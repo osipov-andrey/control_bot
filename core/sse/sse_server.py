@@ -1,13 +1,19 @@
 import asyncio
 import logging
-import json
 
 from aiohttp import web
 from aiohttp.web import Application, HTTPBadRequest
 from aiohttp_sse import sse_response
 
-
+from core._helpers import MessageTarget
+from core.sse.sse_event import SSEEvent
 log = logging.getLogger(__name__)
+
+
+def get_intro_event(client_name: str) -> str:
+    target = MessageTarget("service", client_name)
+    intro_event = SSEEvent(event="start", command="getAvailableMethods", target=target)
+    return intro_event.compiled
 
 
 async def sse_connect(request):
@@ -15,10 +21,10 @@ async def sse_connect(request):
 
     bot = request.app["bot"]
 
-    events_queue: asyncio.Queue = bot.add_client(client_name)
+    events_queue: asyncio.Queue = bot.new_sse_connection(client_name)
     if not events_queue:
         raise HTTPBadRequest()
-    log.debug(
+    log.info(
         f"{request.remote} has been joined to terminal: {client_name}"
     )
     headers = {
@@ -28,21 +34,19 @@ async def sse_connect(request):
 
     async with sse_response(request, headers=headers) as response:
         try:
-            # introduce:
-            await response.send(json.dumps({"client_name": client_name}))
-            await response.send(
-                json.dumps({"command": "getAvailableMethods", "target":{"target_type": "service", "target_name": client_name}}), event="start"
-            )
+
+            await response.send(get_intro_event(client_name))
+
             while not response.task.done():
                 payload = await events_queue.get()
-                log.debug(
+                log.info(
                     f"{request.remote} sent message with {payload}"
                 )
                 await response.send(payload, event="slave")
                 events_queue.task_done()
         finally:
-            bot.remove_client(client_name)
-            log.debug(
+            bot.stop_sse_connection(client_name)
+            log.info(
                 f"{request._transport_peername[0]} has been left from terminal: {client_name}"
             )
     return response

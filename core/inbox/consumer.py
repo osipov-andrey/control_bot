@@ -5,7 +5,7 @@ import json
 
 from aioamqp.channel import Channel
 
-from core.inbox._helpers import MessageTarget
+from core._helpers import MessageTarget
 
 
 class MessageTargetDescriptor:
