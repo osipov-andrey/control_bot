@@ -1,0 +1,8 @@
+API_TOKEN: ----------
+
+rabbit:
+  host: ----------
+  port: ----------
+  login: ----------
+  pwd: ----------
+  rabbit_queue: ----------
