@@ -6,8 +6,12 @@ from aiohttp.web import Application, HTTPBadRequest
 from aiohttp_sse import sse_response
 
 from core._helpers import MessageTarget
+from core.config import config
 from core.sse.sse_event import SSEEvent
+
 log = logging.getLogger(__name__)
+_HOST = config["sse"]["host"]
+_PORT = config["sse"]["port"]
 
 
 def get_intro_event(client_name: str) -> str:
@@ -56,5 +60,5 @@ def create_sse_server(bot):
     app = Application()
     app["bot"] = bot
     app.router.add_route("GET", "/sse/{client_name}/events", sse_connect)
-    asyncio.ensure_future(web._run_app(app, host="localhost", port=8080))
+    asyncio.ensure_future(web._run_app(app, host=_HOST, port=_PORT))
     return app

@@ -1,6 +1,6 @@
 import logging
 
-from core.bot import Observer
+from core.observer import Observer
 
 
 logging.basicConfig(level=logging.INFO)
