@@ -14,10 +14,10 @@ _HOST = config["sse"]["host"]
 _PORT = config["sse"]["port"]
 
 
-def get_intro_event(client_name: str) -> str:
+def get_intro_event(client_name: str) -> SSEEvent:
     target = MessageTarget("service", client_name)
     intro_event = SSEEvent(event="start", command="getAvailableMethods", target=target)
-    return intro_event.compiled
+    return intro_event
 
 
 async def sse_connect(request):
@@ -38,15 +38,15 @@ async def sse_connect(request):
 
     async with sse_response(request, headers=headers) as response:
         try:
-
-            await response.send(get_intro_event(client_name))
+            intro_event = get_intro_event(client_name)
+            await response.send(intro_event.data, event=intro_event.event)
 
             while not response.task.done():
                 payload = await events_queue.get()
                 log.info(
                     f"{request.remote} sent message with {payload}"
                 )
-                await response.send(payload, event="slave")
+                await response.send(payload)
                 events_queue.task_done()
         finally:
             bot.stop_sse_connection(client_name)

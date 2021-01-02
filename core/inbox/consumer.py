@@ -1,11 +1,14 @@
 import asyncio
-
 import aioamqp
 import json
+import logging
 
 from aioamqp.channel import Channel
 
 from core._helpers import MessageTarget
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MessageTargetDescriptor:
@@ -65,6 +68,7 @@ class RabbitConsumer:
             await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
 
     async def _callback(self, channel, body, envelope, properties):
+        _LOGGER.info("Get message from rabbit: %s", body)
         message = TelegramLeverMessage(body)
         await self.inbox_queue.put(message)
 

@@ -18,10 +18,11 @@ class SSEEvent:
         self.args = args if args else {}
 
     @property
-    def compiled(self):
+    def data(self):
         return json.dumps(
             {
-                "event": self.event,
-                "data": {key: value for key, value in self.__dict__.items() if key != "event"}
+                "command": self.command,
+                "target": self.target,
+                "args": self.args,
             }
         )

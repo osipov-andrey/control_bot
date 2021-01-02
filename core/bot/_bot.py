@@ -18,9 +18,9 @@ class ControlBot:
     # ]
 
     def __init__(self, observer):
+        d.observer = observer
         self.observer = observer
         self.bot_dispatcher = d
-
 
     # async def various_cmd_handler(self, message: aiogram.types.Message):
     #     _LOGGER.info(
