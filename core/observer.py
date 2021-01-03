@@ -66,6 +66,9 @@ class Observer:
     def get_command_info(self, client_name, command):
         return self.memory_storage.get_command_info(client_name, command)
 
+    def get_client_info(self, client_name):
+        return self.memory_storage.get_client_info(client_name)
+
     def stop_sse_connection(self, client_name: str):
         self.active_clients.pop(client_name)
         self.memory_storage.remove_client(client_name)
@@ -79,3 +82,7 @@ class Observer:
             await client_queue.put(event.data)
         except KeyError:
             return "Unknown Client"
+
+    async def send_message_to_user(self, **kwargs):
+        return await self.bot.send_message(**kwargs)
+

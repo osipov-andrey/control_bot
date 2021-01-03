@@ -1,8 +1,13 @@
+from core._helpers import ClientCommandInfo
+
+
 class NoSuchClient(Exception):
     """ No such client """
 
+
 class NoSuchCommand(Exception):
     """ No such command for client"""
+
 
 class MemoryStorage:
 
@@ -11,6 +16,11 @@ class MemoryStorage:
 
     def save_client(self, client_name: str, commands_info: dict):
         # TODO: schema validation
+
+        commands_info = {
+            cmd: ClientCommandInfo(**info)
+            for cmd, info in commands_info.items()
+        }
         self._storage[client_name] = commands_info
 
     def remove_client(self, client_name: str):

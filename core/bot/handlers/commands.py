@@ -6,7 +6,11 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from core._helpers import MessageTarget
+from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
+from core.bot.state_enums import CommandFillStatus
+from core.bot.states import Command
 from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.bot.template_strings import COMMAND_IS_NOT_EXIST
 from core.sse.sse_event import SSEEvent
 
 _COMMAND_REGEX = r"^\/([^_]*)_?.*?$"
@@ -50,21 +54,58 @@ async def commands_handler(message: types.Message, state: FSMContext):
 
 
 async def process_command_workflow(message, state, message_id=None):
-    cmd = TelegramBotCommand(message.text, message.chat.id)
+    command_state = await state.get_state()
+    user_id = chat_id = message.chat.id
 
-    prepare_command(cmd)
+    message_kwargs = {'chat_id': chat_id, 'parse_mode': 'HTML'}
 
-    event = SSEEvent(
-        command=cmd.cmd,
-        args=cmd.dict_args,
-        target=MessageTarget(target_type="user", target_name=cmd.user_id)
-    )
+    cmd = TelegramBotCommand(message.text, user_id)
 
-    bad_result = await d.observer.emit_event(cmd.client, event)
-    if bad_result:
-        await message.answer(f"Something wrong: {bad_result}")
+    # TODO проверкар прав пользователя на клиента
+    # if not db.grants.has_access(client_name, user_id):
+    #     return
+    # TODO is_admin?
+    # is_admin = db.superuser.is_admin(user_id)
+    is_admin = False
+
+    if cmd.cmd is None and command_state is None:
+        # Пришло только имя клиента - показываем возможные команды
+        message_kwargs["text"] = get_client_commands(cmd.client, is_admin)
+        await d.observer.send_message_to_user(**message_kwargs)
+        await Command.client.set()
+        # TODO for what?
+        # await storage.update_data(
+        #     user=user_id,
+        #     chat=chat_id,
+        #     client=client_name,
+        # )
+        await Command.command.set()
+    elif cmd.cmd is None and command_state is not None:
+        # Не указана команда
+        message_kwargs["text"] = COMMAND_IS_NOT_FILLED + CONTEXT_CANCEL_MENU
+        await d.observer.send_message_to_user(**message_kwargs)
+    else:
+        cmd_info = d.observer.get_command_info(cmd.client, cmd.cmd)
+        if not cmd_info:
+            message_kwargs["text"] = COMMAND_IS_NOT_EXIST.format(command=cmd.cmd)
+            d.observer.send_message_to_user(**message_kwargs)
+        else:
+            await continue_workflow(
+                state, cmd, cmd_info, message_kwargs, CommandFillStatus.FILL_COMMAND
+            )
 
 
-def prepare_command(cmd: TelegramBotCommand):
-    command_info = d.observer.get_command_info(cmd.client, cmd.cmd)
+async def continue_workflow(state, cmd, cmd_info, message_kwargs, fill_status):
     pass
+
+
+def get_client_commands(client_name: str, is_admin=False) -> str:
+    commands = d.observer.get_client_info(client_name)
+    message = "Информация о командах:\n"
+    for cmd in commands.values():
+        if not cmd.hidden:
+            if (is_admin and cmd.admin_only) or not cmd.admin_only:
+                message += f"{cmd.description}\n"
+    message += "\n/cancel - Выход в главное меню\n"
+    return message
+

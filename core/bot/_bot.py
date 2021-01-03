@@ -43,8 +43,8 @@ class ControlBot:
     #         result = await self.main_menu_handler(main_command)
     #         await message.reply(result)
 
-    async def send_message(self, user_id, message):
-        await self.bot_dispatcher.bot.send_message(user_id, message)
+    async def send_message(self, *, chat_id, text, **kwargs):
+        await self.bot_dispatcher.bot.send_message(chat_id=chat_id, text=text, **kwargs)
 
     # async def main_menu_handler(self, cmd):
     #     if cmd == "help":

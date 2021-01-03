@@ -7,6 +7,12 @@ MessageTarget = namedtuple(
 )
 
 
+ClientCommandInfo = namedtuple(
+    "ClientCommandInfo",
+    "description, hidden, admin_only, args"
+)
+
+
 def get_log_cover(cover_name: str) -> str:
     cover = f"\n{'#'*20} {cover_name} {'#'*20}" \
             f"\n%s" \
