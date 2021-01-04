@@ -1,6 +1,14 @@
 from collections import namedtuple
+from enum import Enum
 
 
+class TargetTypes(Enum):
+    SERVICE = "service"
+    USER = "user"
+    CHANNEL = "channel"
+
+
+# TODO: replace with dataclass?
 MessageTarget = namedtuple(
     "MessageTarget",
     "target_type, target_name, message_id", defaults=(None, )

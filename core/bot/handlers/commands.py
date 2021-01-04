@@ -9,13 +9,13 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from typing import Optional, List
 
-from aiogram.types import Message
+from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
 
 from core._helpers import CommandScheme, MessageTarget
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
-from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.bot.telegram_api import storage, telegram_api_dispatcher as d
 from core.bot.template_strings import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
 from core.memory_storage import NoSuchClient, NoSuchCommand
 from core.sse.sse_event import SSEEvent
@@ -61,6 +61,40 @@ class TelegramBotCommand:
 
         self._parse_args_to_fill()
 
+    @property
+    def fill_status(self):
+        if len(self.args_to_fill) == 0:
+            return ArgumentsFillStatus.FILLED
+        else:
+            return ArgumentsFillStatus.NOT_FILLED
+
+    def fill_argument(self, arg_value):
+        arg_name = self.args_to_fill.pop(0)
+        self.filled_args[arg_name] = arg_value
+
+    def get_next_step(self) -> dict:
+        message_kwargs = dict()
+        argument_to_fill = self.args_to_fill[0]
+        argument_info = self.cmd_scheme.args.get(argument_to_fill)
+
+        options = argument_info.get("options")
+        if options:
+            message_kwargs["reply_markup"] = self._generate_keyboard(options)
+
+        message_kwargs['text'] = \
+            f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
+            f"<i><b>{argument_to_fill}</b></i> - {argument_info['description']}\n" \
+            f"{CONTEXT_CANCEL_MENU}"
+
+        return message_kwargs
+
+    @staticmethod
+    def _generate_keyboard(options: list) -> ReplyKeyboardMarkup:
+        keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        for option in options:
+            keyboard.insert(KeyboardButton(option))
+        return keyboard
+
     def _parse_args_to_fill(self):
         """ Сравнить полученные аргументы и требуемые """
         required_args = list(self.cmd_scheme.args.keys())
@@ -71,14 +105,7 @@ class TelegramBotCommand:
             elif not required_arg:
                 break
             else:
-                self.args_to_fill.append(required_args)
-
-    @property
-    def fill_status(self):
-        if len(self.args_to_fill) == 0:
-            return ArgumentsFillStatus.FILLED
-        else:
-            return ArgumentsFillStatus.NOT_FILLED
+                self.args_to_fill.append(required_arg)
 
     # def __repr__(self):
     #     return f"{self.__class__.__name__}"\
@@ -92,10 +119,23 @@ class TelegramBotCommand:
 @d.message_handler(regexp=_COMMAND_REGEX)
 async def commands_handler(message: types.Message, state: FSMContext):
     print(message)
-    await process_command_workflow(message, state)
+    await _start_command_workflow(message, state)
 
 
-async def process_command_workflow(message, state, message_id=None):
+@d.message_handler(state=Command.arguments)
+async def argument_handler(message: types.Message, state: FSMContext):
+    user_id = chat_id = message.chat.id
+    message_kwargs = {'chat_id': chat_id}
+    data = await state.get_data()
+    cmd: TelegramBotCommand = data.get("cmd")
+
+    argument_value = message.text
+    cmd.fill_argument(argument_value)
+
+    await _continue_cmd_workflow(state, cmd, message_kwargs, CommandFillStatus.FILL_ARGUMENTS)
+
+
+async def _start_command_workflow(message, state, message_id=None):
     command_state = await state.get_state()
     user_id = chat_id = message.chat.id
 
@@ -103,8 +143,7 @@ async def process_command_workflow(message, state, message_id=None):
 
     client, command, args = TelegramBotCommand.parse_cmd_string(message.text)
 
-
-    # TODO проверкар прав пользователя на клиента
+    # TODO проверка прав пользователя на клиента
     # if not db.grants.has_access(client_name, user_id):
     #     return
     # TODO is_admin?
@@ -113,15 +152,17 @@ async def process_command_workflow(message, state, message_id=None):
 
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
+        #TODO если нет клиента:
         message_kwargs["text"] = get_client_commands(client, is_admin)
         await d.observer.send_message_to_user(**message_kwargs)
         await Command.client.set()
-        # TODO for what?
-        # await storage.update_data(
-        #     user=user_id,
-        #     chat=chat_id,
-        #     client=client_name,
-        # )
+
+        await storage.update_data(
+            user=user_id,
+            chat=chat_id,
+            client=client,
+        )
+
         await Command.command.set()
         return
     elif command is None and command_state is not None:
@@ -130,35 +171,50 @@ async def process_command_workflow(message, state, message_id=None):
         await d.observer.send_message_to_user(**message_kwargs)
         return
 
+    # Указаны клиент и команда:
     exception = False
     try:
         cmd = TelegramBotCommand(client, command, args, user_id)
+        await _continue_cmd_workflow(
+            state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND
+        )
     except NoSuchCommand as e:
         exception = True
         message_kwargs["text"] = COMMAND_IS_NOT_EXIST.format(command=e.cmd)
     except NoSuchClient:
         exception = True
         message_kwargs["text"] = NO_SUCH_CLIENT.format(client=client)
-    finally:
-        if exception:
-            await d.observer.send_message_to_user(**message_kwargs)
-            await state.reset_state()
-            return
-
-    await continue_workflow(
-        state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND
-    )
+    if exception:
+        await d.observer.send_message_to_user(**message_kwargs)
+        await state.reset_state()
 
 
-async def continue_workflow(state, cmd: TelegramBotCommand, message_kwargs, fill_status):
+async def _continue_cmd_workflow(state, cmd: TelegramBotCommand, message_kwargs, fill_status):
     cmd_fill_status = cmd.fill_status
 
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
         # Команда заполнена
-        await end_workflow(state, cmd)
+        await _finish_cmd_workflow(state, cmd)
+    elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
+        # Команда не заполнена:
+
+        await storage.update_data(
+            user=cmd.user_id,
+            chat=cmd.user_id,
+            cmd=cmd,
+        )
+
+        message_kwargs.update(cmd.get_next_step())
+        # Arguments input state:
+        await Command.arguments.set()
+        await d.observer.send_message_to_user(**message_kwargs)
+    # TODO:
+    # elif cmd_fill_status == ArgumentsFillStatus.FAILED:
+    #     message_kwargs['text'] = cmd.generate_error_report(fill_status)
+    #     await d.observer.send_message_to_user(**message_kwargs)
 
 
-async def end_workflow(state, cmd: TelegramBotCommand):
+async def _finish_cmd_workflow(state, cmd: TelegramBotCommand):
     await state.reset_state()
     event = SSEEvent(
         command=cmd.cmd,
@@ -177,4 +233,3 @@ def get_client_commands(client_name: str, is_admin=False) -> str:
                 message += f"{cmd.description}\n"
     message += "\n/cancel - Выход в главное меню\n"
     return message
-

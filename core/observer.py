@@ -2,6 +2,7 @@ import asyncio
 import aiogram
 import logging
 
+from core._helpers import TargetTypes
 from core.config import config
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
@@ -56,7 +57,7 @@ class Observer:
     def save_client_commands(self, message: TelegramLeverMessage):
         client_name = message.target.target_name
 
-        assert message.target.target_type == 'service'
+        assert message.target.target_type == TargetTypes.SERVICE.value
         assert client_name in self.active_clients
 
         self.memory_storage.save_client(client_name, message.commands)
