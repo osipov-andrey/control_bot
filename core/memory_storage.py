@@ -1,4 +1,4 @@
-from core._helpers import ClientCommandInfo
+from core._helpers import CommandScheme
 
 
 class NoSuchClient(Exception):
@@ -7,6 +7,9 @@ class NoSuchClient(Exception):
 
 class NoSuchCommand(Exception):
     """ No such command for client"""
+    def __init__(self, cmd: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cmd = cmd
 
 
 class MemoryStorage:
@@ -18,7 +21,7 @@ class MemoryStorage:
         # TODO: schema validation
 
         commands_info = {
-            cmd: ClientCommandInfo(**info)
+            cmd: CommandScheme(**info)
             for cmd, info in commands_info.items()
         }
         self._storage[client_name] = commands_info

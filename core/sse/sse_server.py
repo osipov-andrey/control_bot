@@ -42,11 +42,11 @@ async def sse_connect(request):
             await response.send(intro_event.data, event=intro_event.event)
 
             while not response.task.done():
-                payload = await events_queue.get()
+                event = await events_queue.get()
                 log.info(
-                    f"{request.remote} sent message with {payload}"
+                    f"{request.remote} sent message with {event}"
                 )
-                await response.send(payload)
+                await response.send(event.data, event=event.event)
                 events_queue.task_done()
         finally:
             bot.stop_sse_connection(client_name)

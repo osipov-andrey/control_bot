@@ -7,8 +7,8 @@ MessageTarget = namedtuple(
 )
 
 
-ClientCommandInfo = namedtuple(
-    "ClientCommandInfo",
+CommandScheme = namedtuple(
+    "CommandScheme",
     "description, hidden, admin_only, args"
 )
 

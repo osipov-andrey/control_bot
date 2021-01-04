@@ -42,13 +42,11 @@ class Observer:
 
             if message.cmd == 'getAvailableMethods':
                 self.save_client_commands(message)
-
-    # async def handle_command(self, message: TelegramBotCommand) -> str:
-    #     print("handle: ", message.cmd)
-    #
-    #     await self.bot.send_message(message.from_user.id, "GIGGITY")
-    #
-    #     return "kekos"
+            else:
+                await self.send_message_to_user(
+                    chat_id=message.target.target_name,
+                    text=message.message
+                )
 
     def new_sse_connection(self, client_name: str):
         client_queue = asyncio.Queue()
@@ -73,16 +71,13 @@ class Observer:
         self.active_clients.pop(client_name)
         self.memory_storage.remove_client(client_name)
 
-    # async def save_new_client(self, register_message):
-    #     pass
-
     async def emit_event(self, client_name: str, event: SSEEvent):
         try:
             client_queue: asyncio.Queue = self.active_clients[client_name]
-            await client_queue.put(event.data)
+            await client_queue.put(event)
         except KeyError:
             return "Unknown Client"
 
     async def send_message_to_user(self, **kwargs):
-        return await self.bot.send_message(**kwargs)
+        return await self.bot.send_message(parse_mode='HTML', **kwargs)
 
