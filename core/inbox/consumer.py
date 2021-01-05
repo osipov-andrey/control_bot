@@ -1,39 +1,17 @@
 import asyncio
+from typing import List
+
 import aioamqp
 import json
 import logging
 
 from aioamqp.channel import Channel
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from core._helpers import MessageTarget
-
+from core._helpers import MessageTarget, TargetTypes
+from core.inbox.messages import TelegramLeverMessage, message_fabric
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class MessageTargetDescriptor:
-
-    def __set__(self, instance: 'TelegramLeverMessage', value: dict):
-        instance.__dict__["target"] = MessageTarget(**value)
-
-
-class TelegramLeverMessage:
-    target = MessageTargetDescriptor()
-
-    def __init__(self, raw_message: bytes):
-        message_body = raw_message.decode()
-        message_body = json.loads(message_body)
-        for key, value in message_body.items():
-            setattr(self, key, value)
-
-    def __getattr__(self, item):
-        return self.__dict__.get(item)
-
-    def __str__(self):
-        values = '\n'.join(f'{key}: {value}' for key, value in self.__dict__.items())
-        return f"\n{'#'*20} TelegramLeverMessage {'#'*20}" \
-               f"\n{values}" \
-               f"\n{'#'*20}{' '*22}{'#'*20}"
 
 
 class RabbitConsumer:
@@ -69,6 +47,7 @@ class RabbitConsumer:
 
     async def _callback(self, channel, body, envelope, properties):
         _LOGGER.info("Get message from rabbit: %s", body)
-        message = TelegramLeverMessage(body)
-        await self.inbox_queue.put(message)
 
+        # TODO создавать сообщение определенного класса в зависимости от содержимого
+        message = message_fabric(body)
+        await self.inbox_queue.put(message)
