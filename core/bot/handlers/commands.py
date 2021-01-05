@@ -9,7 +9,8 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from typing import Optional, List
 
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, KeyboardButton, Message, \
+    ReplyKeyboardMarkup
 
 from core._helpers import CommandScheme, MessageTarget
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
@@ -133,6 +134,17 @@ async def argument_handler(message: types.Message, state: FSMContext):
     cmd.fill_argument(argument_value)
 
     await _continue_cmd_workflow(state, cmd, message_kwargs, CommandFillStatus.FILL_ARGUMENTS)
+
+
+@d.callback_query_handler(lambda callback_query: True, state='*')
+async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContext):
+    # Обязательно сразу сделать answer, чтобы убрать "часики" после нажатия на кнопку.
+    await callback_query.answer('Button has been Pressed')
+
+    message = callback_query.message
+    message.text = callback_query.data
+
+    await _start_command_workflow(message, state)
 
 
 async def _start_command_workflow(message, state, message_id=None):

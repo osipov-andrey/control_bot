@@ -1,6 +1,10 @@
 import asyncio
+from typing import List
+
 import aiogram
 import logging
+
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from core._helpers import TargetTypes
 from core.config import config
@@ -44,10 +48,14 @@ class Observer:
             if message.cmd == 'getAvailableMethods':
                 self.save_client_commands(message)
             else:
-                await self.send_message_to_user(
-                    chat_id=message.target.target_name,
-                    text=message.message
-                )
+                message_kwargs = {
+                    "chat_id": message.target.target_name,
+                    "text": message.message,
+                }
+                if message.buttons:
+                    inline_keyboard = _generate_inline_buttons(message.buttons)
+                    message_kwargs["reply_markup"] = inline_keyboard
+                await self.send_message_to_user(**message_kwargs)
 
     def new_sse_connection(self, client_name: str):
         client_queue = asyncio.Queue()
@@ -81,4 +89,11 @@ class Observer:
 
     async def send_message_to_user(self, **kwargs):
         return await self.bot.send_message(parse_mode='HTML', **kwargs)
+
+
+def _generate_inline_buttons(buttons: List[dict]) -> InlineKeyboardMarkup:
+    inline_keyboard = InlineKeyboardMarkup(row_width=2)
+    for button in buttons:
+        inline_keyboard.insert(InlineKeyboardButton(**button))
+    return inline_keyboard
 

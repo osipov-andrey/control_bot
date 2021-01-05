@@ -26,3 +26,9 @@ class SSEEvent:
                 "args": self.args,
             }
         )
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(" \
+               f"event='{self.event}', command='{self.command}', " \
+               f"target={self.target}), args={self.args}" \
+               f")"
