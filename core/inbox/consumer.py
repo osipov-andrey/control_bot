@@ -35,15 +35,12 @@ class RabbitConsumer:
         self.inbox_queue = inbox_queue
 
     async def listen_to_rabbit(self):
-
         transport, protocol = await aioamqp.connect(
             self.host, self.port,
             login=self.login, password=self.password, login_method='PLAIN'
         )
         channel: Channel = await protocol.channel()
-
-        while True:
-            await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
+        await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
 
     async def _callback(self, channel, body, envelope, properties):
         _LOGGER.info("Get message from rabbit: %s", body)

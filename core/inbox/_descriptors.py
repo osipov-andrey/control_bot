@@ -5,6 +5,7 @@ from typing import List, Union
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
 from core._helpers import MessageTarget, TargetTypes
+from core.bot.telegram_api import telegram_api_dispatcher as d
 
 
 class MessageTargetDescriptor:
@@ -73,10 +74,21 @@ class PhotoDescriptor:
 
 class CaptionDescriptor:
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value: str):
         instance.__dict__["caption"] = value
 
 
-# class MessageReplies:
-#
-#     def __set__(self, instance, value):
+class MessageIssue:
+
+    def __set__(self, instance, value: dict):
+        if value["resolved"] is True:
+            problem_issue = d.observer.memory_storage.resolve_issue(value["issue_id"])
+            if problem_issue:
+                instance.__dict__["reply_to_message_id"] = problem_issue.reply_to_message_id
+        instance.__dict__["issue"] = value
+
+    def __get__(self, instance, owner):
+        if isinstance(instance.__dict__.get("issue"), self.__class__):
+            return
+        return instance.__dict__.get("issue")
+

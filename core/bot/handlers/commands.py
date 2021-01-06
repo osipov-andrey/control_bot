@@ -176,7 +176,8 @@ async def _start_command_workflow(message, state, message_id=None):
             chat=chat_id,
             client=client,
         )
-        await Command.command.set()
+        await state.reset_state()
+        # await Command.command.set()
         return
     elif command is None and command_state is not None:
         # Не указана команда

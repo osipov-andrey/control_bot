@@ -28,6 +28,7 @@ class BaseMessage(ABC):
 
     target = MessageTargetDescriptor()
     buttons = InlineButtonsDescriptor()
+    issue = MessageIssue()
     # replies = MessageReplies()
 
     def __init__(self, message_body: dict):
