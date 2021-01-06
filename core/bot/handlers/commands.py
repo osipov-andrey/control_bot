@@ -16,8 +16,9 @@ from core._helpers import CommandScheme, MessageTarget
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
-from core.bot.telegram_api import storage, telegram_api_dispatcher as d
+from core.bot.telegram_api import state_storage, telegram_api_dispatcher as d
 from core.bot.template_strings import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
+from core.inbox.messages import message_fabric
 from core.memory_storage import NoSuchClient, NoSuchCommand
 from core.sse.sse_event import SSEEvent
 
@@ -166,21 +167,21 @@ async def _start_command_workflow(message, state, message_id=None):
         # Пришло только имя клиента - показываем возможные команды
         #TODO если нет клиента:
         message_kwargs["text"] = get_client_commands(client, is_admin)
-        await d.observer.send_message_to_user(**message_kwargs)
-        await Command.client.set()
 
-        await storage.update_data(
+        await d.observer.send(message_fabric(message_kwargs))
+
+        await Command.client.set()
+        await state_storage.update_data(
             user=user_id,
             chat=chat_id,
             client=client,
         )
-
         await Command.command.set()
         return
     elif command is None and command_state is not None:
         # Не указана команда
         message_kwargs["text"] = COMMAND_IS_NOT_FILLED + CONTEXT_CANCEL_MENU
-        await d.observer.send_message_to_user(**message_kwargs)
+        await d.observer.send(message_fabric(message_kwargs))
         return
 
     # Указаны клиент и команда:
@@ -197,7 +198,7 @@ async def _start_command_workflow(message, state, message_id=None):
         exception = True
         message_kwargs["text"] = NO_SUCH_CLIENT.format(client=client)
     if exception:
-        await d.observer.send_message_to_user(**message_kwargs)
+        await d.observer.send(message_fabric(message_kwargs))
         await state.reset_state()
 
 
@@ -210,7 +211,7 @@ async def _continue_cmd_workflow(state, cmd: TelegramBotCommand, message_kwargs,
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
         # Команда не заполнена:
 
-        await storage.update_data(
+        await state_storage.update_data(
             user=cmd.user_id,
             chat=cmd.user_id,
             cmd=cmd,
@@ -219,7 +220,7 @@ async def _continue_cmd_workflow(state, cmd: TelegramBotCommand, message_kwargs,
         message_kwargs.update(cmd.get_next_step())
         # Arguments input state:
         await Command.arguments.set()
-        await d.observer.send_message_to_user(**message_kwargs)
+        await d.observer.send(message_fabric(message_kwargs))
     # TODO:
     # elif cmd_fill_status == ArgumentsFillStatus.FAILED:
     #     message_kwargs['text'] = cmd.generate_error_report(fill_status)

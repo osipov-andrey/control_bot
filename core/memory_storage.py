@@ -12,8 +12,8 @@ class NoSuchCommand(Exception):
         self.cmd = cmd
 
 
-class MemoryStorage:
-
+class ControlBotMemoryStorage:
+    """ Хранит информацию о командах подключенных клиентов, об issues и т.п..."""
     def __init__(self):
         self._storage = dict()
 

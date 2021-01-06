@@ -1,6 +1,6 @@
 import base64
 import io
-from typing import List
+from typing import List, Union
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
@@ -9,8 +9,13 @@ from core._helpers import MessageTarget, TargetTypes
 
 class MessageTargetDescriptor:
 
-    def __set__(self, instance, value: dict):
-        target = MessageTarget(**value)
+    def __set__(self, instance, value: Union[dict, MessageTarget]):
+        if isinstance(value, dict):
+            target = MessageTarget(**value)
+        elif isinstance(value, MessageTarget):
+            target = value
+        else:
+            raise AttributeError(f"Unsupported target value: {type(value)}")
         instance.__dict__["target"] = target
 
         if target.target_type == TargetTypes.USER.value:
@@ -70,3 +75,8 @@ class CaptionDescriptor:
 
     def __set__(self, instance, value):
         instance.__dict__["caption"] = value
+
+
+# class MessageReplies:
+#
+#     def __set__(self, instance, value):

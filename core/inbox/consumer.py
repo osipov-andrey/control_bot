@@ -47,7 +47,5 @@ class RabbitConsumer:
 
     async def _callback(self, channel, body, envelope, properties):
         _LOGGER.info("Get message from rabbit: %s", body)
-
-        # TODO создавать сообщение определенного класса в зависимости от содержимого
         message = message_fabric(body)
         await self.inbox_queue.put(message)
