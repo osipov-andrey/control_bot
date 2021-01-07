@@ -2,12 +2,20 @@ import datetime
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Dict, List, Union
 
 
 class TargetTypes(Enum):
     SERVICE = "service"
     USER = "user"
     CHANNEL = "channel"
+
+
+class ArgTypes(Enum):
+    STR = "string"
+    INT = "integer"
+    LIST = "list"
+    # USER = schema["is_client"]
 
 
 # TODO: replace with dataclass?
@@ -17,9 +25,29 @@ MessageTarget = namedtuple(
 )
 
 
-CommandScheme = namedtuple(
-    "CommandScheme",
-    "description, hidden, admin_only, args"
+# CommandScheme = namedtuple(
+#     "CommandScheme",
+#     "description, hidden, admin_only, args"
+# )
+
+
+@dataclass
+class CommandScheme:
+    description: str
+    hidden: bool
+    admin_only: bool
+    args: Dict[str, Union['ArgScheme', dict]]
+
+    def __post_init__(self):
+        self.args = {
+            arg_name: ArgScheme(**arg_info)
+            for arg_name, arg_info in self.args.items()
+        }
+
+
+ArgScheme = namedtuple(
+    "ArgScheme",
+    "description, schema, options", defaults=(None, )
 )
 
 
