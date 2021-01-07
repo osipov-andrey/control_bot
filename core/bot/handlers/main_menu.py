@@ -6,13 +6,16 @@ from core.bot.telegram_api import telegram_api_dispatcher as d
 
 @d.message_handler(commands=["start"])
 async def main_menu_handler(message: types.Message):
-
+    clients = [
+        MenuTextButton(client, "-")
+        for client in d.observer.active_clients.keys()
+    ]
     menu = get_menu(
         header="Список команд:",
         commands=[
             MenuTextButton("start", "главное меню"),
             MenuTextButton("me", "узнать свой телеграм ID"),
-        ]
+        ] + clients
     )
     # if db.superuser.is_admin(message["from"]["id"]):
     #     superuser_cmds = [

@@ -137,6 +137,12 @@ async def argument_handler(message: types.Message, state: FSMContext):
     await _continue_cmd_workflow(state, cmd, message_kwargs, CommandFillStatus.FILL_ARGUMENTS)
 
 
+@d.message_handler(state=Command.client)
+async def client_commands_handler(message: types.Message, state: FSMContext):
+    """ Вызов команд из меню клиента """
+    await _start_command_workflow(message, state)
+
+
 @d.callback_query_handler(lambda callback_query: True, state='*')
 async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContext):
     # Обязательно сразу сделать answer, чтобы убрать "часики" после нажатия на кнопку.
@@ -176,7 +182,7 @@ async def _start_command_workflow(message, state, message_id=None):
             chat=chat_id,
             client=client,
         )
-        await state.reset_state()
+        # await state.reset_state()
         # await Command.command.set()
         return
     elif command is None and command_state is not None:
