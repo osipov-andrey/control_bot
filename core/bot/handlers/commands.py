@@ -11,6 +11,7 @@ from typing import Optional, List, Union
 
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, KeyboardButton, Message, \
     ReplyKeyboardMarkup
+from cerberus import Validator
 
 from core._helpers import ArgScheme, ArgTypes, CommandScheme, MessageTarget
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
@@ -61,7 +62,7 @@ class TelegramBotCommand:
         self.filled_args = dict()
         self.args_to_fill = list()
 
-        self.validation_errors = list()
+        self.validation_errors = dict()
 
         self._parse_args_to_fill()
 
@@ -80,7 +81,7 @@ class TelegramBotCommand:
             self.filled_args[arg_name] = arg_value.split(' ')
             return
 
-        validated = self._validate_arg(arg_scheme, arg_value)
+        validated = self._validate_arg(arg_name, arg_scheme, arg_value)
 
         if validated:
             self.filled_args[arg_name] = arg_value
@@ -97,10 +98,13 @@ class TelegramBotCommand:
         if options:
             message_kwargs["reply_markup"] = self._generate_keyboard(options)
 
-        message_kwargs['text'] = \
-            f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
-            f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
-            f"{CONTEXT_CANCEL_MENU}"
+        if self.validation_errors:
+            message_kwargs['text'] = self.validation_errors
+        else:
+            message_kwargs['text'] = \
+                f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
+                f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
+                f"{CONTEXT_CANCEL_MENU}"
 
         return message_kwargs
 
@@ -118,7 +122,8 @@ class TelegramBotCommand:
         for index, (required_arg, received_value) in enumerate(
                 zip_longest(required_args, self.list_args)
         ):
-
+            if not required_arg:
+                break
             if received_value:
                 arg_scheme = self._get_arg_scheme(required_arg)
 
@@ -129,23 +134,32 @@ class TelegramBotCommand:
                     break
                     # лист может быть только в конце аргументов
 
-                validated = self._validate_arg(arg_scheme, received_value)
+                validated = self._validate_arg(required_arg, arg_scheme, received_value)
                 if validated:
                     self.filled_args[required_arg] = received_value
                 else:
                     self.args_to_fill.append(required_arg)
-
-            elif not required_arg:
-                break
             else:
                 self.args_to_fill.append(required_arg)
 
-    def _validate_arg(self, scheme: ArgScheme, received_value: Union[int, str]) -> bool:
-        # TODO
-        return True
+    def _validate_arg(
+            self,
+            arg_name: str,
+            arg_info: ArgScheme,
+            received_value: Union[int, str]
+    ) -> bool:
+        if arg_info.schema['type'] == ArgTypes.INT.value:
+            try:  # Телеграм возвращает всегда строки
+                received_value = int(received_value)
+            except ValueError:
+                pass  # Цербер скажет это за меня
+        v = Validator({arg_name: arg_info.schema})
+        validation = v.validate({arg_name: received_value})
+        self.validation_errors.update(v.errors)
+        return validation
 
     def _get_arg_scheme(self, arg_name: str) -> ArgScheme:
-        return self.cmd_scheme.args[arg_name]
+        return self.cmd_scheme.args.get(arg_name)
 
     # def __repr__(self):
     #     return f"{self.__class__.__name__}"\
