@@ -1,20 +1,14 @@
 """
 TgAPI --(cmd)--> Handler --(event)--> Observer
 """
-from itertools import zip_longest
-from uuid import UUID
-
-import aiogram
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from typing import Optional, List, Union
 
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, KeyboardButton, Message, \
-    ReplyKeyboardMarkup
-from cerberus import Validator
+from aiogram.types import CallbackQuery
 
-from core._helpers import ArgScheme, ArgTypes, CommandScheme, MessageTarget
+from core._helpers import MessageTarget
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
+from core.bot.handlers._command import TelegramBotCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import state_storage, telegram_api_dispatcher as d
@@ -24,150 +18,6 @@ from core.memory_storage import NoSuchClient, NoSuchCommand
 from core.sse.sse_event import SSEEvent
 
 _COMMAND_REGEX = r"^\/([^_]*)_?.*?$"
-
-
-class TelegramBotCommand:
-    """ Команда, полученная из телеги """
-
-    @staticmethod
-    def parse_cmd_string(cmd_string: str):
-        assert cmd_string.startswith('/')
-
-        full_cmd = cmd_string.split('_')
-        client = full_cmd[0][1:]
-        try:
-            cmd = full_cmd[1]
-        except IndexError:
-            cmd = None
-        args = full_cmd[2:]
-
-        return client, cmd, args
-
-    def __init__(
-            self,
-            client: str,
-            cmd: str,
-            arguments: List,
-            user_id: int,
-            message_id: Optional[UUID] = None):
-
-        self.client = client
-        self.cmd: str = cmd
-        self.user_id = user_id
-        self.message_id = message_id
-
-        self.cmd_scheme: CommandScheme = d.observer.get_command_info(client, cmd)
-
-        self.list_args: list = arguments
-        self.filled_args = dict()
-        self.args_to_fill = list()
-
-        self.validation_errors = dict()
-
-        self._parse_args_to_fill()
-
-    @property
-    def fill_status(self):
-        if len(self.args_to_fill) == 0:
-            return ArgumentsFillStatus.FILLED
-        else:
-            return ArgumentsFillStatus.NOT_FILLED
-
-    def fill_argument(self, arg_value):
-        arg_name = self.args_to_fill.pop(0)
-        arg_scheme = self._get_arg_scheme(arg_name)
-
-        if arg_scheme.schema['type'] == ArgTypes.LIST.value:
-            self.filled_args[arg_name] = arg_value.split(' ')
-            return
-
-        validated = self._validate_arg(arg_name, arg_scheme, arg_value)
-
-        if validated:
-            self.filled_args[arg_name] = arg_value
-        else:
-            # TODO результат валидации в список с ошибками валидации
-            self.args_to_fill.insert(0, arg_name)
-
-    def get_next_step(self) -> dict:
-        message_kwargs = dict()
-        argument_to_fill = self.args_to_fill[0]
-        argument_info = self.cmd_scheme.args.get(argument_to_fill)
-
-        options = argument_info.options
-        if options:
-            message_kwargs["reply_markup"] = self._generate_keyboard(options)
-
-        if self.validation_errors:
-            message_kwargs['text'] = self.validation_errors
-        else:
-            message_kwargs['text'] = \
-                f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
-                f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
-                f"{CONTEXT_CANCEL_MENU}"
-
-        return message_kwargs
-
-    @staticmethod
-    def _generate_keyboard(options: list) -> ReplyKeyboardMarkup:
-        keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-        for option in options:
-            keyboard.insert(KeyboardButton(option))
-        return keyboard
-
-    def _parse_args_to_fill(self):
-        """ Сравнить полученные аргументы и требуемые """
-        required_args = list(self.cmd_scheme.args.keys())
-
-        for index, (required_arg, received_value) in enumerate(
-                zip_longest(required_args, self.list_args)
-        ):
-            if not required_arg:
-                break
-            if received_value:
-                arg_scheme = self._get_arg_scheme(required_arg)
-
-                if arg_scheme.schema['type'] == ArgTypes.LIST.value:
-                    # Если тип аргумента лист - то все,
-                    # что есть далее в полученных аргументах - запихиваем в лист
-                    self.filled_args[required_arg] = self.list_args[index:]
-                    break
-                    # лист может быть только в конце аргументов
-
-                validated = self._validate_arg(required_arg, arg_scheme, received_value)
-                if validated:
-                    self.filled_args[required_arg] = received_value
-                else:
-                    self.args_to_fill.append(required_arg)
-            else:
-                self.args_to_fill.append(required_arg)
-
-    def _validate_arg(
-            self,
-            arg_name: str,
-            arg_info: ArgScheme,
-            received_value: Union[int, str]
-    ) -> bool:
-        if arg_info.schema['type'] == ArgTypes.INT.value:
-            try:  # Телеграм возвращает всегда строки
-                received_value = int(received_value)
-            except ValueError:
-                pass  # Цербер скажет это за меня
-        v = Validator({arg_name: arg_info.schema})
-        validation = v.validate({arg_name: received_value})
-        self.validation_errors.update(v.errors)
-        return validation
-
-    def _get_arg_scheme(self, arg_name: str) -> ArgScheme:
-        return self.cmd_scheme.args.get(arg_name)
-
-    # def __repr__(self):
-    #     return f"{self.__class__.__name__}"\
-    #            f"(full_cmd=\"{self._full_cmd}\", user-id=\"{self.user_id}\")"
-
-    def __str__(self):
-        return f"{self.__class__.__name__}: " \
-               f"(cmd={self.cmd}; args={self.list_args}; user-id={self.user_id})"
 
 
 @d.message_handler(regexp=_COMMAND_REGEX)
@@ -203,7 +53,7 @@ async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContex
     message = callback_query.message
     message.text = callback_query.data
 
-    await _start_command_workflow(message, state)
+    await _start_command_workflow(message, state, message.message_id)
 
 
 async def _start_command_workflow(message, state, message_id=None):
@@ -248,7 +98,7 @@ async def _start_command_workflow(message, state, message_id=None):
     try:
         cmd = TelegramBotCommand(client, command, args, user_id)
         await _continue_cmd_workflow(
-            state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND
+            state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND, message_id
         )
     except NoSuchCommand as e:
         exception = True
@@ -261,12 +111,14 @@ async def _start_command_workflow(message, state, message_id=None):
         await state.reset_state()
 
 
-async def _continue_cmd_workflow(state, cmd: TelegramBotCommand, message_kwargs, fill_status):
+async def _continue_cmd_workflow(
+        state, cmd: TelegramBotCommand, message_kwargs, fill_status, message_id=None
+):
     cmd_fill_status = cmd.fill_status
 
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
         # Команда заполнена
-        await _finish_cmd_workflow(state, cmd)
+        await _finish_cmd_workflow(state, cmd, message_id)
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
         # Команда не заполнена:
 
@@ -286,11 +138,11 @@ async def _continue_cmd_workflow(state, cmd: TelegramBotCommand, message_kwargs,
     #     await d.observer.send_message_to_user(**message_kwargs)
 
 
-async def _finish_cmd_workflow(state, cmd: TelegramBotCommand):
+async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
     await state.reset_state()
     event = SSEEvent(
         command=cmd.cmd,
-        target=MessageTarget(target_type="user", target_name=cmd.user_id),
+        target=MessageTarget(target_type="user", target_name=cmd.user_id, message_id=message_id),
         args=cmd.filled_args
     )
     await d.observer.emit_event(cmd.client, event)

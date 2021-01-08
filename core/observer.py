@@ -8,10 +8,10 @@ from core._helpers import TargetTypes
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.config import config
 from core.inbox.dispatcher import RabbitDispatcher
-from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage
+from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
-from core.inbox.consumer import RabbitConsumer, TelegramLeverMessage
+from core.inbox.consumer import RabbitConsumer, TextMessage
 # from core.bot import ControlBot
 from core.memory_storage import ControlBotMemoryStorage
 
@@ -48,7 +48,7 @@ class Observer:
         self.active_clients[client_name] = client_queue
         return client_queue
 
-    def save_client_info(self, message: TelegramLeverMessage):
+    def save_client_info(self, message: TextMessage):
         client_name = message.target.target_name
 
         assert message.target.target_type == TargetTypes.SERVICE.value
@@ -85,9 +85,13 @@ class Observer:
         return await self.d.bot.send_document(**message.get_params_to_sent())
 
     @send.register
-    async def _(self, message: TelegramLeverMessage):
+    async def _(self, message: TextMessage):
         return await self.d.bot.send_message(**message.get_params_to_sent())
 
     @send.register
     async def _(self, message: PhotoMessage):
         return await self.d.bot.send_photo(**message.get_params_to_sent())
+
+    @send.register
+    async def _(self, message: EditTextMessage):
+        return await self.d.bot.edit_message_text(**message.get_params_to_sent())

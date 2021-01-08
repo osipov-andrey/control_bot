@@ -21,6 +21,7 @@ class MessageTargetDescriptor:
 
         if target.target_type == TargetTypes.USER.value:
             instance.__dict__["chat_id"] = target.target_name
+            instance.__dict__["message_id"] = target.message_id
 
 
 class InlineButtonsDescriptor:

@@ -4,7 +4,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from core.config import config
 
 
-__all__ = ['telegram_api_dispatcher']
+__all__ = ['telegram_api_dispatcher', 'state_storage']
 
 _API_TOKEN = config["API_TOKEN"]
 

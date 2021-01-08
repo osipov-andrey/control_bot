@@ -22,7 +22,7 @@ class RabbitDispatcher:
             await self.dispatch(message)
 
     async def dispatch(self, message: BaseMessage):
-
+        # TODO if target.message_id: ...
         if message.cmd == INTRO_COMMAND:
             self.observer.save_client_info(message)
             return

@@ -9,7 +9,7 @@ from aioamqp.channel import Channel
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from core._helpers import MessageTarget, TargetTypes
-from core.inbox.messages import TelegramLeverMessage, message_fabric
+from core.inbox.messages import TextMessage, message_fabric
 
 _LOGGER = logging.getLogger(__name__)
 

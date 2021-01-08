@@ -1,11 +1,11 @@
 import json
 from abc import ABC
-from typing import Tuple, Union
 
 from ._descriptors import *
 
 
 def message_fabric(raw_message: Union[bytes, dict]):
+    # TODO: ugly
     if isinstance(raw_message, bytes):
         message_body = raw_message.decode()
         message_body = json.loads(message_body)
@@ -18,8 +18,10 @@ def message_fabric(raw_message: Union[bytes, dict]):
         return DocumentMessage(message_body)
     elif "image" in message_body:
         return PhotoMessage(message_body)
+    elif message_body["target"].get("message_id") is not None:
+        return EditTextMessage(message_body)
     else:
-        return TelegramLeverMessage(message_body)
+        return TextMessage(message_body)
 
 
 class BaseMessage(ABC):
@@ -66,10 +68,14 @@ class BaseMessage(ABC):
                f"\n{'#'*20}{' '*22}{'#'*20}"
 
 
-class TelegramLeverMessage(BaseMessage):
+class TextMessage(BaseMessage):
     _PARAMS_TO_SENT = ('text', 'entities')
 
     message = MessageTextDescriptor()
+
+
+class EditTextMessage(TextMessage):
+    _PARAMS_TO_SENT = ('text', 'entities', 'message_id')
 
 
 class DocumentMessage(BaseMessage):
