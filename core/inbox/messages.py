@@ -14,11 +14,13 @@ def message_fabric(raw_message: Union[bytes, dict]):
     else:
         raise AttributeError("Unsupported raw_message type!")
 
+    target = message_body["target"]
+
     if "document" in message_body:
         return DocumentMessage(message_body)
     elif "image" in message_body:
         return PhotoMessage(message_body)
-    elif message_body["target"].get("message_id") is not None:
+    elif target.get("message_id") is not None:
         return EditTextMessage(message_body)
     else:
         return TextMessage(message_body)
@@ -53,7 +55,7 @@ class BaseMessage(ABC):
             message_kwargs = self.get_params_to_sent(only_common=True)
             message_kwargs.update(reply)
             message_kwargs["reply_to_message_id"] = reply_to_message_id
-            message_kwargs["target"] = self.target
+            message_kwargs["target"] = self.target._asdict()
             reply_message = message_fabric(message_kwargs)
             replies.append(reply_message)
         return replies

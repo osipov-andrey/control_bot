@@ -10,13 +10,9 @@ from core.bot.telegram_api import telegram_api_dispatcher as d
 
 class MessageTargetDescriptor:
 
-    def __set__(self, instance, value: Union[dict, MessageTarget]):
-        if isinstance(value, dict):
-            target = MessageTarget(**value)
-        elif isinstance(value, MessageTarget):
-            target = value
-        else:
-            raise AttributeError(f"Unsupported target value: {type(value)}")
+    def __set__(self, instance, value: dict):
+        target = MessageTarget(**value)
+
         instance.__dict__["target"] = target
 
         if target.target_type == TargetTypes.USER.value:

@@ -4,11 +4,13 @@ import logging
 
 from functools import singledispatchmethod
 
+from aiogram.utils import exceptions
+
 from core._helpers import TargetTypes
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.config import config
 from core.inbox.dispatcher import RabbitDispatcher
-from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage
+from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, message_fabric
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
 from core.inbox.consumer import RabbitConsumer, TextMessage
@@ -73,25 +75,34 @@ class Observer:
         except KeyError:
             return "Unknown Client"
 
-    # async def send_message_to_user(self, **kwargs):
-    #     return await self.d.bot.send_message(parse_mode='HTML', **kwargs)
+    async def send(self, message):
+        try:
+            return await self._send(message)
+        except aiogram.utils.exceptions.MessageIsTooLong:
+            message_params = {
+                # TODO: заменить этот параметр на 'text', начиная с левера
+                "message": "Message is too long!",
+                "target": message.target
+            }
+            error_message = message_fabric(message_params)
+            return await self._send(error_message)
 
     @singledispatchmethod
-    async def send(self, message, bot=None):
+    async def _send(self, message):
         ...
 
-    @send.register
+    @_send.register
     async def _(self, message: DocumentMessage):
         return await self.d.bot.send_document(**message.get_params_to_sent())
 
-    @send.register
+    @_send.register
     async def _(self, message: TextMessage):
         return await self.d.bot.send_message(**message.get_params_to_sent())
 
-    @send.register
+    @_send.register
     async def _(self, message: PhotoMessage):
         return await self.d.bot.send_photo(**message.get_params_to_sent())
 
-    @send.register
+    @_send.register
     async def _(self, message: EditTextMessage):
         return await self.d.bot.edit_message_text(**message.get_params_to_sent())
