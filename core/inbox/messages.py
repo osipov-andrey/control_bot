@@ -1,18 +1,9 @@
-import json
 from abc import ABC
 
 from ._descriptors import *
 
 
-def message_fabric(raw_message: Union[bytes, dict]):
-    # TODO: ugly
-    if isinstance(raw_message, bytes):
-        message_body = raw_message.decode()
-        message_body = json.loads(message_body)
-    elif isinstance(raw_message, dict):
-        message_body = raw_message
-    else:
-        raise AttributeError("Unsupported raw_message type!")
+def message_fabric(message_body: dict):
 
     target = message_body["target"]
 

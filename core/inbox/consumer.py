@@ -44,5 +44,7 @@ class RabbitConsumer:
 
     async def _callback(self, channel, body, envelope, properties):
         _LOGGER.info("Get message from rabbit: %s", body)
+        body = body.decode()
+        body = json.loads(body)
         message = message_fabric(body)
         await self.inbox_queue.put(message)
