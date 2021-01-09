@@ -84,15 +84,22 @@ class TelegramBotCommand:
         if options:
             message_kwargs["reply_markup"] = self._generate_keyboard(options)
 
+        message = ""
         if self.validation_errors:
-            message_kwargs['text'] = self.validation_errors
-        else:
-            message_kwargs['text'] = \
-                f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
-                f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
-                f"{CONTEXT_CANCEL_MENU}"
+            message += self._get_validation_report()
+        message += \
+            f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
+            f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
+            f"{CONTEXT_CANCEL_MENU}"
 
+        message_kwargs["text"] = message
         return message_kwargs
+
+    def _get_validation_report(self) -> str:
+        report = "<b>Следующие аргументы введены с ошибками:</b>\n" \
+                 + "\n".join(f"{arg}: {error}" for arg, error in self.validation_errors.items()) \
+                 + "\n\n"
+        return report
 
     @staticmethod
     def _generate_keyboard(options: list) -> ReplyKeyboardMarkup:
@@ -141,7 +148,11 @@ class TelegramBotCommand:
                 pass  # Цербер скажет это за меня
         v = Validator({arg_name: arg_info.schema})
         validation = v.validate({arg_name: received_value})
-        self.validation_errors.update(v.errors)
+        if validation is False:
+            self.validation_errors.update(v.errors)
+        else:
+            if arg_name in self.validation_errors:
+                self.validation_errors.pop(arg_name)
         return validation
 
     def _get_arg_scheme(self, arg_name: str) -> ArgScheme:
