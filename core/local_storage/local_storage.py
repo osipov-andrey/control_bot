@@ -1,6 +1,5 @@
 import asyncio
 
-from functools import wraps
 from pathlib import Path
 from typing import List, Optional
 
@@ -12,19 +11,6 @@ from core.local_storage.db_enums import UserEvents
 from core.local_storage.schema import *
 
 
-metadata = MetaData()
-
-def auto_connection(method):
-    # TODO: хрень какая-то
-    @wraps(method)
-    async def wrapper(self, *args, **kwargs):
-        if kwargs.get("connection") is None:
-            kwargs["connection"] = aiosqlite.connect(self.db)
-        return await method(self, *args, **kwargs)
-
-    return wrapper
-
-
 class LocalStorage:
 
     def __init__(self):
@@ -33,7 +19,6 @@ class LocalStorage:
     def connection(self):
         return aiosqlite.connect(self.db)
 
-    @auto_connection
     async def upsert_user(
             self,
             tg_id: int,
@@ -41,11 +26,9 @@ class LocalStorage:
             name: Optional[str] = null(),
             phone: Optional[str] = null(),
             is_admin: Optional[bool] = False,
-            *,
-            connection: aiosqlite.Connection
     ):
 
-        async with connection as db:
+        async with self.connection() as db:
 
             insert_query = users_table.insert().values(
                 {
@@ -77,14 +60,8 @@ class LocalStorage:
             await db.commit()
             return result
 
-    @auto_connection
-    async def get_user(
-        self,
-        tg_id: int,
-        *,
-        connection: aiosqlite.Connection
-    ) -> User:
-        async with connection as db:
+    async def get_user(self, tg_id: int) -> User:
+        async with self.connection() as db:
             user_query = users_table.select().where(
                 users_table.c.telegram_id == tg_id
             )
@@ -94,18 +71,17 @@ class LocalStorage:
                 user = User(*user)
             return user
 
-    @auto_connection
-    async def get_all_users(self, *, connection: aiosqlite.Connection):
+    async def get_all_users(self):
         # TODO: generator
-        async with connection as db:
+        async with self.connection() as db:
             users_query = users_table.select()
             users = await db.execute(self._get_sql(users_query))
             users = await users.fetchall()
+            users = [User(*user) for user in users]
             return users
 
-    @auto_connection
-    async def get_admins(self, *, connection: aiosqlite.Connection) -> List[User]:
-        async with connection as db:
+    async def get_admins(self) -> List[User]:
+        async with self.connection() as db:
             admins_query = users_table.select().where(
                 users_table.c.is_admin == 1
             )
@@ -114,18 +90,11 @@ class LocalStorage:
             admins = [User(*admin) for admin in admins]
             return admins
 
-    @auto_connection
-    async def save_channel(
-            self,
-            name: str,
-            *,
-            connection: aiosqlite.Connection
-    ):
-        async with aiosqlite.connect(self.db) as db:
+    async def save_channel(self, name: str):
+        async with self.connection() as db:
             query: Query = channel_table.insert().values({
                 'name': name
             })
-
             await db.execute(self._get_sql(query))
             await db.commit()
 
