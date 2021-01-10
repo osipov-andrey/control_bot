@@ -11,6 +11,7 @@ from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.config import config
 from core.inbox.dispatcher import RabbitDispatcher
 from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, message_fabric
+from core.local_storage.local_storage import LocalStorage
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
 from core.inbox.consumer import RabbitConsumer, TextMessage
@@ -33,7 +34,7 @@ class Observer:
 
         # self.bot = ControlBot(self)
         self.memory_storage = ControlBotMemoryStorage()
-
+        self.db = LocalStorage()
         self.d = d
 
         self.active_clients = dict()

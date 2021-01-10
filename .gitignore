@@ -1,4 +1,12 @@
-*.pyc
+*.pycchannel_table = Table(
+    "channel",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True, index=True),
+    Column("name", String, unique=True, nullable=False, index=True),
+    Column("user_id", Integer),
+    ForeignKeyConstraint(('user_id',), ['user_channel.channel_id'], name="subscribers")
+
+)
 *.log
 config.yaml
 *.db

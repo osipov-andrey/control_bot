@@ -12,5 +12,8 @@ def create_tables():
     local_storage.channels_users_associations.create(engine, checkfirst=True)
 
 
+# async def create_super_user(telegram_id):
+
+
 if __name__ == '__main__':
     create_tables()
