@@ -1,63 +1,18 @@
 import asyncio
+
 from functools import wraps
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import aiosqlite
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, MetaData, String, Table, \
-    ForeignKeyConstraint, UniqueConstraint, insert, null
-from sqlalchemy.orm import Query, backref, relationship
+from sqlalchemy import null
+from sqlalchemy.orm import Query
 
 from core.local_storage.db_enums import UserEvents
+from core.local_storage.schema import *
+
 
 metadata = MetaData()
-
-
-channels_users_associations = Table(
-    "user_channel",
-    metadata,
-    Column("user_id", Integer, ForeignKey('user.id')),
-    Column("channel_id", ForeignKey('channel.id')),
-)
-
-
-actuators_users_associations = Table(
-    "user_actuator",
-    metadata,
-    Column("user_id", Integer, ForeignKey('user.id')),
-    Column("actuator_id", ForeignKey('actuator.id')),
-)
-
-
-users_table = Table(
-    "user",
-    metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True, index=True),
-    Column("telegram_id", Integer, unique=True, index=True, nullable=False),
-    Column("telegram_username", String, unique=True, nullable=False),
-    Column("name", String, nullable=True),
-    Column("phone_number", String, nullable=True),
-    Column("is_admin", Boolean, default=False),
-    UniqueConstraint("telegram_id", "telegram_username", name="uq_id_user")
-)
-
-
-channel_table = Table(
-    "channel",
-    metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True, index=True),
-    Column("name", String, unique=True, nullable=False, index=True),
-)
-
-
-actuators_table = Table(
-    "actuator",
-    metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True, index=True),
-    Column("name", String, unique=True, nullable=False, index=True),
-    Column("description", String, nullable=True),
-)
-
 
 def auto_connection(method):
     # TODO: хрень какая-то
@@ -128,13 +83,15 @@ class LocalStorage:
         tg_id: int,
         *,
         connection: aiosqlite.Connection
-    ):
+    ) -> User:
         async with connection as db:
             user_query = users_table.select().where(
                 users_table.c.telegram_id == tg_id
             )
             user = await db.execute(self._get_sql(user_query))
             user = await user.fetchone()
+            if user:
+                user = User(*user)
             return user
 
     @auto_connection
@@ -147,13 +104,14 @@ class LocalStorage:
             return users
 
     @auto_connection
-    async def get_admins(self, *, connection: aiosqlite.Connection):
+    async def get_admins(self, *, connection: aiosqlite.Connection) -> List[User]:
         async with connection as db:
             admins_query = users_table.select().where(
                 users_table.c.is_admin == 1
             )
             admins = await db.execute(self._get_sql(admins_query))
             admins = await admins.fetchall()
+            admins = [User(*admin) for admin in admins]
             return admins
 
     @auto_connection
@@ -198,7 +156,10 @@ if __name__ == '__main__':
     # print(insp.get_columns(users_table))
 
     store = LocalStorage()
-    asyncio.run(store.save_user(6, "6", is_admin=False))
+    user = asyncio.run(store.get_user(172698654))
+    admins = asyncio.run(store.get_admins())
+    print(user)
+    print(admins)
     # asyncio.run(store.save_channel('123'))
 
 # id

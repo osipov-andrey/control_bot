@@ -88,6 +88,10 @@ class Observer:
             error_message = message_fabric(message_params)
             return await self._send(error_message)
 
+    async def is_admin(self, telegram_id: int):
+        user = self.db.get_user(telegram_id)
+        return bool(user.is_admin)
+
     @singledispatchmethod
     async def _send(self, message):
         ...
