@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery
 
 from core._helpers import MessageTarget, TargetTypes
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
-from core.bot.handlers._command import TelegramBotCommand
+from core.bot.handlers.actuator_commands._command import TelegramBotCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import state_storage, telegram_api_dispatcher as d
