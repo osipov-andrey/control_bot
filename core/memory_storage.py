@@ -1,4 +1,4 @@
-from core._helpers import CommandScheme, Issue
+from core._helpers import CommandSchema, Issue
 
 
 class NoSuchClient(Exception):
@@ -22,7 +22,7 @@ class ControlBotMemoryStorage:
         # TODO: schema validation
 
         commands_info = {
-            cmd: CommandScheme(**info)
+            cmd: CommandSchema(**info)
             for cmd, info in commands_info.items()
         }
         self._storage[client_name] = commands_info

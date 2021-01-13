@@ -66,12 +66,7 @@ async def _start_command_workflow(message, state, message_id=None):
 
     client, command, args = TelegramBotCommand.parse_cmd_string(message.text)
 
-    # TODO проверка прав пользователя на клиента
-    # if not db.grants.has_access(client_name, user_id):
-    #     return
-    # TODO is_admin?
-    # is_admin = db.superuser.is_admin(user_id)
-    is_admin = False
+    is_admin = await d.observer.is_admin(user_id)
 
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
@@ -98,7 +93,7 @@ async def _start_command_workflow(message, state, message_id=None):
     # Указаны клиент и команда:
     exception = False
     try:
-        cmd = TelegramBotCommand(client, command, args, user_id)
+        cmd = TelegramBotCommand(client, command, args, user_id, is_admin)
         await _continue_cmd_workflow(
             state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND, message_id
         )
@@ -154,8 +149,13 @@ def get_client_commands(client_name: str, is_admin=False) -> str:
     commands = d.observer.get_client_info(client_name)
     message = "Информация о командах:\n"
     for cmd in commands.values():
-        if not cmd.hidden:
-            if (is_admin and cmd.admin_only) or not cmd.admin_only:
-                message += f"{cmd.description}\n"
+        if cmd.hidden:
+            continue
+        if cmd.behavior__admin and is_admin:
+            message += f"{cmd.behavior__admin.description}\n"
+        elif cmd.behavior__user:
+            message += f"{cmd.behavior__user.description}\n"
+        # if (is_admin and cmd.behavior__admin) or not cmd.admin_only:
+        #     message += f"{cmd.description}\n"
     message += "\n/cancel - Выход в главное меню\n"
     return message

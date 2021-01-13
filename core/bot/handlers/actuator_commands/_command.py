@@ -1,3 +1,4 @@
+import asyncio
 from itertools import zip_longest
 from uuid import UUID
 
@@ -8,7 +9,7 @@ from cerberus import Validator
 
 from core.bot.constant_strings import CONTEXT_CANCEL_MENU
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core._helpers import ArgScheme, ArgTypes, CommandScheme
+from core._helpers import ArgScheme, ArgTypes, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 
 
@@ -35,6 +36,7 @@ class TelegramBotCommand:
             cmd: str,
             arguments: List,
             user_id: int,
+            is_admin=False,
             message_id: Optional[UUID] = None):
 
         self.client = client
@@ -42,7 +44,11 @@ class TelegramBotCommand:
         self.user_id = user_id
         self.message_id = message_id
 
-        self.cmd_scheme: CommandScheme = d.observer.get_command_info(client, cmd)
+        cmd_info: CommandSchema = d.observer.get_command_info(client, cmd)
+        if is_admin:
+            self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
+        else:
+            self.cmd_scheme = cmd_info.behavior__user
 
         self.list_args: list = arguments
         self.filled_args = dict()
