@@ -9,7 +9,7 @@ from cerberus import Validator
 
 from core.bot.constant_strings import CONTEXT_CANCEL_MENU
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core._helpers import ArgScheme, ArgTypes, CommandBehavior, CommandSchema
+from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 
 
@@ -43,12 +43,16 @@ class TelegramBotCommand:
         self.cmd: str = cmd
         self.user_id = user_id
         self.message_id = message_id
+        self.behavior = Behaviors.USER.value
 
         cmd_info: CommandSchema = d.observer.get_command_info(client, cmd)
-        if is_admin:
+        if is_admin and cmd_info.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
-        else:
+            self.behavior = Behaviors.ADMIN.value
+        elif cmd_info.behavior__user:
             self.cmd_scheme = cmd_info.behavior__user
+        else:  # Такой команды нет, или она admin_only:
+            return
 
         self.list_args: list = arguments
         self.filled_args = dict()

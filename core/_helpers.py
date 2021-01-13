@@ -18,6 +18,12 @@ class ArgTypes(Enum):
     # USER = schema["is_client"]
 
 
+class Behaviors(Enum):
+    USER = "user"
+    ADMIN = "admin"
+    SERVICE = "service"
+
+
 # TODO: replace with dataclass?
 MessageTarget = namedtuple(
     "MessageTarget",

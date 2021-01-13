@@ -94,6 +94,8 @@ async def _start_command_workflow(message, state, message_id=None):
     exception = False
     try:
         cmd = TelegramBotCommand(client, command, args, user_id, is_admin)
+        if not cmd.cmd_scheme:
+            return
         await _continue_cmd_workflow(
             state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND, message_id
         )
@@ -140,7 +142,8 @@ async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
     event = SSEEvent(
         command=cmd.cmd,
         target=MessageTarget(target_type="user", target_name=cmd.user_id, message_id=message_id),
-        args=cmd.filled_args
+        args=cmd.filled_args,
+        behavior=cmd.behavior
     )
     await d.observer.emit_event(cmd.client, event)
 
