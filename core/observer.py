@@ -9,12 +9,12 @@ from aiogram.utils import exceptions
 from core._helpers import TargetTypes
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.config import config
-from core.inbox.dispatcher import RabbitDispatcher
+from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, message_fabric
 from core.local_storage.local_storage import LocalStorage
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
-from core.inbox.consumer import RabbitConsumer, TextMessage
+from core.inbox.consumers.rabbit import RabbitConsumer, TextMessage
 # from core.bot import ControlBot
 from core.memory_storage import ControlBotMemoryStorage
 
@@ -29,7 +29,7 @@ class Observer:
         self._rabbit_inbox = asyncio.Queue()
 
         self.rabbit = RabbitConsumer(**config["rabbit"], inbox_queue=self._rabbit_inbox)
-        self.rabbit_dispatcher = RabbitDispatcher(self, self._rabbit_inbox)
+        self.inbox_dispatcher = InboxDispatcher(self, self._rabbit_inbox)
         self.sse_server = create_sse_server(self)
 
         # self.bot = ControlBot(self)
@@ -42,8 +42,8 @@ class Observer:
     def run(self):
         self.d.observer = self
 
-        asyncio.ensure_future(self.rabbit.listen_to_rabbit())
-        asyncio.ensure_future(self.rabbit_dispatcher.message_dispatcher())
+        # asyncio.ensure_future(self.rabbit.listen_to_rabbit())
+        asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
         aiogram.executor.start_polling(self.d, skip_updates=True)
 
     def new_sse_connection(self, client_name: str):

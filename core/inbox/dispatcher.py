@@ -8,7 +8,7 @@ from core.inbox.messages import BaseMessage, TargetTypes
 _LOGGER = logging.getLogger(__name__)
 
 
-class RabbitDispatcher:
+class InboxDispatcher:
 
     def __init__(self, observer, queue: Queue):
         self.observer = observer

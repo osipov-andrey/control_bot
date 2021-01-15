@@ -60,5 +60,7 @@ def create_sse_server(bot):
     app = Application()
     app["bot"] = bot
     app.router.add_route("GET", "/sse/{client_name}/events", sse_connect)
+    from core.inbox.consumers.http import consume_message
+    app.router.add_route("POST", "/inbox", consume_message)
     asyncio.ensure_future(web._run_app(app, host=_HOST, port=_PORT))
     return app
