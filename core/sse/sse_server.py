@@ -6,7 +6,7 @@ from aiohttp.web import Application, HTTPBadRequest
 from aiohttp_sse import sse_response
 
 from core._helpers import Behaviors, MessageTarget
-from core.config import config
+from config import config
 from core.sse.sse_event import SSEEvent
 
 log = logging.getLogger(__name__)

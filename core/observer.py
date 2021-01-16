@@ -8,7 +8,7 @@ from aiogram.utils import exceptions
 
 from core._helpers import TargetTypes
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.config import config
+from config import config
 from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, message_fabric
 from core.local_storage.local_storage import LocalStorage

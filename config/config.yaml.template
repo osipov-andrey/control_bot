@@ -6,3 +6,9 @@ rabbit:
   login: ----------
   pwd: ----------
   rabbit_queue: ----------
+
+sse:
+  host: ---------
+  port: ---------
+
+logging: TODO
