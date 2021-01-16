@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import aiosqlite
-from sqlalchemy import null
+from sqlalchemy import null, select
 from sqlalchemy.orm import Query
 
 from core.local_storage.db_enums import UserEvents
@@ -97,6 +97,31 @@ class LocalStorage:
             })
             await db.execute(self._get_sql(query))
             await db.commit()
+
+    async def get_subscribers(self, channel: str) -> List[int]:
+        async with self.connection() as db:
+
+            channel_id = select([channel_table.c.id, ]).where(
+                channel_table.c.name == channel
+            )
+
+            users_id = select(
+                [channels_users_associations.c.user_id, ]
+            ).where(
+                channels_users_associations.c.channel_id == channel_id
+            )
+            users_id = await db.execute(self._get_sql(users_id))
+            users_id = await users_id.fetchall()
+            users_id = [uid[0] for uid in users_id]
+
+            query = select(
+                [users_table.c.telegram_id, ],
+                users_table.c.id.in_(users_id)
+            )
+            subscribers = await db.execute(self._get_sql(query))
+            subscribers = await subscribers.fetchall()
+            subscribers = [subs[0] for subs in subscribers]
+            return subscribers
 
     async def subscribe_user_on_channel(self):
         ...

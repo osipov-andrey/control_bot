@@ -92,6 +92,10 @@ class Observer:
         user = await self.db.get_user(telegram_id)
         return bool(user.is_admin)
 
+    async def get_subscribers(self, channel: str) -> list:
+        subscribers = await self.db.get_subscribers(channel)
+        return subscribers
+
     @singledispatchmethod
     async def _send(self, message):
         ...

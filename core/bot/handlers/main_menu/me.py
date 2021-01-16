@@ -15,6 +15,8 @@ async def users_handler(message: types.Message):
         header="Список команд: ",
         commands=[
             MenuTextButton("introduce", "записать ваш telegram ID в бот"),
+            MenuTextButton("myID", "узнать ваш telegram ID в бот"),
+            MenuTextButton("myChannels", "мои каналы"),
         ]
     )
     await message.answer(menu)
@@ -33,3 +35,22 @@ async def introduce_handler(message: types.Message, state: FSMContext):
         await message.answer("Вы зарегистрировались в боте")
     elif user_status == UserEvents.UPDATED:
         await message.answer("Ваши данные обновлены")
+
+    await state.reset_data()
+
+
+@d.message_handler(commands=["myID"], state=MainMenu.me)
+async def introduce_handler(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    await message.answer(f"Ваш telegram ID: {user_id}")
+    await state.reset_data()
+
+
+@d.message_handler(commands=["myChannels"], state=MainMenu.me)
+async def my_channels_handler(message: types.Message, state: FSMContext):
+    ...
+
+
+@d.message_handler(commands=["unsubscribe"], state=MainMenu.me)
+async def unsubscribe_handler(message: types.Message, state: FSMContext):
+    ...

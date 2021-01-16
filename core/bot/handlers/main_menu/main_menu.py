@@ -28,7 +28,6 @@ async def main_menu_handler(message: types.Message):
         header="Список команд:",
         commands=[
             MenuTextButton("start", "главное меню"),
-            # MenuTextButton("introduce", "зарегистрировать себя в боте"),
             MenuTextButton("users", "операции с пользователями"),
             MenuTextButton("me", "личный кабинет"),
             # MenuTextButton("all_users", "Список пользователей"),
