@@ -175,3 +175,27 @@ class TelegramBotCommand:
     def __str__(self):
         return f"{self.__class__.__name__}: " \
                f"(cmd={self.cmd}; args={self.list_args}; user-id={self.user_id})"
+
+
+class InternalCommand(TelegramBotCommand):
+    """ Команда, порожденная внутри бота """
+
+    def __init__(self, cmd: str, user_id: int, cmd_schema: CommandSchema, arguments: Optional[list] = None, is_admin=False):
+
+        if is_admin and cmd_schema.behavior__admin:
+            self.cmd_scheme: CommandBehavior = cmd_schema.behavior__admin
+            self.behavior = Behaviors.ADMIN.value
+        elif cmd_schema.behavior__user:
+            self.cmd_scheme = cmd_schema.behavior__user
+            self.behavior = Behaviors.USER.value
+        else:  # Такой команды нет, или она admin_only:
+            return
+        self.cmd = cmd
+        self.user_id = user_id
+        self.list_args: list = arguments if arguments else []
+        self.filled_args = dict()
+        self.args_to_fill = list()
+
+        self.validation_errors = dict()
+
+        self._parse_args_to_fill()

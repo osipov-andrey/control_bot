@@ -1,6 +1,8 @@
 """
 TgAPI --(cmd)--> Handler --(event)--> Observer
 """
+from typing import Awaitable, Callable, Optional
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -8,7 +10,7 @@ from aiogram.types import CallbackQuery
 
 from core._helpers import MessageTarget, TargetTypes
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
-from core.bot.handlers.actuator_commands._command import TelegramBotCommand
+from core.bot.handlers.actuator_commands._command import InternalCommand, TelegramBotCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import state_storage, telegram_api_dispatcher as d
@@ -36,7 +38,7 @@ async def argument_handler(message: types.Message, state: FSMContext):
     argument_value = message.text
     cmd.fill_argument(argument_value)
 
-    await _continue_cmd_workflow(state, cmd, message_kwargs, CommandFillStatus.FILL_ARGUMENTS)
+    await continue_cmd_workflow(state, cmd, message_kwargs, CommandFillStatus.FILL_ARGUMENTS)
 
 
 @d.message_handler(state=Command.client)
@@ -96,7 +98,7 @@ async def _start_command_workflow(message, state, message_id=None):
         cmd = TelegramBotCommand(client, command, args, user_id, is_admin)
         if not cmd.cmd_scheme:
             return
-        await _continue_cmd_workflow(
+        await continue_cmd_workflow(
             state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND, message_id
         )
     except NoSuchCommand as e:
@@ -110,7 +112,7 @@ async def _start_command_workflow(message, state, message_id=None):
         await state.reset_state()
 
 
-async def _continue_cmd_workflow(
+async def continue_cmd_workflow(
         state, cmd: TelegramBotCommand, message_kwargs, fill_status, message_id=None
 ):
     cmd_fill_status = cmd.fill_status

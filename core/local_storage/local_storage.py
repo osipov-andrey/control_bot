@@ -101,30 +101,43 @@ class LocalStorage:
     async def get_subscribers(self, channel: str) -> List[int]:
         async with self.connection() as db:
 
-            channel_id = select([channel_table.c.id, ]).where(
+            channel_id_query = select(
+                [channel_table.c.id, ]
+            ).where(
                 channel_table.c.name == channel
             )
 
-            users_id = select(
+            users_id_query = select(
                 [channels_users_associations.c.user_id, ]
             ).where(
-                channels_users_associations.c.channel_id == channel_id
+                channels_users_associations.c.channel_id == channel_id_query
             )
-            users_id = await db.execute(self._get_sql(users_id))
-            users_id = await users_id.fetchall()
-            users_id = [uid[0] for uid in users_id]
 
-            query = select(
+            subscribers_query = select(
                 [users_table.c.telegram_id, ],
-                users_table.c.id.in_(users_id)
+                users_table.c.id.in_(users_id_query)
             )
-            subscribers = await db.execute(self._get_sql(query))
+
+            subscribers = await db.execute(self._get_sql(subscribers_query))
             subscribers = await subscribers.fetchall()
             subscribers = [subs[0] for subs in subscribers]
             return subscribers
 
-    async def subscribe_user_on_channel(self):
-        ...
+    async def subscribe_user_on_channel(self, user_id: int, channel: str):
+        async with self.connection() as db:
+            channel_id_query = select(
+                [channel_table.c.id, ]
+            ).where(
+                channel_table.c.name == channel
+            )
+
+            subscribe_query = channels_users_associations.insert().values({
+                "user_id": user_id,
+                "channel_id": channel_id_query
+            })
+
+            await db.execute(self._get_sql(subscribe_query))
+            await db.commit()
 
     async def unsubscribe_user_on_channel(self):
         ...
