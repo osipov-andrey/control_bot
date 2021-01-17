@@ -15,7 +15,7 @@ class ArgTypes(Enum):
     STR = "string"
     INT = "integer"
     LIST = "list"
-    # USER = schema["is_client"]
+    # USER = "user"
 
 
 class Behaviors(Enum):
@@ -71,7 +71,7 @@ class CommandSchema:
 
 ArgScheme = namedtuple(
     "ArgScheme",
-    "description, schema, options", defaults=(None, )
+    "description, schema, options, is_user", defaults=(None, None)
 )
 
 

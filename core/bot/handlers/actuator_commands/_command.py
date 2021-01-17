@@ -11,6 +11,7 @@ from core.bot.constant_strings import CONTEXT_CANCEL_MENU
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
+from core.local_storage.schema import User
 
 
 class TelegramBotCommand:
@@ -85,7 +86,8 @@ class TelegramBotCommand:
             # TODO результат валидации в список с ошибками валидации
             self.args_to_fill.insert(0, arg_name)
 
-    def get_next_step(self) -> dict:
+    async def get_next_step(self) -> dict:
+        prompt = ""
         message_kwargs = dict()
         argument_to_fill = self.args_to_fill[0]
         argument_info = self.cmd_scheme.args.get(argument_to_fill)
@@ -97,13 +99,26 @@ class TelegramBotCommand:
         message = ""
         if self.validation_errors:
             message += self._get_validation_report()
+        if argument_info.is_user:
+            prompt = await self._get_users_prompt()
         message += \
             f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
             f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
+            f"{prompt if prompt else ''}" \
             f"{CONTEXT_CANCEL_MENU}"
 
         message_kwargs["text"] = message
         return message_kwargs
+
+    @staticmethod
+    async def _get_users_prompt() -> str:
+        prompt = "<b>Зарегистрированные в боте пользователи:</b>\n"
+        users: List[User] = await d.observer.get_all_users()
+        if users:
+            prompt += "".join(f"/{user.telegram_id} - {user.name}\n" for user in users)
+        else:
+            prompt += "Нет зарегистрированных пользователей"
+        return prompt
 
     def _get_validation_report(self) -> str:
         report = "<b>Следующие аргументы введены с ошибками:</b>\n" \

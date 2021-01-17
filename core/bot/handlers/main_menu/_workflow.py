@@ -26,7 +26,7 @@ async def start_cmd_internal_workflow(
 
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
         # Команда заполнена
-        await callback(cmd.filled_args)
+        await callback(**cmd.filled_args)
         await state.reset_state()
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
         # Команда не заполнена:
@@ -36,7 +36,8 @@ async def start_cmd_internal_workflow(
             cmd=cmd,
             callback=callback
         )
-        message_kwargs.update(cmd.get_next_step())
+        new_kwargs = await cmd.get_next_step()
+        message_kwargs.update(new_kwargs)
         # Arguments input state:
         await Command.argument_internal.set()
         await d.observer.send(message_fabric(message_kwargs))

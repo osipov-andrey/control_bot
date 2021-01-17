@@ -1,4 +1,6 @@
 import asyncio
+from typing import List
+
 import aiogram
 import logging
 
@@ -11,7 +13,7 @@ from core.bot.telegram_api import telegram_api_dispatcher as d
 from config import config
 from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, message_fabric
-from core.local_storage.local_storage import LocalStorage
+from core.local_storage.local_storage import LocalStorage, User
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
 from core.inbox.consumers.rabbit import RabbitConsumer, TextMessage
@@ -92,9 +94,25 @@ class Observer:
         user = await self.db.get_user(telegram_id)
         return bool(user.is_admin)
 
-    async def get_subscribers(self, channel: str) -> list:
+    async def get_subscribers(self, channel: str) -> List[User]:
         subscribers = await self.db.get_subscribers(channel)
         return subscribers
+
+    async def get_all_users(self) -> list:
+        users = await self.db.get_all_users()
+        return users
+
+    async def channel_subscribe(self, user_telegram_id: int, channel: str):
+        await self.db.channel_subscribe(user_telegram_id, channel)
+
+    async def channel_unsubscribe(self, user_telegram_id: int, channel: str):
+        await self.db.channel_unsubscribe(user_telegram_id, channel)
+
+    async def channel_create(self, channel: str):
+        ...
+
+    async def channel_delete(self, channel: str):
+        ...
 
     @singledispatchmethod
     async def _send(self, message):

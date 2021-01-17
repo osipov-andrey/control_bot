@@ -123,7 +123,8 @@ class LocalStorage:
             subscribers = [subs[0] for subs in subscribers]
             return subscribers
 
-    async def subscribe_user_on_channel(self, user_id: int, channel: str):
+    async def channel_subscribe(self, user_id: int, channel: str):
+        # TODO telegram id, а не user.id
         async with self.connection() as db:
             channel_id_query = select(
                 [channel_table.c.id, ]
@@ -139,7 +140,7 @@ class LocalStorage:
             await db.execute(self._get_sql(subscribe_query))
             await db.commit()
 
-    async def unsubscribe_user_on_channel(self):
+    async def channel_unsubscribe(self, user_id: int, channel: str):
         ...
 
     async def grant_client_to_the_user(self):
