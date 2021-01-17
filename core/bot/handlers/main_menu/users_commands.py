@@ -31,3 +31,34 @@ def get_subscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
             is_admin=is_admin,
         )
     return subscribe_cmd
+
+
+def get_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
+
+    args = {
+        "user_id": ArgScheme(
+            description="ID пользователя",
+            schema={"type": ArgTypes.INT.value},
+            is_subscriber=True
+        )._asdict(),
+        "channel": ArgScheme(
+            description="Название канала",
+            schema={"type": ArgTypes.STR.value}
+        )._asdict()
+    }
+
+    cmd_schema = CommandSchema(
+                    hidden=False,
+                    behavior__admin={
+                        "description": "Отписать пользователя от канала",
+                        "args": args,
+                    },
+                )
+
+    unsubscribe_cmd = InternalCommand(
+            cmd,
+            user_id,
+            cmd_schema=cmd_schema,
+            is_admin=is_admin,
+        )
+    return unsubscribe_cmd

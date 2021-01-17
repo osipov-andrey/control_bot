@@ -7,6 +7,7 @@ import aiosqlite
 from sqlalchemy import null, select
 from sqlalchemy.orm import Query
 
+from core.local_storage import queryes
 from core.local_storage.db_enums import UserEvents
 from core.local_storage.schema import *
 
@@ -123,25 +124,22 @@ class LocalStorage:
             subscribers = [subs[0] for subs in subscribers]
             return subscribers
 
-    async def channel_subscribe(self, user_id: int, channel: str):
-        # TODO telegram id, а не user.id
+    async def channel_subscribe(self, user_telegram_id: int, channel: str) -> bool:
         async with self.connection() as db:
-            channel_id_query = select(
-                [channel_table.c.id, ]
-            ).where(
-                channel_table.c.name == channel
-            )
-
             subscribe_query = channels_users_associations.insert().values({
-                "user_id": user_id,
-                "channel_id": channel_id_query
+                "user_id": queryes.get_user_id_query(user_telegram_id),
+                "channel_id": queryes.get_channel_id_query(channel)
             })
-
-            await db.execute(self._get_sql(subscribe_query))
+            result = await db.execute(self._get_sql(subscribe_query))
             await db.commit()
+        return bool(result.rowcount)
 
-    async def channel_unsubscribe(self, user_id: int, channel: str):
-        ...
+    async def channel_unsubscribe(self, user_telegram_id: int, channel: str) -> bool:
+        async with self.connection() as db:
+            unsubscribe_query = queryes.get_unsubscribe_query(user_telegram_id, channel)
+            result = await db.execute(self._get_sql(unsubscribe_query))
+            await db.commit()
+        return bool(result.rowcount)
 
     async def grant_client_to_the_user(self):
         ...

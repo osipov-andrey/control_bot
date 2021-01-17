@@ -10,8 +10,8 @@ metadata = MetaData()
 channels_users_associations = Table(
     "user_channel",
     metadata,
-    Column("user_id", Integer, ForeignKey('user.id')),
-    Column("channel_id", ForeignKey('channel.id')),
+    Column("user_id", Integer, ForeignKey('user.id'), nullable=False),
+    Column("channel_id", ForeignKey('channel.id'), nullable=False),
 )
 UserChannel = create_mapping(channels_users_associations)
 
@@ -19,8 +19,8 @@ UserChannel = create_mapping(channels_users_associations)
 actuators_users_associations = Table(
     "user_actuator",
     metadata,
-    Column("user_id", Integer, ForeignKey('user.id')),
-    Column("actuator_id", ForeignKey('actuator.id')),
+    Column("user_id", Integer, ForeignKey('user.id'), nullable=False),
+    Column("actuator_id", ForeignKey('actuator.id'), nullable=False),
 )
 UserActuator = create_mapping(actuators_users_associations)
 

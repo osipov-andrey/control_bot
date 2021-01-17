@@ -20,6 +20,8 @@ async def users_handler(message: types.Message):
                      MenuTextButton("all_users", "Список пользователей"),
                      MenuTextButton("subscribe", "Подписать пользователя на канал"),
                      MenuTextButton("unsubscribe", "Отписать пользователя от канала"),
+                     MenuTextButton("grant", "Предоставить пользователю доступ к актуатору"),
+                     MenuTextButton("revoke", "Закрыть пользователю доступ к актуатору"),
                  ]
     )
     await message.answer(menu)
@@ -53,8 +55,7 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
     async def unsubscribe_callback(**kwargs):
         user_to_subs_id = kwargs.get("user_id")
         channel = kwargs.get("channel")
-        #TODO:
-        # await d.observer.db.unsubscribe_user_on_channel(user_to_subs_id, channel)
+        await d.observer.channel_unsubscribe(user_to_subs_id, channel)
         await message.answer(f"Пользователь {user_to_subs_id} отписан от канала {channel}")
 
     if cmd == "subscribe":

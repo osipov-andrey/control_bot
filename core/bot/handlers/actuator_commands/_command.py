@@ -101,6 +101,8 @@ class TelegramBotCommand:
             message += self._get_validation_report()
         if argument_info.is_user:
             prompt = await self._get_users_prompt()
+        elif argument_info.is_subscriber:
+            prompt = await self._get_subscribers_prompt()
         message += \
             f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
             f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
@@ -119,6 +121,11 @@ class TelegramBotCommand:
         else:
             prompt += "Нет зарегистрированных пользователей"
         return prompt
+
+    @staticmethod
+    async def _get_subscribers_prompt(channel: str) -> str:
+        """ Получить справку по подписчикам канала """
+        subscribers = await d.observer.channel_subscribers(channel)
 
     def _get_validation_report(self) -> str:
         report = "<b>Следующие аргументы введены с ошибками:</b>\n" \
