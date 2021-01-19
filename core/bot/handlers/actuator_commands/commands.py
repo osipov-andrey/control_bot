@@ -1,8 +1,6 @@
 """
 TgAPI --(cmd)--> Handler --(event)--> Observer
 """
-from typing import Awaitable, Callable, Optional
-
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -10,27 +8,28 @@ from aiogram.types import CallbackQuery
 
 from core._helpers import MessageTarget, TargetTypes
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
-from core.bot.handlers.actuator_commands._command import InternalCommand, TelegramBotCommand
+from core.bot.handlers.actuator_commands._command import TelegramBotCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
-from core.bot.telegram_api import state_storage, telegram_api_dispatcher as d
+from core.bot.telegram_api import state_storage, telegram_api_dispatcher
 from core.bot.template_strings import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
 from core.inbox.messages import message_fabric
 from core.memory_storage import NoSuchClient, NoSuchCommand
 from core.sse.sse_event import SSEEvent
 
+
 _COMMAND_REGEX = r"^\/([^_]*)_?.*?$"
 
 
-@d.message_handler(regexp=_COMMAND_REGEX)
+@telegram_api_dispatcher.message_handler(regexp=_COMMAND_REGEX)
 async def commands_handler(message: types.Message, state: FSMContext):
     print(message)
     await _start_command_workflow(message, state)
 
 
-@d.message_handler(state=Command.arguments)
+@telegram_api_dispatcher.message_handler(state=Command.arguments)
 async def argument_handler(message: types.Message, state: FSMContext):
-    user_id = chat_id = message.chat.id
+    user_id = message.chat.id
     message_kwargs = {"target": MessageTarget(TargetTypes.USER.value, user_id)._asdict()}
     data = await state.get_data()
     cmd: TelegramBotCommand = data.get("cmd")
@@ -41,13 +40,13 @@ async def argument_handler(message: types.Message, state: FSMContext):
     await continue_cmd_workflow(state, cmd, message_kwargs, CommandFillStatus.FILL_ARGUMENTS)
 
 
-@d.message_handler(state=Command.client)
+@telegram_api_dispatcher.message_handler(state=Command.client)
 async def client_commands_handler(message: types.Message, state: FSMContext):
     """ Вызов команд из меню клиента """
     await _start_command_workflow(message, state)
 
 
-@d.callback_query_handler(lambda callback_query: True, state='*')
+@telegram_api_dispatcher.callback_query_handler(lambda callback_query: True, state='*')
 async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContext):
     # Обязательно сразу сделать answer, чтобы убрать "часики" после нажатия на кнопку.
     await callback_query.answer('Button has been Pressed')
@@ -59,6 +58,7 @@ async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContex
 
 
 async def _start_command_workflow(message, state, message_id=None):
+    observer = telegram_api_dispatcher.observer
     command_state = await state.get_state()
     user_id = chat_id = message.chat.id
 
@@ -68,14 +68,14 @@ async def _start_command_workflow(message, state, message_id=None):
 
     client, command, args = TelegramBotCommand.parse_cmd_string(message.text)
 
-    is_admin = await d.observer.is_admin(user_id)
+    is_admin = await observer.users.is_admin(user_id)
 
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
         #TODO если нет клиента:
         message_kwargs["text"] = get_client_commands(client, is_admin)
 
-        await d.observer.send(message_fabric(message_kwargs))
+        await observer.send(message_fabric(message_kwargs))
 
         await Command.client.set()
         await state_storage.update_data(
@@ -89,7 +89,7 @@ async def _start_command_workflow(message, state, message_id=None):
     elif command is None and command_state is not None:
         # Не указана команда
         message_kwargs["text"] = COMMAND_IS_NOT_FILLED + CONTEXT_CANCEL_MENU
-        await d.observer.send(message_fabric(message_kwargs))
+        await observer.send(message_fabric(message_kwargs))
         return
 
     # Указаны клиент и команда:
@@ -108,15 +108,15 @@ async def _start_command_workflow(message, state, message_id=None):
         exception = True
         message_kwargs["text"] = NO_SUCH_CLIENT.format(client=client)
     if exception:
-        await d.observer.send(message_fabric(message_kwargs))
+        await observer.send(message_fabric(message_kwargs))
         await state.reset_state()
 
 
 async def continue_cmd_workflow(
         state, cmd: TelegramBotCommand, message_kwargs, fill_status, message_id=None
 ):
+    observer = telegram_api_dispatcher.observer
     cmd_fill_status = cmd.fill_status
-
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
         # Команда заполнена
         await _finish_cmd_workflow(state, cmd, message_id)
@@ -132,7 +132,7 @@ async def continue_cmd_workflow(
         message_kwargs.update(cmd.get_next_step())
         # Arguments input state:
         await Command.arguments.set()
-        await d.observer.send(message_fabric(message_kwargs))
+        await observer.send(message_fabric(message_kwargs))
     # TODO:
     # elif cmd_fill_status == ArgumentsFillStatus.FAILED:
     #     message_kwargs['text'] = cmd.generate_error_report(fill_status)
@@ -140,6 +140,7 @@ async def continue_cmd_workflow(
 
 
 async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
+    observer = telegram_api_dispatcher.observer
     await state.reset_state()
     event = SSEEvent(
         command=cmd.cmd,
@@ -147,11 +148,12 @@ async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
         args=cmd.filled_args,
         behavior=cmd.behavior
     )
-    await d.observer.emit_event(cmd.client, event)
+    await observer.actuators.emit_event(cmd.client, event)
 
 
 def get_client_commands(client_name: str, is_admin=False) -> str:
-    commands = d.observer.get_client_info(client_name)
+    observer = telegram_api_dispatcher.observer
+    commands = observer.actuators.get_actuator_info(client_name)
     message = "Информация о командах:\n"
     for cmd in commands.values():
         if cmd.hidden:

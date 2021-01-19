@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import aiosqlite
-from sqlalchemy import null, select
+from sqlalchemy import null
 from sqlalchemy.orm import Query
 
 from core.local_storage import queryes
@@ -31,31 +31,16 @@ class LocalStorage:
 
         async with self.connection() as db:
 
-            insert_query = users_table.insert().values(
-                {
-                    "telegram_id": tg_id,
-                    "telegram_username": tg_username,
-                    "name": name,
-                    "phone_number": phone,
-                    "is_admin": is_admin
-                }
-            )
-
-            update_query = users_table.update().values({
-                "name": name,
-                "phone_number": phone,
-                "is_admin": is_admin
-            }).where(
-                users_table.c.telegram_id == tg_id
-                or users_table.c.telegram_username == tg_username
-            )
-
             user_exists = await self.get_user(tg_id)
             if user_exists:
-                query = update_query
+                query = queryes.update_user(
+                    tg_id, tg_username, name, phone, is_admin
+                )
                 result = UserEvents.UPDATED
             else:
-                query = insert_query
+                query = queryes.insert_user(
+                    tg_id, tg_username, name, phone, is_admin
+                )
                 result = UserEvents.CREATED
             await db.execute(self._get_sql(query))
             await db.commit()
@@ -99,29 +84,12 @@ class LocalStorage:
             await db.execute(self._get_sql(query))
             await db.commit()
 
-    async def get_subscribers(self, channel: str) -> List[int]:
+    async def get_subscribers(self, channel: str) -> List[User]:
         async with self.connection() as db:
-
-            channel_id_query = select(
-                [channel_table.c.id, ]
-            ).where(
-                channel_table.c.name == channel
-            )
-
-            users_id_query = select(
-                [channels_users_associations.c.user_id, ]
-            ).where(
-                channels_users_associations.c.channel_id == channel_id_query
-            )
-
-            subscribers_query = select(
-                [users_table.c.telegram_id, ],
-                users_table.c.id.in_(users_id_query)
-            )
-
+            subscribers_query = queryes.get_subscribers(channel)
             subscribers = await db.execute(self._get_sql(subscribers_query))
             subscribers = await subscribers.fetchall()
-            subscribers = [subs[0] for subs in subscribers]
+            subscribers = [User(*subs) for subs in subscribers]
             return subscribers
 
     async def channel_subscribe(self, user_telegram_id: int, channel: str) -> bool:

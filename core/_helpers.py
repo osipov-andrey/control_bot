@@ -2,7 +2,7 @@ import datetime
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 
 class TargetTypes(Enum):

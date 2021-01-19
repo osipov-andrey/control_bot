@@ -1,4 +1,3 @@
-import asyncio
 from itertools import zip_longest
 from uuid import UUID
 
@@ -8,7 +7,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
 from core.bot.constant_strings import CONTEXT_CANCEL_MENU
-from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.bot.telegram_api import telegram_api_dispatcher
 from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 from core.local_storage.schema import User
@@ -45,8 +44,9 @@ class TelegramBotCommand:
         self.user_id = user_id
         self.message_id = message_id
         self.behavior = Behaviors.USER.value
+        self.OBSERVER = telegram_api_dispatcher.observer
 
-        cmd_info: CommandSchema = d.observer.get_command_info(client, cmd)
+        cmd_info: CommandSchema = self.OBSERVER.actuators.get_command_info(client, cmd)
         if is_admin and cmd_info.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
             self.behavior = Behaviors.ADMIN.value
@@ -112,20 +112,18 @@ class TelegramBotCommand:
         message_kwargs["text"] = message
         return message_kwargs
 
-    @staticmethod
-    async def _get_users_prompt() -> str:
+    async def _get_users_prompt(self) -> str:
         prompt = "<b>Зарегистрированные в боте пользователи:</b>\n"
-        users: List[User] = await d.observer.get_all_users()
+        users: List[User] = await self.OBSERVER.users.get_all()
         if users:
             prompt += "".join(f"/{user.telegram_id} - {user.name}\n" for user in users)
         else:
             prompt += "Нет зарегистрированных пользователей"
         return prompt
 
-    @staticmethod
-    async def _get_subscribers_prompt(channel: str) -> str:
+    async def _get_subscribers_prompt(self, channel: str) -> str:
         """ Получить справку по подписчикам канала """
-        subscribers = await d.observer.channel_subscribers(channel)
+        subscribers = await self.OBSERVER.channels.get_subscribers(channel)
 
     def _get_validation_report(self) -> str:
         report = "<b>Следующие аргументы введены с ошибками:</b>\n" \

@@ -1,11 +1,11 @@
 import base64
 import io
-from typing import List, Union
+from typing import List
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
 from core._helpers import MessageTarget, TargetTypes
-from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.bot.telegram_api import telegram_api_dispatcher
 
 
 class MessageTargetDescriptor:
@@ -78,8 +78,9 @@ class CaptionDescriptor:
 class MessageIssue:
 
     def __set__(self, instance, value: dict):
+        observer = telegram_api_dispatcher.observer
         if value["resolved"] is True:
-            problem_issue = d.observer.memory_storage.resolve_issue(value["issue_id"])
+            problem_issue = observer.memory_storage.resolve_issue(value["issue_id"])
             if problem_issue:
                 instance.__dict__["reply_to_message_id"] = problem_issue.reply_to_message_id
         instance.__dict__["issue"] = value

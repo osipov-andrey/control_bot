@@ -1,6 +1,5 @@
 import logging
 from asyncio import Queue
-from copy import copy
 from typing import Iterable
 
 from core._constants import INTRO_COMMAND
@@ -26,7 +25,7 @@ class InboxDispatcher:
     async def dispatch(self, message: BaseMessage):
         # TODO if target.message_id: ...
         if message.cmd == INTRO_COMMAND:
-            self.observer.save_client_info(message)
+            self.observer.actuators.save_actuator_info(message)
             return
 
         if message.target.target_type == TargetTypes.USER.value:
@@ -38,7 +37,7 @@ class InboxDispatcher:
 
         if message.target.target_type == TargetTypes.CHANNEL.value:
             channel = message.target.target_name
-            subscribers: Iterable = await self.observer.get_subscribers(channel)
+            subscribers: Iterable = await self.observer.channels.get_subscribers(channel)
 
             for subs in subscribers:
                 # TODO некрасиво это все

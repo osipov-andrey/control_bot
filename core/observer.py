@@ -1,5 +1,6 @@
 import asyncio
-from typing import List
+from abc import ABC
+from typing import List, Optional
 
 import aiogram
 import logging
@@ -12,73 +13,144 @@ from core._helpers import TargetTypes
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from config import config
 from core.inbox.dispatcher import InboxDispatcher
-from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, message_fabric
+from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
+    TextMessage, message_fabric
 from core.local_storage.local_storage import LocalStorage, User
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
-from core.inbox.consumers.rabbit import RabbitConsumer, TextMessage
-# from core.bot import ControlBot
+from core.inbox.consumers.rabbit import RabbitConsumer
 from core.memory_storage import ControlBotMemoryStorage
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-#TODO singletone
-class Observer:
-    """ Класс связывающий различные компоненты программы """
+class BaseInterface(ABC):
+
     def __init__(self):
-        self._rabbit_inbox = asyncio.Queue()
 
-        self.rabbit = RabbitConsumer(**config["rabbit"], inbox_queue=self._rabbit_inbox)
-        self.inbox_dispatcher = InboxDispatcher(self, self._rabbit_inbox)
-        self.sse_server = create_sse_server(self)
-
-        # self.bot = ControlBot(self)
-        self.memory_storage = ControlBotMemoryStorage()
         self.db = LocalStorage()
         self.d = d
 
-        self.active_clients = dict()
 
-    def run(self):
-        self.d.observer = self
+class ActuatorsInterface(BaseInterface):
 
-        # asyncio.ensure_future(self.rabbit.listen_to_rabbit())
-        asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
-        aiogram.executor.start_polling(self.d, skip_updates=True)
+    def __init__(self, memory_storage):
+        super().__init__()
+        self.memory_storage = memory_storage
+        self.connected_actuators = dict()
 
-    def new_sse_connection(self, client_name: str):
-        client_queue = asyncio.Queue()
-        self.active_clients[client_name] = client_queue
-        return client_queue
-
-    def save_client_info(self, message: TextMessage):
-        client_name = message.target.target_name
+    def save_actuator_info(self, message: TextMessage):
+        """ Сохранить логику актуатора в ОЗУ """
+        actuator_name = message.target.target_name
 
         assert message.target.target_type == TargetTypes.SERVICE.value
-        assert client_name in self.active_clients
+        assert actuator_name in self.connected_actuators
 
-        self.memory_storage.save_client(client_name, message.commands)
+        self.memory_storage.save_client(actuator_name, message.commands)
 
-    def get_command_info(self, client_name, command):
-        return self.memory_storage.get_command_info(client_name, command)
+    def get_command_info(self, actuator_name: str, command: str):
+        """ Получить информацию о команде актуатора """
+        return self.memory_storage.get_command_info(actuator_name, command)
 
-    def get_client_info(self, client_name):
-        return self.memory_storage.get_client_info(client_name)
+    def get_actuator_info(self, actuator_name: str):
+        """ Получить информацию о всех командах актуатора """
+        return self.memory_storage.get_client_info(actuator_name)
 
-    def stop_sse_connection(self, client_name: str):
-        self.active_clients.pop(client_name)
-        self.memory_storage.remove_client(client_name)
+    def new_sse_connection(self, actuator_name: str) -> asyncio.Queue:
+        """ Подключить к интерфейсу новый актуатор  """
+        actuator_queue = asyncio.Queue()
+        self.connected_actuators[actuator_name] = actuator_queue
+        return actuator_queue
 
-    async def emit_event(self, client_name: str, event: SSEEvent):
+    async def emit_event(self, actuator_name: str, event: SSEEvent):
+        """ Отправить ЕVENT в актуатор """
         try:
-            client_queue: asyncio.Queue = self.active_clients[client_name]
-            await client_queue.put(event)
+            actuator_queue: asyncio.Queue = self.connected_actuators[actuator_name]
+            await actuator_queue.put(event)
         except KeyError:
             return "Unknown Client"
 
-    async def send(self, message):
+    def stop_sse_connection(self, actuator_name: str):
+        """ Подключить актуатор от интерфейса """
+        self.connected_actuators.pop(actuator_name)
+        self.memory_storage.remove_client(actuator_name)
+
+
+class ChannelsInterface(BaseInterface):
+
+    async def create(self, channel: str):
+        ...
+
+    async def delete(self, channel: str):
+        ...
+
+    async def subscribe(self, user_telegram_id: int, channel: str):
+        await self.db.channel_subscribe(user_telegram_id, channel)
+
+    async def unsubscribe(self, user_telegram_id: int, channel: str):
+        await self.db.channel_unsubscribe(user_telegram_id, channel)
+
+    async def get_subscribers(self, channel: str) -> List[User]:
+        subscribers = await self.db.get_subscribers(channel)
+        return subscribers
+
+
+class UsersInterface(BaseInterface):
+
+    async def upsert(
+            self,
+            **kwargs
+    ):
+        return await self.db.upsert_user(**kwargs)
+
+    async def get_admins(self):
+        return await self.db.get_admins()
+
+    async def is_admin(self, telegram_id: int):
+        """ Проверка админских прав у пользователя """
+        user: User = await self.db.get_user(telegram_id)
+        return bool(user.is_admin)
+
+    async def get_all(self) -> list:
+        """ Получить ВСЕХ пользователей """
+        users = await self.db.get_all_users()
+        return users
+
+    async def subscribes(self, telegram_id: int):
+        """ Получить подписки пользователя """
+
+
+#TODO singletone
+class Observer:
+    """ Класс связывающий различные компоненты программы """
+
+    def __init__(self):
+        memory_storage = ControlBotMemoryStorage()
+
+        self.memory_storage = memory_storage
+
+        self.users = UsersInterface()
+        self.channels = ChannelsInterface()
+        self.actuators = ActuatorsInterface(memory_storage)
+
+        self.inbox_queue = asyncio.Queue()
+        self.inbox_dispatcher = InboxDispatcher(self, self.inbox_queue)
+        self.d = d
+
+        self._rabbit = RabbitConsumer(**config["rabbit"], inbox_queue=self.inbox_queue)
+        self._sse_server = create_sse_server(self)
+
+    def run(self):
+        # Для доступа к интерфейсам из любой части программы:
+        self.d.observer = self
+
+        # asyncio.ensure_future(self._rabbit.listen_to_rabbit())
+        asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
+        aiogram.executor.start_polling(self.d, skip_updates=True)
+
+    async def send(self, message: BaseMessage):
+        """ Отправить сообщение в телеграм """
         try:
             return await self._send(message)
         except aiogram.utils.exceptions.MessageIsTooLong:
@@ -89,30 +161,6 @@ class Observer:
             }
             error_message = message_fabric(message_params)
             return await self._send(error_message)
-
-    async def is_admin(self, telegram_id: int):
-        user = await self.db.get_user(telegram_id)
-        return bool(user.is_admin)
-
-    async def get_subscribers(self, channel: str) -> List[User]:
-        subscribers = await self.db.get_subscribers(channel)
-        return subscribers
-
-    async def get_all_users(self) -> list:
-        users = await self.db.get_all_users()
-        return users
-
-    async def channel_subscribe(self, user_telegram_id: int, channel: str):
-        await self.db.channel_subscribe(user_telegram_id, channel)
-
-    async def channel_unsubscribe(self, user_telegram_id: int, channel: str):
-        await self.db.channel_unsubscribe(user_telegram_id, channel)
-
-    async def channel_create(self, channel: str):
-        ...
-
-    async def channel_delete(self, channel: str):
-        ...
 
     @singledispatchmethod
     async def _send(self, message):

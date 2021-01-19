@@ -25,7 +25,7 @@ async def sse_connect(request):
 
     bot = request.app["bot"]
 
-    events_queue: asyncio.Queue = bot.new_sse_connection(client_name)
+    events_queue: asyncio.Queue = bot.actuators.new_sse_connection(client_name)
     if not events_queue:
         raise HTTPBadRequest()
     log.info(
@@ -49,7 +49,7 @@ async def sse_connect(request):
                 await response.send(event.data, event=event.event)
                 events_queue.task_done()
         finally:
-            bot.stop_sse_connection(client_name)
+            bot.actuators.stop_sse_connection(client_name)
             log.info(
                 f"{request._transport_peername[0]} has been left from terminal: {client_name}"
             )

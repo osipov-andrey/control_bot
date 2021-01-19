@@ -5,7 +5,6 @@ from core.bot._helpers import get_menu, MenuTextButton
 from core.bot.states import MainMenu
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.local_storage.db_enums import UserEvents
-from core.local_storage.local_storage import LocalStorage
 
 
 @d.message_handler(commands=["me"])
@@ -24,8 +23,8 @@ async def users_handler(message: types.Message):
 
 @d.message_handler(commands=["introduce"], state=MainMenu.me)
 async def introduce_handler(message: types.Message, state: FSMContext):
-    db: LocalStorage = d.observer.db
-    user_status = await db.upsert_user(
+    observer = d.observer
+    user_status = await observer.users.upsert(
         tg_id=message.from_user.id,
         tg_username=message.from_user.username,
         name=message.from_user.full_name,
@@ -36,19 +35,19 @@ async def introduce_handler(message: types.Message, state: FSMContext):
     elif user_status == UserEvents.UPDATED:
         await message.answer("Ваши данные обновлены")
 
-    await state.reset_data()
+    await state.reset_state()
 
 
 @d.message_handler(commands=["myID"], state=MainMenu.me)
 async def introduce_handler(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     await message.answer(f"Ваш telegram ID: {user_id}")
-    await state.reset_data()
+    await state.reset_state()
 
 
 @d.message_handler(commands=["myChannels"], state=MainMenu.me)
 async def my_channels_handler(message: types.Message, state: FSMContext):
-    ...
+    print("channels")
 
 
 @d.message_handler(commands=["unsubscribe"], state=MainMenu.me)
