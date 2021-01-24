@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from core._helpers import MessageTarget, TargetTypes
-from core.bot._helpers import delete_cmd_prefix, get_menu, MenuTextButton
+from core.bot._helpers import admin_only, delete_cmd_prefix, get_menu, MenuTextButton
 from core.bot.handlers.main_menu.users_commands import get_subscribe_cmd
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
@@ -12,7 +12,8 @@ from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
 
 @d.message_handler(commands=["users"])
-async def users_handler(message: types.Message):
+@admin_only
+async def users_handler(message: types.Message, state=MainMenu.users):
     await MainMenu.users.set()
     menu = get_menu(
         header="Список команд: ",
