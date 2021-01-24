@@ -29,8 +29,7 @@ async def users_handler(message: types.Message):
 
 @d.message_handler(commands=["all_users"], state=MainMenu.users)
 async def all_users_handler(message: types.Message, state: FSMContext):
-    db: LocalStorage = d.observer.db
-    users = await db.get_all_users()
+    users = await d.observer.users.get_all()
     await message.answer(users)
 
 
@@ -49,13 +48,13 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
     async def subscribe_callback(**kwargs):
         user_to_subs_id = kwargs.get("user_id")
         channel = kwargs.get("channel")
-        await d.observer.channel_subscribe(user_to_subs_id, channel)
+        await d.observer.channels.subscribe(user_to_subs_id, channel)
         await message.answer(f"Пользователь {user_to_subs_id} подписан на канал {channel}")
 
     async def unsubscribe_callback(**kwargs):
         user_to_subs_id = kwargs.get("user_id")
         channel = kwargs.get("channel")
-        await d.observer.channel_unsubscribe(user_to_subs_id, channel)
+        await d.observer.channels.unsubscribe(user_to_subs_id, channel)
         await message.answer(f"Пользователь {user_to_subs_id} отписан от канала {channel}")
 
     if cmd == "subscribe":
