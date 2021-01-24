@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, MetaData, String, Table, \
+from sqlalchemy import Boolean, Column, ForeignKey, ForeignKeyConstraint, Integer, MetaData, \
+    PrimaryKeyConstraint, String, \
+    Table, \
     UniqueConstraint
 
 from core.local_storage._helpers import create_mapping
@@ -10,8 +12,13 @@ metadata = MetaData()
 channels_users_associations = Table(
     "user_channel",
     metadata,
-    Column("user_id", Integer, ForeignKey('user.id'), nullable=False),
-    Column("channel_id", ForeignKey('channel.id'), nullable=False),
+    Column("user_id", Integer,
+           ForeignKey('user.id', onupdate="CASCADE", ondelete="CASCADE"),
+           nullable=False),
+    Column("channel_id",
+           ForeignKey('channel.id', onupdate="CASCADE", ondelete="CASCADE"),
+           nullable=False),
+    PrimaryKeyConstraint("user_id", "channel_id", name="user_channel_pk")
 )
 UserChannel = create_mapping(channels_users_associations)
 
@@ -19,8 +26,13 @@ UserChannel = create_mapping(channels_users_associations)
 actuators_users_associations = Table(
     "user_actuator",
     metadata,
-    Column("user_id", Integer, ForeignKey('user.id'), nullable=False),
-    Column("actuator_id", ForeignKey('actuator.id'), nullable=False),
+    Column("user_id", Integer,
+           ForeignKey('user.id', onupdate="CASCADE", ondelete="CASCADE"),
+           nullable=False),
+    Column("actuator_id", Integer,
+           ForeignKey('actuator.id', onupdate="CASCADE", ondelete="CASCADE"),
+           nullable=False),
+    PrimaryKeyConstraint("user_id", "actuator_id", name="user_actuator_pk")
 )
 UserActuator = create_mapping(actuators_users_associations)
 

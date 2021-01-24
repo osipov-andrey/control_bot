@@ -38,7 +38,7 @@ class LocalStorage:
             is_admin: Optional[bool] = False,
             *,
             connection
-    ) -> UserEvents.value:
+    ):
 
         user_exists = await self.get_user(tg_id, connection=connection)
         if user_exists:
@@ -119,11 +119,25 @@ class LocalStorage:
         await connection.commit()
         return bool(result.rowcount)
 
-    async def grant_client_to_the_user(self):
+    async def grant_client_to_the_user(self, telegram_id: int, actuator_name: str):
         ...
 
     async def revoke_client_from_the_user(self):
         ...
+
+    @connect_to_db
+    async def create_actuator(self, name: str, description: Optional[str] = None, *, connection):
+        result = await connection.execute(
+            self._get_sql(queryes.create_actuator_query(name, description))
+        )
+        await connection.commit()
+        return result
+
+    @connect_to_db
+    async def delete_actuator(self, name: str, *, connection):
+        result = await connection.execute(self._get_sql(queryes.delete_actuator_query(name)))
+        await connection.commit()
+        return result
 
     @staticmethod
     def _get_sql(query: Query):

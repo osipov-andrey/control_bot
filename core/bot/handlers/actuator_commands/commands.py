@@ -14,7 +14,7 @@ from core.bot.states import Command
 from core.bot.telegram_api import state_storage, telegram_api_dispatcher
 from core.bot.template_strings import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
 from core.inbox.messages import message_fabric
-from core.memory_storage import NoSuchClient, NoSuchCommand
+from core.memory_storage import NoSuchActuator, NoSuchCommand
 from core.sse.sse_event import SSEEvent
 
 
@@ -72,10 +72,14 @@ async def _start_command_workflow(message, state, message_id=None):
 
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
-        #TODO если нет клиента:
-        message_kwargs["text"] = get_client_commands(client, is_admin)
-
-        await observer.send(message_fabric(message_kwargs))
+        try:
+            message_kwargs["text"] = get_client_commands(client, is_admin)
+        except NoSuchActuator:
+            message_kwargs["text"] = "Неизвестный актуатор!"
+            await state.reset_state()
+            return
+        finally:
+            await observer.send(message_fabric(message_kwargs))
 
         await Command.client.set()
         await state_storage.update_data(
@@ -104,7 +108,7 @@ async def _start_command_workflow(message, state, message_id=None):
     except NoSuchCommand as e:
         exception = True
         message_kwargs["text"] = COMMAND_IS_NOT_EXIST.format(command=e.cmd)
-    except NoSuchClient:
+    except NoSuchActuator:
         exception = True
         message_kwargs["text"] = NO_SUCH_CLIENT.format(client=client)
     if exception:

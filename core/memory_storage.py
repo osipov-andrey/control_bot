@@ -1,7 +1,7 @@
 from core._helpers import CommandSchema, Issue
 
 
-class NoSuchClient(Exception):
+class NoSuchActuator(Exception):
     """ No such client """
 
 
@@ -34,7 +34,7 @@ class ControlBotMemoryStorage:
         try:
             return self._storage[client_name]
         except KeyError:
-            raise NoSuchClient(client_name)
+            raise NoSuchActuator(client_name)
 
     def get_command_info(self, client_name: str, command: str):
         try:
