@@ -121,14 +121,14 @@ class LocalStorage:
 
     @connect_to_db
     async def grant(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
-        grant_query = queryes.get_grant_query(user_telegram_id, actuator_name)
+        grant_query = queryes.grant_query(user_telegram_id, actuator_name)
         result = await connection.execute(self._get_sql(grant_query))
         await connection.commit()
         return bool(result.rowcount)
 
     @connect_to_db
     async def revoke(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
-        revoke_query = queryes.get_revoke_query(user_telegram_id, actuator_name)
+        revoke_query = queryes.revoke_query(user_telegram_id, actuator_name)
         result = await connection.execute(self._get_sql(revoke_query))
         await connection.commit()
         return bool(result.rowcount)
@@ -146,6 +146,16 @@ class LocalStorage:
         result = await connection.execute(self._get_sql(queryes.delete_actuator_query(name)))
         await connection.commit()
         return result
+
+    @connect_to_db
+    async def user_has_grant(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
+        result = await connection.execute(
+            self._get_sql(queryes.get_has_grant_query(
+                user_telegram_id, actuator_name
+            ))
+        )
+        result = await result.fetchone()
+        return bool(result)
 
     @staticmethod
     def _get_sql(query: Query):

@@ -66,14 +66,19 @@ async def _start_command_workflow(message, state, message_id=None):
         "target": MessageTarget(TargetTypes.USER.value, user_id, message_id)._asdict()
     }
 
-    client, command, args = TelegramBotCommand.parse_cmd_string(message.text)
+    actuator_name, command, args = TelegramBotCommand.parse_cmd_string(message.text)
+
+    if not await observer.users.has_grant(user_id, actuator_name):
+        await message.answer(text="Неизвестная команда или у вас нет доступа к данному актуатору")
+        await state.reset_state()
+        return
 
     is_admin = await observer.users.is_admin(user_id)
 
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
         try:
-            message_kwargs["text"] = get_client_commands(client, is_admin)
+            message_kwargs["text"] = get_client_commands(actuator_name, is_admin)
         except NoSuchActuator:
             message_kwargs["text"] = "Неизвестный актуатор!"
             await state.reset_state()
@@ -85,7 +90,7 @@ async def _start_command_workflow(message, state, message_id=None):
         await state_storage.update_data(
             user=user_id,
             chat=chat_id,
-            client=client,
+            client=actuator_name,
         )
         # await state.reset_state()
         # await Command.command.set()
@@ -99,7 +104,7 @@ async def _start_command_workflow(message, state, message_id=None):
     # Указаны клиент и команда:
     exception = False
     try:
-        cmd = TelegramBotCommand(client, command, args, user_id, is_admin)
+        cmd = TelegramBotCommand(actuator_name, command, args, user_id, is_admin)
         if not cmd.cmd_scheme:
             return
         await continue_cmd_workflow(
@@ -110,7 +115,7 @@ async def _start_command_workflow(message, state, message_id=None):
         message_kwargs["text"] = COMMAND_IS_NOT_EXIST.format(command=e.cmd)
     except NoSuchActuator:
         exception = True
-        message_kwargs["text"] = NO_SUCH_CLIENT.format(client=client)
+        message_kwargs["text"] = NO_SUCH_CLIENT.format(client=actuator_name)
     if exception:
         await observer.send(message_fabric(message_kwargs))
         await state.reset_state()
@@ -132,8 +137,8 @@ async def continue_cmd_workflow(
             chat=cmd.user_id,
             cmd=cmd,
         )
-
-        message_kwargs.update(cmd.get_next_step())
+        next_step_kwargs = await cmd.get_next_step()
+        message_kwargs.update(next_step_kwargs)
         # Arguments input state:
         await Command.arguments.set()
         await observer.send(message_fabric(message_kwargs))

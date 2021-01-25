@@ -3,7 +3,8 @@ from typing import Optional
 from sqlalchemy import null, select, delete, insert, update, and_
 from sqlalchemy.sql import Select, Delete, Insert, Update
 
-from core.local_storage.schema import actuators_table, channel_table, channels_users_associations, \
+from core.local_storage.schema import actuators_table, actuators_users_associations, channel_table, \
+    channels_users_associations, \
     users_table
 
 
@@ -118,3 +119,67 @@ def delete_actuator_query(
     return delete_query
 
 
+def get_actuator_id_query(
+        actuator_name: str
+) -> Select:
+    query = select(
+        [actuators_table.c.id, ]
+    ).where(
+        actuators_table.c.name == actuator_name
+    )
+    return query
+
+
+def grant_query(
+        tg_id: int,
+        actuator_name: str
+) -> Insert:
+    """ Дать пользователю права на актуатор """
+    user_id_query = get_user_id_query(tg_id)
+    actuator_id_query = get_actuator_id_query(actuator_name)
+    insert_query = insert(actuators_users_associations).values({
+        "user_id": user_id_query,
+        "actuator_id": actuator_id_query
+    })
+    return insert_query
+
+
+def revoke_query(
+        tg_id: int,
+        actuator_name: str
+) -> Delete:
+    """ Забрать у пользователю права на актуатор """
+    user_id_query = get_user_id_query(tg_id)
+    actuator_id_query = get_actuator_id_query(actuator_name)
+    delete_query = delete(actuators_users_associations).where(and_(
+        actuators_users_associations.c.user_id == user_id_query,
+        actuators_users_associations.c.actuator_id == actuator_id_query
+    ))
+    return delete_query
+
+
+def get_granters_query(
+        actuator_name: str
+) -> Select:
+    """ Получить всех пользователей с доступом к актуатору """
+    users_id_query = select(
+        [actuators_users_associations.c.user_id, ]
+    ).where(
+        actuators_users_associations.c.actuator_id == get_actuator_id_query(actuator_name)
+    )
+    granters_query = select(users_table).where(
+        users_table.c.id.in_(users_id_query)
+    )
+    return granters_query
+
+
+def get_has_grant_query(
+        tg_id: int,
+        actuator_name: str
+) -> Select:
+    """ Есть ли у пользователя доступ к актуатору """
+    has_grant_query = select(actuators_users_associations.c).where(and_(
+        actuators_users_associations.c.user_id == get_user_id_query(tg_id),
+        actuators_users_associations.c.actuator_id == get_actuator_id_query(actuator_name)
+    ))
+    return has_grant_query

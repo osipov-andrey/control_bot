@@ -90,13 +90,13 @@ async def grant_handler(message: types.Message, state: FSMContext):
 
     async def revoke_callback(**kwargs):
         user_to_revoke_id = kwargs.get("user_id")
-        actuator = kwargs.get("channel")
+        actuator = kwargs.get("actuator")
         await d.observer.actuators.revoke(user_to_revoke_id, actuator)
         await message.answer(f"Пользователю {user_to_revoke_id} закрыт доступ к {actuator}")
 
     if cmd_text == "grant":
         callback = grant_callback
-    elif cmd_text == "unsubscribe":
+    elif cmd_text == "revoke":
         callback = revoke_callback
     else:
         await message.answer(text="Неизвестная команда")

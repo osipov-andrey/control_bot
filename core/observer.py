@@ -72,11 +72,11 @@ class ActuatorsInterface(BaseInterface):
             return "Unknown Client"
 
     async def grant(self, telegram_id: int, actuator_name: str):
-        """ Предоставить пользователю привилегии на актуатор """
+        """ Предоставить пользователю доступ к актуатору """
         return await self.db.grant(telegram_id, actuator_name)
 
     async def revoke(self, telegram_id: int, actuator_name: str):
-        """ Забрать у пользователя привилегии на актуатор """
+        """ Забрать у пользователя доступ к актуатору """
         return await self.db.revoke(telegram_id, actuator_name)
 
     def stop_sse_connection(self, actuator_name: str):
@@ -127,6 +127,12 @@ class UsersInterface(BaseInterface):
 
     async def subscribes(self, telegram_id: int):
         """ Получить подписки пользователя """
+        #TODO
+
+    async def has_grant(self, telegram_id: int, actuator_name: str) -> bool:
+        """ Есть ли у пользователя доступ к актутатору """
+        result = await self.db.user_has_grant(telegram_id, actuator_name)
+        return result
 
 
 #TODO singletone
