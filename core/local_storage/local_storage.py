@@ -119,11 +119,19 @@ class LocalStorage:
         await connection.commit()
         return bool(result.rowcount)
 
-    async def grant_client_to_the_user(self, telegram_id: int, actuator_name: str):
-        ...
+    @connect_to_db
+    async def grant(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
+        grant_query = queryes.get_grant_query(user_telegram_id, actuator_name)
+        result = await connection.execute(self._get_sql(grant_query))
+        await connection.commit()
+        return bool(result.rowcount)
 
-    async def revoke_client_from_the_user(self):
-        ...
+    @connect_to_db
+    async def revoke(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
+        revoke_query = queryes.get_revoke_query(user_telegram_id, actuator_name)
+        result = await connection.execute(self._get_sql(revoke_query))
+        await connection.commit()
+        return bool(result.rowcount)
 
     @connect_to_db
     async def create_actuator(self, name: str, description: Optional[str] = None, *, connection):

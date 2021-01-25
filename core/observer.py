@@ -71,6 +71,14 @@ class ActuatorsInterface(BaseInterface):
         except KeyError:
             return "Unknown Client"
 
+    async def grant(self, telegram_id: int, actuator_name: str):
+        """ Предоставить пользователю привилегии на актуатор """
+        return await self.db.grant(telegram_id, actuator_name)
+
+    async def revoke(self, telegram_id: int, actuator_name: str):
+        """ Забрать у пользователя привилегии на актуатор """
+        return await self.db.revoke(telegram_id, actuator_name)
+
     def stop_sse_connection(self, actuator_name: str):
         """ Подключить актуатор от интерфейса """
         self.connected_actuators.pop(actuator_name)
