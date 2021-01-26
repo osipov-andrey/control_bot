@@ -2,7 +2,7 @@ import asyncio
 from functools import wraps
 
 from pathlib import Path
-from sqlite3 import Connection
+from sqlite3 import Connection, IntegrityError
 from typing import List, Optional
 
 import aiosqlite
@@ -11,17 +11,24 @@ from sqlalchemy.orm import Query
 
 from core.local_storage import queryes
 from core.local_storage.db_enums import UserEvents
+from core.local_storage.exceptions import AlreadyHasItException
 from core.local_storage.schema import *
 
 
 def connect_to_db(method):
     @wraps(method)
     async def wrapper(self, *args, **kwargs):
-        if kwargs.get("connection"):
-            return await method(self, *args, **kwargs)
-        async with aiosqlite.connect(LocalStorage.db) as db:
-            return await method(self, *args, connection=db, **kwargs)
-
+        try:
+            if kwargs.get("connection"):
+                return await method(self, *args, **kwargs)
+            async with aiosqlite.connect(LocalStorage.db) as db:
+                return await method(self, *args, connection=db, **kwargs)
+        except IntegrityError as err:
+            # Запись нарушает ограничение уникальности
+            if err.args[0].startswith("UNIQUE constraint failed"):
+                raise AlreadyHasItException
+            else:
+                raise
     return wrapper
 
 
@@ -156,6 +163,14 @@ class LocalStorage:
         )
         result = await result.fetchone()
         return bool(result)
+
+    @connect_to_db
+    async def get_actuators(self, *, connection) -> List[Actuator]:
+        result = await connection.execute(
+            self._get_sql(queryes.get_all_actuators())
+        )
+        actuators = [Actuator(*actuator) for actuator in await result.fetchall()]
+        return actuators
 
     @staticmethod
     def _get_sql(query: Query):

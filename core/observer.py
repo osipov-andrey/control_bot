@@ -79,6 +79,11 @@ class ActuatorsInterface(BaseInterface):
         """ Забрать у пользователя доступ к актуатору """
         return await self.db.revoke(telegram_id, actuator_name)
 
+    async def get_all(self):
+        """ Получить все зарегистрированные актуаторы """
+        actuators = await self.db.get_actuators()
+        return actuators
+
     def stop_sse_connection(self, actuator_name: str):
         """ Подключить актуатор от интерфейса """
         self.connected_actuators.pop(actuator_name)

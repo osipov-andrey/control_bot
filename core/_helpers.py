@@ -72,7 +72,7 @@ class CommandSchema:
 ArgScheme = namedtuple(
     #TODO: to dataclass
     "ArgScheme",
-    "description, schema, options, is_user, is_subscriber", defaults=(None, None, None)
+    "description, schema, options, is_user, is_subscriber, is_actuators", defaults=(None, None, None, None)
 )
 
 

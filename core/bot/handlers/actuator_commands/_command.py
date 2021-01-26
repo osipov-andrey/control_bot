@@ -10,7 +10,7 @@ from core.bot.constant_strings import CONTEXT_CANCEL_MENU
 from core.bot.telegram_api import telegram_api_dispatcher
 from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
-from core.local_storage.schema import User
+from core.local_storage.schema import Actuator, User
 
 
 class TelegramBotCommand:
@@ -101,6 +101,8 @@ class TelegramBotCommand:
             message += self._get_validation_report()
         if argument_info.is_user:
             prompt = await self._get_users_prompt()
+        elif argument_info.is_actuators:
+            prompt = await self._get_actuators_prompt()
         elif argument_info.is_subscriber:
             prompt = await self._get_subscribers_prompt()
         message += \
@@ -111,6 +113,18 @@ class TelegramBotCommand:
 
         message_kwargs["text"] = message
         return message_kwargs
+
+    async def _get_actuators_prompt(self):
+        prompt = "<b>Зарегистрированные в боте актуаторы:</b>\n"
+        actuators: List[Actuator] = await telegram_api_dispatcher.observer.actuators.get_all()
+        if actuators:
+            prompt += "".join(
+                f"/{actuator.name} - {actuator.description}\n"
+                for actuator in actuators
+            )
+        else:
+            prompt += "Нет зарегистрированных актуаторов"
+        return prompt
 
     async def _get_users_prompt(self) -> str:
         prompt = "<b>Зарегистрированные в боте пользователи:</b>\n"

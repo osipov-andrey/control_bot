@@ -1,5 +1,7 @@
 from core._helpers import ArgScheme, ArgTypes, CommandSchema
 from core.bot.handlers.actuator_commands._command import InternalCommand
+from core.bot.handlers._static_commands import *
+from core.bot.telegram_api import telegram_api_dispatcher as d
 
 
 def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
@@ -18,7 +20,7 @@ def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
         "user_id": ArgScheme(
             description="ID пользователя",
             schema={"type": ArgTypes.INT.value},
-            is_user=True if cmd == "subscribe" else False,
+            is_user=True if cmd == SUBSCRIBE else False,
             # is_subscriber=True if cmd == "unsubscribe" else False,
         )._asdict(),
         "channel": ArgScheme(
@@ -45,49 +47,19 @@ def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
     return command
 
 
-# def get_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
-#
-#     args = {
-#         "user_id": ArgScheme(
-#             description="ID пользователя",
-#             schema={"type": ArgTypes.INT.value},
-#             is_subscriber=True
-#         )._asdict(),
-#         "channel": ArgScheme(
-#             description="Название канала",
-#             schema={"type": ArgTypes.STR.value}
-#         )._asdict()
-#     }
-#
-#     cmd_schema = CommandSchema(
-#                     hidden=False,
-#                     behavior__admin={
-#                         "description": "Отписать пользователя от канала",
-#                         "args": args,
-#                     },
-#                 )
-#
-#     unsubscribe_cmd = InternalCommand(
-#             cmd,
-#             user_id,
-#             cmd_schema=cmd_schema,
-#             is_admin=is_admin,
-#         )
-#     return unsubscribe_cmd
-
-
-def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
+async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
     args = {
+        "actuator": ArgScheme(
+            description="Название актуатора",
+            schema={"type": ArgTypes.STR.value},
+            is_actuators=True,
+        )._asdict(),
         "user_id": ArgScheme(
             description="ID пользователя",
             schema={"type": ArgTypes.INT.value},
-            is_user=True if cmd == "grant" else False
+            is_user=True if cmd == GRANT else False
         )._asdict(),
-        "actuator": ArgScheme(
-            description="Название актуатора",
-            schema={"type": ArgTypes.STR.value}
-        )._asdict()
     }
 
     cmd_schema = CommandSchema(

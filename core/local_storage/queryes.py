@@ -183,3 +183,9 @@ def get_has_grant_query(
         actuators_users_associations.c.actuator_id == get_actuator_id_query(actuator_name)
     ))
     return has_grant_query
+
+
+def get_all_actuators() -> Select:
+    """ Получить все актуаторы """
+    actuators_query = select(actuators_table.c)
+    return actuators_query

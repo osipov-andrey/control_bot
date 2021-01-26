@@ -171,7 +171,5 @@ def get_client_commands(client_name: str, is_admin=False) -> str:
             message += f"{cmd.behavior__admin.description}\n"
         elif cmd.behavior__user:
             message += f"{cmd.behavior__user.description}\n"
-        # if (is_admin and cmd.behavior__admin) or not cmd.admin_only:
-        #     message += f"{cmd.description}\n"
-    message += "\n/cancel - Выход в главное меню\n"
+    message += CONTEXT_CANCEL_MENU
     return message

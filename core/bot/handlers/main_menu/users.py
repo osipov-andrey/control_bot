@@ -3,11 +3,13 @@ from aiogram.dispatcher import FSMContext
 
 from core._helpers import MessageTarget, TargetTypes
 from core.bot._helpers import admin_only, delete_cmd_prefix, get_menu, MenuTextButton
+from core.bot.handlers._static_commands import *
 from core.bot.handlers.main_menu.users_commands import get_grant_or_revoke_cmd, \
     get_subscribe_or_unsubscribe_cmd
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.local_storage.exceptions import AlreadyHasItException
 from core.local_storage.local_storage import LocalStorage
 from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
@@ -35,7 +37,7 @@ async def all_users_handler(message: types.Message, state: FSMContext):
     await message.answer(users)
 
 
-@d.message_handler(commands=["subscribe", "unsubscribe"], state=MainMenu.users)
+@d.message_handler(commands=[SUBSCRIBE, UNSUBSCRIBE], state=MainMenu.users)
 async def subscribe_handler(message: types.Message, state: FSMContext):
 
     user_id = message.chat.id
@@ -59,9 +61,9 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
         await d.observer.channels.unsubscribe(user_to_subs_id, channel)
         await message.answer(f"Пользователь {user_to_subs_id} отписан от канала {channel}")
 
-    if cmd_text == "subscribe":
+    if cmd_text == SUBSCRIBE:
         callback = subscribe_callback
-    elif cmd_text == "unsubscribe":
+    elif cmd_text == UNSUBSCRIBE:
         callback = unsubscribe_callback
     else:
         await message.answer(text="Неизвестная команда")
@@ -71,12 +73,12 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
     )
 
 
-@d.message_handler(commands=["grant", "revoke"], state=MainMenu.users)
+@d.message_handler(commands=[GRANT, REVOKE], state=MainMenu.users)
 async def grant_handler(message: types.Message, state: FSMContext):
     user_id = message.chat.id
     is_admin = True  # в state=MainMenu.users может попасть только админ
     cmd_text = delete_cmd_prefix(message.text)
-    cmd = get_grant_or_revoke_cmd(cmd_text, user_id, is_admin)
+    cmd = await get_grant_or_revoke_cmd(cmd_text, user_id, is_admin)
 
     message_kwargs = {
         "target": MessageTarget(TargetTypes.USER.value, user_id)._asdict()
@@ -85,8 +87,12 @@ async def grant_handler(message: types.Message, state: FSMContext):
     async def grant_callback(**kwargs):
         user_to_grant_id = kwargs.get("user_id")
         actuator = kwargs.get("actuator")
-        await d.observer.actuators.grant(user_to_grant_id, actuator)
-        await message.answer(f"Пользователю {user_to_grant_id} открыт доступ к {actuator}")
+        try:
+            await d.observer.actuators.grant(user_to_grant_id, actuator)
+            answer = f"Пользователю {user_to_grant_id} открыт доступ к {actuator}"
+        except AlreadyHasItException:
+            answer = f"У пользователя {user_to_grant_id} УЖЕ есть доступ к {actuator}"
+        await message.answer(answer)
 
     async def revoke_callback(**kwargs):
         user_to_revoke_id = kwargs.get("user_id")
@@ -94,9 +100,9 @@ async def grant_handler(message: types.Message, state: FSMContext):
         await d.observer.actuators.revoke(user_to_revoke_id, actuator)
         await message.answer(f"Пользователю {user_to_revoke_id} закрыт доступ к {actuator}")
 
-    if cmd_text == "grant":
+    if cmd_text == GRANT:
         callback = grant_callback
-    elif cmd_text == "revoke":
+    elif cmd_text == REVOKE:
         callback = revoke_callback
     else:
         await message.answer(text="Неизвестная команда")
