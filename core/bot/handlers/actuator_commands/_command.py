@@ -95,7 +95,7 @@ class TelegramBotCommand:
         options = argument_info.options
         if options:
             message_kwargs["reply_markup"] = self._generate_keyboard(options)
-
+        # TODO: все, что ниже, в отдельные функции
         message = ""
         if self.validation_errors:
             message += self._get_validation_report()
@@ -105,6 +105,12 @@ class TelegramBotCommand:
             prompt = await self._get_actuators_prompt()
         elif argument_info.is_subscriber:
             prompt = await self._get_subscribers_prompt()
+        elif argument_info.is_granter:
+            # Чтобы получить подсказку по пользователям, имеющим доступ к актуатору,
+            # надо сначала указать сам актуатор (при вызове команды)
+            actuator_name = self.filled_args.get("actuator")
+            if actuator_name is not None:
+                prompt = await self._get_granters_prompt(actuator_name)
         message += \
             f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
             f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
@@ -113,6 +119,18 @@ class TelegramBotCommand:
 
         message_kwargs["text"] = message
         return message_kwargs
+
+    async def _get_granters_prompt(self, actuator_name: str) -> str:
+        prompt = "<b>Пользователи с доступом к актуатору:</b>\n"
+        granters: List[User] = await telegram_api_dispatcher.observer.actuators.get_granters(actuator_name)
+        if granters:
+            prompt += "".join(
+                f"/{granter.telegram_id} - {granter.name}\n"
+                for granter in granters
+            )
+        else:
+            prompt += "Нет пользователей"
+        return prompt
 
     async def _get_actuators_prompt(self):
         prompt = "<b>Зарегистрированные в боте актуаторы:</b>\n"

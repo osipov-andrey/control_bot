@@ -9,7 +9,7 @@ from core.bot.handlers.main_menu.users_commands import get_grant_or_revoke_cmd, 
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.local_storage.exceptions import AlreadyHasItException
+from core.local_storage.exceptions import AlreadyHasItException, NoSuchUser
 from core.local_storage.local_storage import LocalStorage
 from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
@@ -92,13 +92,18 @@ async def grant_handler(message: types.Message, state: FSMContext):
             answer = f"Пользователю {user_to_grant_id} открыт доступ к {actuator}"
         except AlreadyHasItException:
             answer = f"У пользователя {user_to_grant_id} УЖЕ есть доступ к {actuator}"
+        # except NoSuchUser:
+        #     answer = "Неизвестный пользователь"
         await message.answer(answer)
 
     async def revoke_callback(**kwargs):
         user_to_revoke_id = kwargs.get("user_id")
         actuator = kwargs.get("actuator")
+        # try:
         await d.observer.actuators.revoke(user_to_revoke_id, actuator)
         await message.answer(f"Пользователю {user_to_revoke_id} закрыт доступ к {actuator}")
+        # except NoSuchUser:
+        #     await message.answer("Неизвестный пользователь")
 
     if cmd_text == GRANT:
         callback = grant_callback

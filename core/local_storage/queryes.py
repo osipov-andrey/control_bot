@@ -167,7 +167,7 @@ def get_granters_query(
     ).where(
         actuators_users_associations.c.actuator_id == get_actuator_id_query(actuator_name)
     )
-    granters_query = select(users_table).where(
+    granters_query = select(users_table.c).where(
         users_table.c.id.in_(users_id_query)
     )
     return granters_query

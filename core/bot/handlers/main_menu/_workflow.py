@@ -7,6 +7,7 @@ from core.bot.states import Command
 from core.bot.handlers.actuator_commands._command import InternalCommand
 from core.bot.telegram_api import state_storage, telegram_api_dispatcher as d
 from core.inbox.messages import message_fabric
+from core.local_storage.exceptions import NoSuchUser
 
 
 async def start_cmd_internal_workflow(
@@ -26,7 +27,15 @@ async def start_cmd_internal_workflow(
 
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
         # Команда заполнена
-        await callback(**cmd.filled_args)
+        try:
+            await callback(**cmd.filled_args)
+        except NoSuchUser:
+            # Коллбеки вызываются только здесь.
+            # Значит имеет смысл ловить исключения тоже здесь
+            await d.bot.send_message(
+                chat_id=state.chat,
+                text="Неизвестный пользователь"
+            )
         await state.reset_state()
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
         # Команда не заполнена:

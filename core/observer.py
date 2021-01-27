@@ -84,6 +84,11 @@ class ActuatorsInterface(BaseInterface):
         actuators = await self.db.get_actuators()
         return actuators
 
+    async def get_granters(self, actuator_name: str):
+        """ Получить пользователей с доступом к актуатору """
+        granters = await self.db.get_granters(actuator_name)
+        return granters
+
     def stop_sse_connection(self, actuator_name: str):
         """ Подключить актуатор от интерфейса """
         self.connected_actuators.pop(actuator_name)

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Query
 
 from core.local_storage import queryes
 from core.local_storage.db_enums import UserEvents
-from core.local_storage.exceptions import AlreadyHasItException
+from core.local_storage.exceptions import AlreadyHasItException, NoSuchUser
 from core.local_storage.schema import *
 
 
@@ -62,6 +62,12 @@ class LocalStorage:
         await connection.commit()
         return result
 
+    # @connect_to_db
+    # async def check_user_exists(self, user_telegram_id: int, *, connection):
+    #     user = await self.get_user(user_telegram_id, connection=connection)
+    #     if not user:
+    #         raise NoSuchUser
+
     @connect_to_db
     async def get_user(self, tg_id: int, *, connection) -> User:
 
@@ -70,8 +76,9 @@ class LocalStorage:
         )
         user = await connection.execute(self._get_sql(user_query))
         user = await user.fetchone()
-        if user:
-            user = User(*user)
+        if not user:
+            raise NoSuchUser
+        user = User(*user)
         return user
 
     @connect_to_db
@@ -111,6 +118,9 @@ class LocalStorage:
 
     @connect_to_db
     async def channel_subscribe(self, user_telegram_id: int, channel: str, *, connection) -> bool:
+        # Проверим есть ли вообще такой юзер
+        await self.get_user(user_telegram_id, connection=connection)
+        # TODO: использовать этого пользователя в дальнейшем запросе
         subscribe_query = channels_users_associations.insert().values({
             "user_id": queryes.get_user_id_query(user_telegram_id),
             "channel_id": queryes.get_channel_id_query(channel)
@@ -121,6 +131,9 @@ class LocalStorage:
 
     @connect_to_db
     async def channel_unsubscribe(self, user_telegram_id: int, channel: str, *, connection) -> bool:
+        # Проверим есть ли вообще такой юзер
+        await self.get_user(user_telegram_id, connection=connection)
+        # TODO: использовать этого пользователя в дальнейшем запросе
         unsubscribe_query = queryes.get_unsubscribe_query(user_telegram_id, channel)
         result = await connection.execute(self._get_sql(unsubscribe_query))
         await connection.commit()
@@ -128,6 +141,9 @@ class LocalStorage:
 
     @connect_to_db
     async def grant(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
+        # Проверим есть ли вообще такой юзер
+        await self.get_user(user_telegram_id, connection=connection)
+        # TODO: использовать этого пользователя в дальнейшем запросе
         grant_query = queryes.grant_query(user_telegram_id, actuator_name)
         result = await connection.execute(self._get_sql(grant_query))
         await connection.commit()
@@ -135,6 +151,9 @@ class LocalStorage:
 
     @connect_to_db
     async def revoke(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
+        # Проверим есть ли вообще такой юзер
+        await self.get_user(user_telegram_id, connection=connection)
+        # TODO: использовать этого пользователя в дальнейшем запросе
         revoke_query = queryes.revoke_query(user_telegram_id, actuator_name)
         result = await connection.execute(self._get_sql(revoke_query))
         await connection.commit()
@@ -163,6 +182,15 @@ class LocalStorage:
         )
         result = await result.fetchone()
         return bool(result)
+
+    @connect_to_db
+    async def get_granters(self, actuator_name: str, *, connection) -> List[User]:
+        result = await connection.execute(
+            self._get_sql(queryes.get_granters_query(actuator_name))
+        )
+        result = await result.fetchall()
+        granters = [User(*user) for user in result]
+        return granters
 
     @connect_to_db
     async def get_actuators(self, *, connection) -> List[Actuator]:

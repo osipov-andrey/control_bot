@@ -48,17 +48,19 @@ def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
-
+    actuators = [a.name for a in await d.observer.actuators.get_all()]
     args = {
         "actuator": ArgScheme(
             description="Название актуатора",
-            schema={"type": ArgTypes.STR.value},
+            schema={"type": ArgTypes.STR.value, "allowed": actuators},
             is_actuators=True,
-        )._asdict(),
+            options=actuators,
+         )._asdict(),
         "user_id": ArgScheme(
             description="ID пользователя",
             schema={"type": ArgTypes.INT.value},
-            is_user=True if cmd == GRANT else False
+            is_user=True if cmd == GRANT else False,
+            is_granter=True if cmd == REVOKE else False
         )._asdict(),
     }
 
@@ -67,7 +69,6 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
                     behavior__admin={
                         "description": "Открыть/закрыть доступ к актуатору",
                         "args": args,
-                        # TODO: options
                     },
                 )
 
