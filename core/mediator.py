@@ -15,7 +15,7 @@ from config import config
 from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
     TextMessage, message_fabric
-from core.local_storage.local_storage import LocalStorage, User
+from core.local_storage.local_storage import Channel, LocalStorage, User
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
 from core.inbox.consumers.rabbit import RabbitConsumer
@@ -122,22 +122,23 @@ class UsersInterface(BaseInterface):
     ):
         return await self.db.upsert_user(**kwargs)
 
-    async def get_admins(self):
+    async def get_admins(self) -> List[User]:
         return await self.db.get_admins()
 
-    async def is_admin(self, telegram_id: int):
+    async def is_admin(self, telegram_id: int) -> bool:
         """ Проверка админских прав у пользователя """
         user: User = await self.db.get_user(telegram_id)
         return bool(user.is_admin)
 
-    async def get_all(self) -> list:
+    async def get_all(self) -> List[User]:
         """ Получить ВСЕХ пользователей """
         users = await self.db.get_all_users()
         return users
 
-    async def subscribes(self, telegram_id: int):
+    async def subscribes(self, telegram_id: int) -> List[Channel]:
         """ Получить подписки пользователя """
-        #TODO
+        subs = await self.db.get_user_subscribes(telegram_id)
+        return subs
 
     async def has_grant(self, telegram_id: int, actuator_name: str) -> bool:
         """ Есть ли у пользователя доступ к актутатору """
@@ -146,7 +147,7 @@ class UsersInterface(BaseInterface):
 
 
 #TODO singletone
-class Observer:
+class Mediator:
     """ Класс связывающий различные компоненты программы """
 
     def __init__(self):
@@ -166,6 +167,7 @@ class Observer:
         self._sse_server = create_sse_server(self)
 
     def run(self):
+        # TODO разделить посредник и запускатор программы
         # Для доступа к интерфейсам из любой части программы:
         self.d.observer = self
 

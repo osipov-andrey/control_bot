@@ -2,8 +2,8 @@ import asyncio
 from functools import wraps
 
 from pathlib import Path
-from sqlite3 import Connection, IntegrityError
-from typing import List, Optional
+from sqlite3 import Connection, Cursor, IntegrityError
+from typing import List, Optional, Union
 
 import aiosqlite
 from sqlalchemy import null
@@ -35,7 +35,6 @@ def connect_to_db(method):
 class LocalStorage:
     db = Path(__file__).parent.absolute().joinpath("control_bot.db")
 
-    @connect_to_db
     async def upsert_user(
             self,
             tg_id: int,
@@ -43,23 +42,20 @@ class LocalStorage:
             name: Optional[str] = null(),
             phone: Optional[str] = null(),
             is_admin: Optional[bool] = False,
-            *,
-            connection
     ):
-
-        user_exists = await self.get_user(tg_id, connection=connection)
-        if user_exists:
+        try:
+            user_exists = await self.get_user(tg_id)
             query = queryes.update_user(
                 tg_id, tg_username, name, phone, is_admin
             )
             result = UserEvents.UPDATED
-        else:
+        except NoSuchUser:
             query = queryes.insert_user(
                 tg_id, tg_username, name, phone, is_admin
             )
             result = UserEvents.CREATED
-        await connection.execute(self._get_sql(query))
-        await connection.commit()
+
+        await self._execute_query(query, commit=True)
         return result
 
     # @connect_to_db
@@ -68,137 +64,122 @@ class LocalStorage:
     #     if not user:
     #         raise NoSuchUser
 
-    @connect_to_db
-    async def get_user(self, tg_id: int, *, connection) -> User:
-
+    async def get_user(self, tg_id: int) -> User:
         user_query = users_table.select().where(
             users_table.c.telegram_id == tg_id
         )
-        user = await connection.execute(self._get_sql(user_query))
-        user = await user.fetchone()
+        user = await self._execute_query(user_query, fetchall=False)
         if not user:
             raise NoSuchUser
         user = User(*user)
         return user
 
-    @connect_to_db
-    async def get_all_users(self, *, connection):
+    async def get_all_users(self):
         # TODO: generator
         users_query = users_table.select()
-        users = await connection.execute(self._get_sql(users_query))
-        users = await users.fetchall()
+        users = await self._execute_query(users_query)
         users = [User(*user) for user in users]
         return users
 
-    @connect_to_db
-    async def get_admins(self, *, connection) -> List[User]:
+    async def get_admins(self) -> List[User]:
         admins_query = users_table.select().where(
             users_table.c.is_admin == 1
         )
-        admins = await connection.execute(self._get_sql(admins_query))
-        admins = await admins.fetchall()
+        admins = await self._execute_query(admins_query)
         admins = [User(*admin) for admin in admins]
         return admins
 
-    @connect_to_db
-    async def save_channel(self, name: str, *, connection):
-        query: Query = channel_table.insert().values({
-            'name': name
-        })
-        await connection.execute(self._get_sql(query))
-        await connection.commit()
+    async def save_channel(self, name: str):
+        query: Query = channel_table.insert().values({'name': name})
+        await self._execute_query(query, commit=True)
 
-    @connect_to_db
-    async def get_subscribers(self, channel: str, *, connection) -> List[User]:
+    async def get_subscribers(self, channel: str) -> List[User]:
         subscribers_query = queryes.get_subscribers(channel)
-        subscribers = await connection.execute(self._get_sql(subscribers_query))
-        subscribers = await subscribers.fetchall()
+        subscribers = await self._execute_query(subscribers_query)
         subscribers = [User(*subs) for subs in subscribers]
         return subscribers
 
-    @connect_to_db
-    async def channel_subscribe(self, user_telegram_id: int, channel: str, *, connection) -> bool:
+    async def channel_subscribe(self, user_telegram_id: int, channel: str) -> bool:
         # Проверим есть ли вообще такой юзер
-        await self.get_user(user_telegram_id, connection=connection)
+        await self.get_user(user_telegram_id)
         # TODO: использовать этого пользователя в дальнейшем запросе
         subscribe_query = channels_users_associations.insert().values({
             "user_id": queryes.get_user_id_query(user_telegram_id),
             "channel_id": queryes.get_channel_id_query(channel)
         })
-        result = await connection.execute(self._get_sql(subscribe_query))
-        await connection.commit()
+        result = await self._execute_query(subscribe_query, commit=True)
         return bool(result.rowcount)
 
-    @connect_to_db
-    async def channel_unsubscribe(self, user_telegram_id: int, channel: str, *, connection) -> bool:
+    async def channel_unsubscribe(self, user_telegram_id: int, channel: str) -> bool:
         # Проверим есть ли вообще такой юзер
-        await self.get_user(user_telegram_id, connection=connection)
+        await self.get_user(user_telegram_id)
         # TODO: использовать этого пользователя в дальнейшем запросе
         unsubscribe_query = queryes.get_unsubscribe_query(user_telegram_id, channel)
-        result = await connection.execute(self._get_sql(unsubscribe_query))
-        await connection.commit()
+        result = await self._execute_query(unsubscribe_query, commit=True)
         return bool(result.rowcount)
 
-    @connect_to_db
-    async def grant(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
+    async def grant(self, user_telegram_id: int, actuator_name: str) -> bool:
         # Проверим есть ли вообще такой юзер
-        await self.get_user(user_telegram_id, connection=connection)
+        await self.get_user(user_telegram_id)
         # TODO: использовать этого пользователя в дальнейшем запросе
         grant_query = queryes.grant_query(user_telegram_id, actuator_name)
-        result = await connection.execute(self._get_sql(grant_query))
-        await connection.commit()
+        result = await self._execute_query(grant_query, commit=True)
         return bool(result.rowcount)
 
-    @connect_to_db
-    async def revoke(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
+    async def revoke(self, user_telegram_id: int, actuator_name: str) -> bool:
         # Проверим есть ли вообще такой юзер
-        await self.get_user(user_telegram_id, connection=connection)
+        await self.get_user(user_telegram_id)
         # TODO: использовать этого пользователя в дальнейшем запросе
         revoke_query = queryes.revoke_query(user_telegram_id, actuator_name)
-        result = await connection.execute(self._get_sql(revoke_query))
-        await connection.commit()
+        result = await self._execute_query(revoke_query, commit=True)
         return bool(result.rowcount)
 
-    @connect_to_db
-    async def create_actuator(self, name: str, description: Optional[str] = None, *, connection):
-        result = await connection.execute(
-            self._get_sql(queryes.create_actuator_query(name, description))
+    async def create_actuator(self, name: str, description: Optional[str] = None):
+        result = await self._execute_query(
+            queryes.create_actuator_query(name, description), commit=True
         )
-        await connection.commit()
         return result
 
-    @connect_to_db
-    async def delete_actuator(self, name: str, *, connection):
-        result = await connection.execute(self._get_sql(queryes.delete_actuator_query(name)))
-        await connection.commit()
+    async def delete_actuator(self, name: str):
+        result = await self._execute_query(
+            queryes.delete_actuator_query(name), commit=True
+        )
         return result
 
-    @connect_to_db
-    async def user_has_grant(self, user_telegram_id: int, actuator_name: str, *, connection) -> bool:
-        result = await connection.execute(
-            self._get_sql(queryes.get_has_grant_query(
-                user_telegram_id, actuator_name
-            ))
+    async def user_has_grant(self, user_telegram_id: int, actuator_name: str) -> bool:
+        result = await self._execute_query(
+            queryes.get_has_grant_query(user_telegram_id, actuator_name), fetchall=False
         )
-        result = await result.fetchone()
         return bool(result)
 
-    @connect_to_db
-    async def get_granters(self, actuator_name: str, *, connection) -> List[User]:
-        result = await connection.execute(
-            self._get_sql(queryes.get_granters_query(actuator_name))
-        )
-        result = await result.fetchall()
-        granters = [User(*user) for user in result]
+    async def get_granters(self, actuator_name: str) -> List[User]:
+        granters = await self._execute_query(queryes.get_granters_query(actuator_name))
+        granters = [User(*user) for user in granters]
         return granters
 
-    @connect_to_db
-    async def get_actuators(self, *, connection) -> List[Actuator]:
-        result = await connection.execute(
-            self._get_sql(queryes.get_all_actuators())
-        )
-        actuators = [Actuator(*actuator) for actuator in await result.fetchall()]
+    async def get_actuators(self) -> List[Actuator]:
+        actuators = await self._execute_query(queryes.get_all_actuators())
+        actuators = [Actuator(*actuator) for actuator in actuators]
         return actuators
+
+    async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
+        channels = await self._execute_query(queryes.get_user_subscribes_query(user_telegram_id))
+        channels = [Channel(**channel) for channel in channels]
+        return channels
+
+    @connect_to_db
+    async def _execute_query(
+            self, query: Query, *, connection, fetchall=True, commit=False
+    ) -> Union[tuple, List[tuple], Cursor]:
+        cursor = await connection.execute(self._get_sql(query))
+        if commit:
+            await connection.commit()
+            return cursor
+        if fetchall is True:
+            result = await cursor.fetchall()
+        else:
+            result = await cursor.fetchone()
+        return result
 
     @staticmethod
     def _get_sql(query: Query):
