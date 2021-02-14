@@ -1,7 +1,7 @@
 import json
 from aiohttp import web
 
-from core.inbox.messages import message_fabric
+from ..messages import message_fabric
 
 
 async def consume_message(request):

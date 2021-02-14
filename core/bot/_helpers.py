@@ -5,7 +5,7 @@ from typing import List
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core.bot.telegram_api import telegram_api_dispatcher
+from .telegram_api import telegram_api_dispatcher
 
 
 MenuTextButton = namedtuple("MenuTextButton", "cmd, description, admin_only", defaults=(False,))

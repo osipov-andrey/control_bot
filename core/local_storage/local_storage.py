@@ -9,10 +9,13 @@ import aiosqlite
 from sqlalchemy import null
 from sqlalchemy.orm import Query
 
-from core.local_storage import queryes
-from core.local_storage.db_enums import UserEvents
-from core.local_storage.exceptions import AlreadyHasItException, NoSuchUser
-from core.local_storage.schema import *
+from . import queryes
+from .db_enums import UserEvents
+from .exceptions import AlreadyHasItException, NoSuchUser
+from .schema import *
+
+
+PATH_TO_DB = Path(__file__).parent.absolute().joinpath("control_bot.sqlite")
 
 
 def connect_to_db(method):
@@ -33,7 +36,7 @@ def connect_to_db(method):
 
 
 class LocalStorage:
-    db = Path(__file__).parent.absolute().joinpath("control_bot.db")
+    db = PATH_TO_DB
 
     async def upsert_user(
             self,

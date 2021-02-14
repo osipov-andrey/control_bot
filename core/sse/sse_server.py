@@ -5,9 +5,9 @@ from aiohttp import web
 from aiohttp.web import Application, HTTPBadRequest
 from aiohttp_sse import sse_response
 
-from core._helpers import Behaviors, MessageTarget
-from config import config
-from core.sse.sse_event import SSEEvent
+from .._helpers import Behaviors, MessageTarget
+from ..config import config
+from .sse_event import SSEEvent
 
 log = logging.getLogger(__name__)
 _HOST = config["sse"]["host"]

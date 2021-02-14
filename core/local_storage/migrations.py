@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 
-import local_storage
+from . import local_storage
 
 
 TABLES = [
@@ -13,7 +13,7 @@ TABLES = [
 
 
 def create_tables():
-    engine = create_engine('sqlite:///control_bot.db')
+    engine = create_engine(f'sqlite:///{local_storage.PATH_TO_DB}')
     for table in TABLES:
         table.create(engine, checkfirst=True)
 

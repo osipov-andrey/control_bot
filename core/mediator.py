@@ -9,17 +9,18 @@ from functools import singledispatchmethod
 
 from aiogram.utils import exceptions
 
-from core._helpers import TargetTypes
-from core.bot.telegram_api import telegram_api_dispatcher as d
-from config import config
-from core.inbox.dispatcher import InboxDispatcher
-from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
+from ._helpers import TargetTypes
+from .bot.telegram_api import telegram_api_dispatcher as d
+from .config import config
+from .inbox.dispatcher import InboxDispatcher
+from .inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
     TextMessage, message_fabric
-from core.local_storage.local_storage import Channel, LocalStorage, User
-from core.sse.sse_event import SSEEvent
-from core.sse.sse_server import create_sse_server
-from core.inbox.consumers.rabbit import RabbitConsumer
-from core.memory_storage import ControlBotMemoryStorage
+from .local_storage.exceptions import NoSuchUser
+from .local_storage.local_storage import Channel, LocalStorage, User
+from .sse.sse_event import SSEEvent
+from .sse.sse_server import create_sse_server
+from .inbox.consumers.rabbit import RabbitConsumer
+from .memory_storage import ControlBotMemoryStorage
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,7 +128,10 @@ class UsersInterface(BaseInterface):
 
     async def is_admin(self, telegram_id: int) -> bool:
         """ Проверка админских прав у пользователя """
-        user: User = await self.db.get_user(telegram_id)
+        try:
+            user: User = await self.db.get_user(telegram_id)
+        except NoSuchUser:
+            return False
         return bool(user.is_admin)
 
     async def get_all(self) -> List[User]:

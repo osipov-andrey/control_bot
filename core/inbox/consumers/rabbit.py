@@ -5,7 +5,7 @@ import logging
 
 from aioamqp.channel import Channel
 
-from core.inbox.messages import message_fabric
+from ..messages import message_fabric
 
 
 _LOGGER = logging.getLogger(__name__)

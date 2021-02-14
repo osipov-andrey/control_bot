@@ -1,4 +1,4 @@
-from core._helpers import CommandSchema, Issue
+from ._helpers import CommandSchema, Issue
 
 
 class NoSuchActuator(Exception):

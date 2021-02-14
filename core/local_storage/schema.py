@@ -3,7 +3,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, ForeignKeyConstraint, Intege
     Table, \
     UniqueConstraint
 
-from core.local_storage._helpers import create_mapping
+from ._helpers import create_mapping
 
 
 metadata = MetaData()

@@ -2,9 +2,10 @@ import logging
 from asyncio import Queue
 from typing import Iterable
 
-from core._constants import INTRO_COMMAND
-from core._helpers import Issue, MessageTarget
-from core.inbox.messages import BaseMessage, TargetTypes, message_fabric
+from .._constants import INTRO_COMMAND
+from .._helpers import Issue, MessageTarget
+from ..inbox.messages import BaseMessage, TargetTypes, message_fabric
+
 
 _LOGGER = logging.getLogger(__name__)
 

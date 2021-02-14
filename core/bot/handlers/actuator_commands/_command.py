@@ -6,8 +6,8 @@ from typing import Optional, List, Union
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
-from core.bot.constant_strings import CONTEXT_CANCEL_MENU
-from core.bot.telegram_api import telegram_api_dispatcher
+from ...constant_strings import CONTEXT_CANCEL_MENU
+from ...telegram_api import telegram_api_dispatcher
 from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 from core.local_storage.schema import Actuator, User

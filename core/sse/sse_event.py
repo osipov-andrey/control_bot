@@ -1,5 +1,5 @@
 import json
-from core._helpers import MessageTarget
+from .._helpers import MessageTarget
 
 
 class SSEEvent:

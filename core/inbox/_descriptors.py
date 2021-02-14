@@ -4,8 +4,8 @@ from typing import List
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
-from core._helpers import MessageTarget, TargetTypes
-from core.bot.telegram_api import telegram_api_dispatcher
+from .._helpers import MessageTarget, TargetTypes
+from ..bot.telegram_api import telegram_api_dispatcher
 
 
 class MessageTargetDescriptor:
