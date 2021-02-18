@@ -1,0 +1,8 @@
+version: '3.3'
+
+services:
+  app:
+    build: .
+    image: bot
+    env_file:
+      - .env
