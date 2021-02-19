@@ -73,7 +73,7 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
     )
 
 
-@d.message_handler(commands=[GRANT, REVOKE], state=MainMenu.users)
+@d.message_handler(commands=[GRANT, REVOKE], state=[MainMenu.users, MainMenu.actuators])
 async def grant_handler(message: types.Message, state: FSMContext):
     user_id = message.chat.id
     is_admin = True  # в state=MainMenu.users может попасть только админ

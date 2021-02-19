@@ -21,19 +21,19 @@ async def actuators_handler(message: types.Message, state: FSMContext):
     menu = get_menu(
         header="Список команд: ",
         commands=[
-                     MenuTextButton("all_actuators", "-------"),
-                     MenuTextButton("create", "Create actuator"),
-                     MenuTextButton("delete", "Delete actuator"),
-                     MenuTextButton("grant", "-------"),
-                     MenuTextButton("revoke", "-------"),
-                 ]
+            MenuTextButton("all_actuators", "-------"),
+            MenuTextButton("create", "Create actuator"),
+            MenuTextButton("delete", "Delete actuator"),
+            MenuTextButton("grant", "Предоставить пользователю доступ к актуатору"),
+            MenuTextButton("revoke", "Закрыть пользователю доступ к актуатору"),
+            # grant, revoke - calling from users submenu
+        ]
     )
     await message.answer(menu)
 
 
 @d.message_handler(commands=[CREATE_ACTUATOR, DELETE_ACTUATOR], state=MainMenu.actuators)
 async def create_delete_handler(message: types.Message, state: FSMContext):
-
     user_id = message.chat.id
     is_admin = True  # в state=MainMenu.actuators может попасть только админ
     cmd_text = delete_cmd_prefix(message.text)
