@@ -68,6 +68,9 @@ class ActuatorsInterface(BaseInterface):
     async def create_actuator(self, actuator_name: str, description: str):
         return await self.db.create_actuator(actuator_name, description)
 
+    async def delete_actuator(self, actuator_name: str):
+        return await self.db.delete_actuator(actuator_name)
+
     async def emit_event(self, actuator_name: str, event: SSEEvent):
         """ Отправить ЕVENT в актуатор """
         try:

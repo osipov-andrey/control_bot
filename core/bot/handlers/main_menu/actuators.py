@@ -47,18 +47,17 @@ async def create_delete_handler(message: types.Message, state: FSMContext):
         actuator_name = kwargs.get("actuator_name")
         description = kwargs.get("description")
         await d.observer.actuators.create_actuator(actuator_name, description)
-        # await message.answer(f"Пользователь {user_to_subs_id} подписан на канал {channel}")
+        await message.answer(f"Создан актуатор {actuator_name} - {description}.")
 
-    # async def unsubscribe_callback(**kwargs):
-    #     user_to_subs_id = kwargs.get("user_id")
-    #     channel = kwargs.get("channel")
-    #     await d.observer.channels.unsubscribe(user_to_subs_id, channel)
-    #     await message.answer(f"Пользователь {user_to_subs_id} отписан от канала {channel}")
+    async def delete_callback(**kwargs):
+        actuator_name = kwargs.get("actuator_name")
+        await d.observer.actuators.delete_actuator(actuator_name)
+        await message.answer(f"Удален актуатор {actuator_name}.")
 
     if cmd_text == CREATE_ACTUATOR:
         callback = create_callback
-    # elif cmd_text == UNSUBSCRIBE:
-    #     callback = unsubscribe_callback
+    elif cmd_text == DELETE_ACTUATOR:
+        callback = delete_callback
     else:
         await message.answer(text="Неизвестная команда")
         return
