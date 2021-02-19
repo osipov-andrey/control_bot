@@ -79,3 +79,33 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
             is_admin=is_admin,
         )
     return command
+
+
+def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
+    args = {
+        "actuator_name": ArgScheme(
+            description="Название актуатора",
+            schema={"type": ArgTypes.STR.value},
+            is_actuators=True,
+        )._asdict(),
+        "description": ArgScheme(
+            description="Actuator description",
+            schema={"type": ArgTypes.STR.value},
+        )._asdict(),
+    }
+
+    cmd_schema = CommandSchema(
+        hidden=False,
+        behavior__admin={
+            "description": "Create/delete actuator",
+            "args": args,
+        },
+    )
+
+    command = InternalCommand(
+        cmd,
+        user_id,
+        cmd_schema=cmd_schema,
+        is_admin=is_admin,
+    )
+    return command

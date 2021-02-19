@@ -65,6 +65,9 @@ class ActuatorsInterface(BaseInterface):
         self.connected_actuators[actuator_name] = actuator_queue
         return actuator_queue
 
+    async def create_actuator(self, actuator_name: str, description: str):
+        return await self.db.create_actuator(actuator_name, description)
+
     async def emit_event(self, actuator_name: str, event: SSEEvent):
         """ Отправить ЕVENT в актуатор """
         try:
