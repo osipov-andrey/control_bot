@@ -1,6 +1,6 @@
 import asyncio
 from abc import ABC
-from typing import List, Optional
+from typing import List
 
 import aiogram
 import logging
@@ -9,18 +9,18 @@ from functools import singledispatchmethod
 
 from aiogram.utils import exceptions
 
-from ._helpers import TargetTypes
-from .bot.telegram_api import telegram_api_dispatcher as d
-from .config import config
-from .inbox.dispatcher import InboxDispatcher
-from .inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
+from core._helpers import TargetTypes
+from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.config import config
+from core.inbox.dispatcher import InboxDispatcher
+from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
     TextMessage, message_fabric
-from .local_storage.exceptions import NoSuchUser
-from .local_storage.local_storage import Channel, LocalStorage, User
-from .sse.sse_event import SSEEvent
-from .sse.sse_server import create_sse_server
-from .inbox.consumers.rabbit import RabbitConsumer
-from .memory_storage import ControlBotMemoryStorage
+from core.local_storage.exceptions import NoSuchUser
+from core.local_storage.local_storage import Channel, LocalStorage, User
+from core.sse.sse_event import SSEEvent
+from core.sse.sse_server import create_sse_server
+from core.inbox.consumers.rabbit import RabbitConsumer
+from core.memory_storage import ControlBotMemoryStorage
 
 
 _LOGGER = logging.getLogger(__name__)
