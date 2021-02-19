@@ -22,5 +22,5 @@ config = dict(
                     rabbit_queue=os.getenv("RABBIT_QUEUE"),
                 )
         )
-print(config)
+
 

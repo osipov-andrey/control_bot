@@ -1,8 +1,22 @@
 version: '3.3'
 
 services:
+  # TODO: DB-volume
   app:
     build: .
+    command: run
     image: bot
     env_file:
       - .env
+    ports:
+      - "8082:8082"
+    depends_on:
+      - rabbit
+    restart: on-failure
+
+  rabbit:
+    image: "rabbitmq:3-management"
+    command: rabbitmq-server
+    ports:
+      - "15672:15672"
+      - "5672:5672"

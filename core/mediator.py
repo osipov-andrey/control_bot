@@ -24,6 +24,7 @@ from .memory_storage import ControlBotMemoryStorage
 
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.debug(config)
 
 
 class BaseInterface(ABC):
@@ -175,7 +176,7 @@ class Mediator:
         # Для доступа к интерфейсам из любой части программы:
         self.d.observer = self
 
-        # asyncio.ensure_future(self._rabbit.listen_to_rabbit())
+        asyncio.ensure_future(self._rabbit.listen_to_rabbit())
         asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
         aiogram.executor.start_polling(self.d, skip_updates=True)
 
