@@ -6,7 +6,7 @@ from aiogram.dispatcher import FSMContext
 
 from aiogram.types import CallbackQuery
 
-from core._helpers import MessageTarget, TargetTypes
+from core._helpers import MessageTarget, TargetType
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
 from core.bot.handlers.actuator_commands._command import TelegramBotCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
@@ -30,7 +30,7 @@ async def commands_handler(message: types.Message, state: FSMContext):
 @telegram_api_dispatcher.message_handler(state=Command.arguments)
 async def argument_handler(message: types.Message, state: FSMContext):
     user_id = message.chat.id
-    message_kwargs = {"target": MessageTarget(TargetTypes.USER.value, user_id)._asdict()}
+    message_kwargs = {"target": MessageTarget(TargetType.USER.value, user_id)._asdict()}
     data = await state.get_data()
     cmd: TelegramBotCommand = data.get("cmd")
 
@@ -63,7 +63,7 @@ async def _start_command_workflow(message, state, message_id=None):
     user_id = chat_id = message.chat.id
 
     message_kwargs = {
-        "target": MessageTarget(TargetTypes.USER.value, user_id, message_id)._asdict()
+        "target": MessageTarget(TargetType.USER.value, user_id, message_id)._asdict()
     }
 
     actuator_name, command, args = TelegramBotCommand.parse_cmd_string(message.text)

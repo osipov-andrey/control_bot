@@ -1,7 +1,7 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core._helpers import MessageTarget, TargetTypes
+from core._helpers import MessageTarget, TargetType
 from core.bot._helpers import admin_only, delete_cmd_prefix, get_menu, MenuTextButton
 from core.bot.handlers._static_commands import *
 from core.bot.handlers.main_menu.users_commands import get_create_or_delete_channel_cmd
@@ -37,7 +37,7 @@ async def create_delete_handler(message: types.Message, state: FSMContext):
     cmd = get_create_or_delete_channel_cmd(cmd_text, user_id, is_admin)
 
     message_kwargs = {
-        "target": MessageTarget(TargetTypes.USER.value, user_id)._asdict()
+        "target": MessageTarget(TargetType.USER.value, user_id)._asdict()
     }
 
     async def create_callback(**kwargs):

@@ -1,9 +1,7 @@
-import asyncio
-from functools import wraps
-
 from pathlib import Path
-from sqlite3 import Connection, Cursor, IntegrityError
+from sqlite3 import Cursor, IntegrityError
 from typing import List, Optional, Union
+from functools import wraps
 
 import aiosqlite
 from sqlalchemy import null
@@ -60,12 +58,6 @@ class LocalStorage:
 
         await self._execute_query(query, commit=True)
         return result
-
-    # @connect_to_db
-    # async def check_user_exists(self, user_telegram_id: int, *, connection):
-    #     user = await self.get_user(user_telegram_id, connection=connection)
-    #     if not user:
-    #         raise NoSuchUser
 
     async def get_user(self, tg_id: int) -> User:
         user_query = users_table.select().where(
@@ -188,7 +180,7 @@ class LocalStorage:
         return actuators
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
-        channels = await self._execute_query(queryes.get_user_subscribes_query(user_telegram_id))
+        channels = await self._execute_query(queryes.get_user_subscribes_query(user_telegram_id))  # TODO:
         channels = [Channel(**channel) for channel in channels]
         return channels
 
@@ -209,26 +201,3 @@ class LocalStorage:
     @staticmethod
     def _get_sql(query: Query):
         return str(query.compile(compile_kwargs={"literal_binds": True}))
-
-
-# if __name__ == '__main__':
-    # from sqlalchemy import create_engine
-    # from sqlalchemy.engine import reflection
-    #
-    #
-    # engine = create_engine('sqlite:///control_bot.db')
-    # insp = reflection.Inspector.from_engine(engine)
-    # print(insp.get_columns(users_table))
-
-    # store = LocalStorage()
-    # user = asyncio.run(store.get_user(172698654))
-    # admins = asyncio.run(store.get_admins())
-    # print(user)
-    # print(admins)
-    # asyncio.run(store.save_channel('123'))
-
-# id
-# name
-# phone
-# username
-# telegram_id

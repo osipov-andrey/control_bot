@@ -1,7 +1,7 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core._helpers import MessageTarget, TargetTypes
+from core._helpers import MessageTarget, TargetType
 from core.bot._helpers import admin_only, delete_cmd_prefix, get_menu, MenuTextButton
 from core.bot.handlers._static_commands import *
 from core.bot.handlers.main_menu.users_commands import get_grant_or_revoke_cmd, \
@@ -46,7 +46,7 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
     cmd = await get_subscribe_or_unsubscribe_cmd(cmd_text, user_id, is_admin)
 
     message_kwargs = {
-        "target": MessageTarget(TargetTypes.USER.value, user_id)._asdict()
+        "target": MessageTarget(TargetType.USER.value, user_id)._asdict()
     }
 
     async def subscribe_callback(**kwargs):
@@ -85,7 +85,7 @@ async def grant_handler(message: types.Message, state: FSMContext):
     cmd = await get_grant_or_revoke_cmd(cmd_text, user_id, is_admin)
 
     message_kwargs = {
-        "target": MessageTarget(TargetTypes.USER.value, user_id)._asdict()
+        "target": MessageTarget(TargetType.USER.value, user_id)._asdict()
     }
 
     async def grant_callback(**kwargs):

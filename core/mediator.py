@@ -1,27 +1,24 @@
 import asyncio
+import logging
 from abc import ABC
 from typing import List
-
-import aiogram
-import logging
-
 from functools import singledispatchmethod
 
+import aiogram
 from aiogram.utils import exceptions
 
-from core._helpers import TargetTypes
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.config import config
+from core._helpers import TargetType
+from core.inbox.consumers.rabbit import RabbitConsumer
 from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
     TextMessage, message_fabric
 from core.local_storage.exceptions import NoSuchUser
 from core.local_storage.local_storage import Channel, LocalStorage, User
+from core.memory_storage import ControlBotMemoryStorage
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
-from core.inbox.consumers.rabbit import RabbitConsumer
-from core.memory_storage import ControlBotMemoryStorage
-
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.debug(config)
@@ -30,7 +27,6 @@ _LOGGER.debug(config)
 class BaseInterface(ABC):
 
     def __init__(self):
-
         self.db = LocalStorage()
         self.d = d
 
@@ -49,7 +45,7 @@ class ActuatorsInterface(BaseInterface):
         """ Сохранить логику актуатора в ОЗУ """
         actuator_name = message.target.target_name
 
-        assert message.target.target_type == TargetTypes.SERVICE.value
+        assert message.target.target_type == TargetType.SERVICE.value
         assert actuator_name in self.connected_actuators
 
         self.memory_storage.save_client(actuator_name, message.commands)
@@ -163,7 +159,7 @@ class UsersInterface(BaseInterface):
         return result
 
 
-#TODO singletone
+# TODO singletone
 class Mediator:
     """ Класс связывающий различные компоненты программы """
 

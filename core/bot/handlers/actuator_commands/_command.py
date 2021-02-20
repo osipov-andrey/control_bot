@@ -9,7 +9,7 @@ from cerberus import Validator
 from ._prompts_generators import generate_prompt
 from ...constant_strings import CONTEXT_CANCEL_MENU
 from ...telegram_api import telegram_api_dispatcher
-from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
+from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 
 
@@ -43,13 +43,13 @@ class TelegramBotCommand:
         self.cmd: str = cmd
         self.user_id = user_id
         self.message_id = message_id
-        self.behavior = Behaviors.USER.value
+        self.behavior = Behavior.USER.value
         # self.OBSERVER = telegram_api_dispatcher.observer
 
         cmd_info: CommandSchema = telegram_api_dispatcher.observer.actuators.get_command_info(client, cmd)
         if is_admin and cmd_info.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
-            self.behavior = Behaviors.ADMIN.value
+            self.behavior = Behavior.ADMIN.value
         elif cmd_info.behavior__user:
             self.cmd_scheme = cmd_info.behavior__user
         else:  # Такой команды нет, или она admin_only:
@@ -74,7 +74,7 @@ class TelegramBotCommand:
         arg_name = self.args_to_fill.pop(0)
         arg_scheme = self._get_arg_scheme(arg_name)
 
-        if arg_scheme.schema['type'] == ArgTypes.LIST.value:
+        if arg_scheme.schema['type'] == ArgType.LIST.value:
             self.filled_args[arg_name] = arg_value.split(' ')
             return
 
@@ -132,7 +132,7 @@ class TelegramBotCommand:
             if received_value:
                 arg_scheme = self._get_arg_scheme(required_arg)
 
-                if arg_scheme.schema['type'] == ArgTypes.LIST.value:
+                if arg_scheme.schema['type'] == ArgType.LIST.value:
                     # Если тип аргумента лист - то все,
                     # что есть далее в полученных аргументах - запихиваем в лист
                     self.filled_args[required_arg] = self.list_args[index:]
@@ -153,7 +153,7 @@ class TelegramBotCommand:
             arg_info: ArgScheme,
             received_value: Union[int, str]
     ) -> bool:
-        if arg_info.schema['type'] == ArgTypes.INT.value:
+        if arg_info.schema['type'] == ArgType.INT.value:
             try:  # Телеграм возвращает всегда строки
                 received_value = int(received_value)
             except ValueError:
@@ -186,10 +186,10 @@ class InternalCommand(TelegramBotCommand):
         # self.OBSERVER = telegram_api_dispatcher.observer
         if is_admin and cmd_schema.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_schema.behavior__admin
-            self.behavior = Behaviors.ADMIN.value
+            self.behavior = Behavior.ADMIN.value
         elif cmd_schema.behavior__user:
             self.cmd_scheme = cmd_schema.behavior__user
-            self.behavior = Behaviors.USER.value
+            self.behavior = Behavior.USER.value
         else:  # Такой команды нет, или она admin_only:
             return
         self.cmd = cmd

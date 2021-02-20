@@ -29,7 +29,7 @@ async def generate_prompt(argument_info: ArgScheme, filled_args: dict) -> str:
 
 
 async def _get_granters_prompt(actuator_name: str) -> str:
-    prompt = "<b>Пользователи с доступом к актуатору:</b>\n"
+    prompt = f"<b>Users with {actuator_name} grant:</b>\n"
     granters: List[User] = await telegram_api_dispatcher.observer.actuators.get_granters(actuator_name)
     if granters:
         prompt += "".join(
@@ -37,12 +37,12 @@ async def _get_granters_prompt(actuator_name: str) -> str:
             for granter in granters
         )
     else:
-        prompt += "Нет пользователей"
+        prompt += "No users"
     return prompt
 
 
 async def _get_actuators_prompt():
-    prompt = "<b>Зарегистрированные в боте актуаторы:</b>\n"
+    prompt = "<b>Registered actuators:</b>\n"
     actuators: List[Actuator] = await telegram_api_dispatcher.observer.actuators.get_all()
     if actuators:
         prompt += "".join(
@@ -50,22 +50,22 @@ async def _get_actuators_prompt():
             for actuator in actuators
         )
     else:
-        prompt += "Нет зарегистрированных актуаторов"
+        prompt += "No registered actuators"
     return prompt
 
 
 async def _get_users_prompt() -> str:
-    prompt = "<b>Зарегистрированные в боте пользователи:</b>\n"
+    prompt = "<b>Registered users:</b>\n"
     users: List[User] = await telegram_api_dispatcher.observer.users.get_all()
     if users:
         prompt += "".join(f"/{user.telegram_id} - {user.name}\n" for user in users)
     else:
-        prompt += "Нет зарегистрированных пользователей"
+        prompt += "No registered users"
     return prompt
 
 
 async def _get_subscribers_prompt(channel: str) -> str:
-    """ Получить справку по подписчикам канала """
+    """ Take prompt about channel subscribers """
     subscribers = await telegram_api_dispatcher.observer.channels.get_subscribers(channel)
     prompt = f"<b>{channel} subscribers:</b>\n"
     if subscribers:
