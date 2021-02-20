@@ -12,4 +12,5 @@ class MainMenu(StatesGroup):
     main_menu = State()
     users = State()
     actuators = State()
+    channels = State()
     me = State()

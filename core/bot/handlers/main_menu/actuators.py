@@ -14,18 +14,18 @@ from core.local_storage.local_storage import LocalStorage
 from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
 
-@d.message_handler(commands=["actuators"])
+@d.message_handler(commands=[ACTUATORS])
 @admin_only
 async def actuators_handler(message: types.Message, state: FSMContext):
     await MainMenu.actuators.set()
     menu = get_menu(
-        header="Список команд: ",
+        header="Actuators menu: ",
         commands=[
-            MenuTextButton("all_actuators", "-------"),
-            MenuTextButton("create", "Create actuator"),
-            MenuTextButton("delete", "Delete actuator"),
-            MenuTextButton("grant", "Предоставить пользователю доступ к актуатору"),
-            MenuTextButton("revoke", "Закрыть пользователю доступ к актуатору"),
+            MenuTextButton(ALL_ACTUATORS, "-------"),
+            MenuTextButton(CREATE_ACTUATOR, "Create actuator"),
+            MenuTextButton(DELETE_ACTUATOR, "Delete actuator"),
+            MenuTextButton(GRANT, "Предоставить пользователю доступ к актуатору"),
+            MenuTextButton(REVOKE, "Закрыть пользователю доступ к актуатору"),
             # grant, revoke - calling from users submenu
         ]
     )

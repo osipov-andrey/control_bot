@@ -2,9 +2,10 @@ from aiogram import types
 
 from core.bot._helpers import get_menu, MenuTextButton
 from core.bot.telegram_api import telegram_api_dispatcher
+from core.bot.handlers._static_commands import *
 
 
-@telegram_api_dispatcher.message_handler(commands=["start"])
+@telegram_api_dispatcher.message_handler(commands=[START])
 async def main_menu_handler(message: types.Message, state):
     observer = telegram_api_dispatcher.observer
     telegram_id = message.from_user.id
@@ -23,11 +24,11 @@ async def main_menu_handler(message: types.Message, state):
     menu = get_menu(
         header="Main menu:",
         commands=[
-            MenuTextButton("start", "main menu"),
-            MenuTextButton("users", "actions with users", admin_only=True),
-            MenuTextButton("channels", "actions with channels", admin_only=True),
-            MenuTextButton("actuators", "actions with actuators", admin_only=True),
-            MenuTextButton("me", "account settings"),
+            MenuTextButton(START, "main menu"),
+            MenuTextButton(USERS, "actions with users", admin_only=True),
+            MenuTextButton(CHANNELS, "actions with channels", admin_only=True),
+            MenuTextButton(ACTUATORS, "actions with actuators", admin_only=True),
+            MenuTextButton(ME, "account settings"),
         ] + actuators,
         is_admin=is_admin
     )
