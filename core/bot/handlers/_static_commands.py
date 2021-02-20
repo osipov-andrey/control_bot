@@ -8,6 +8,7 @@ USERS = "users"
 ME = "me"
 
 # channels
+ALL_CHANNELS = "allChannels"
 CREATE_CHANNEL = "createChannel"
 DELETE_CHANNEL = "deleteChannel"
 

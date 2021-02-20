@@ -55,6 +55,7 @@ channel_table = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True, index=True),
     Column("name", String, unique=True, nullable=False, index=True),
+    Column("description", String, nullable=True),
 )
 Channel = create_mapping(channel_table)
 

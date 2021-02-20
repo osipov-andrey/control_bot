@@ -15,7 +15,7 @@ TABLES = [
 def create_tables():
     engine = create_engine(f'sqlite:///{local_storage.PATH_TO_DB}')
     for table in TABLES:
-        table.create(engine, checkfirst=True)
+        table.create_channel(engine, checkfirst=True)
 
 
 if __name__ == '__main__':

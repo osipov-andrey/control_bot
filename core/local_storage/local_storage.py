@@ -92,9 +92,22 @@ class LocalStorage:
         admins = [User(*admin) for admin in admins]
         return admins
 
-    async def save_channel(self, name: str):
-        query: Query = channel_table.insert().values({'name': name})
-        await self._execute_query(query, commit=True)
+    async def all_channels(self) -> List[Channel]:
+        query: Query = channel_table.select()
+        result = await self._execute_query(query, fetchall=True)
+        return [Channel(*channel) for channel in result]
+
+    async def save_channel(self, name: str, description: str) -> bool:
+        query: Query = channel_table.insert().values({"name": name, "description": description})
+        result = await self._execute_query(query, commit=True)
+        return result.rowcount == 1
+
+    async def delete_channel(self, name: str) -> bool:
+        query: Query = channel_table.delete_channel().where(
+            channel_table.c.name == name
+        )
+        result = await self._execute_query(query, commit=True)
+        return result.rowcount == 1
 
     async def get_subscribers(self, channel: str) -> List[User]:
         subscribers_query = queryes.get_subscribers(channel)

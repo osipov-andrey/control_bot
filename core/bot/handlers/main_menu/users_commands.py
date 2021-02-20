@@ -2,6 +2,7 @@ from core._helpers import ArgScheme, ArgTypes, CommandSchema
 from core.bot.handlers.actuator_commands._command import InternalCommand
 from core.bot.handlers._static_commands import *
 from core.bot.telegram_api import telegram_api_dispatcher as d
+# TODO: Всю эту срань надо переписать
 
 
 def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
@@ -98,7 +99,38 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
     cmd_schema = CommandSchema(
         hidden=False,
         behavior__admin={
-            "description": "Create/delete actuator",
+            "description": "Create/delete_channel actuator",
+            "args": args,
+        },
+    )
+
+    command = InternalCommand(
+        cmd,
+        user_id,
+        cmd_schema=cmd_schema,
+        is_admin=is_admin,
+    )
+    return command
+
+
+def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
+    args = {
+        "channel_name": ArgScheme(
+            description="Channel name",
+            schema={"type": ArgTypes.STR.value},
+            # is_channels=True,
+        )._asdict(),
+        "description": ArgScheme(
+            description="Channel description",
+            schema={"type": ArgTypes.STR.value},
+        )._asdict(),
+    }
+    if cmd == DELETE_CHANNEL:
+        args.pop("description")
+    cmd_schema = CommandSchema(
+        hidden=False,
+        behavior__admin={
+            "description": "Create/delete_channel channel",
             "args": args,
         },
     )

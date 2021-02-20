@@ -108,11 +108,14 @@ class ActuatorsInterface(BaseInterface):
 
 class ChannelsInterface(BaseInterface):
 
-    async def create(self, channel: str):
-        ...
+    async def all_channels(self) -> List[Channel]:
+        return await self.db.all_channels()
 
-    async def delete(self, channel: str):
-        ...
+    async def create_channel(self, channel: str, description: str) -> bool:
+        return await self.db.save_channel(channel, description)
+
+    async def delete_channel(self, channel: str) -> bool:
+        return await self.db.delete_channel(channel)
 
     async def subscribe(self, user_telegram_id: int, channel: str):
         await self.db.channel_subscribe(user_telegram_id, channel)
