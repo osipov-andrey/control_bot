@@ -6,11 +6,11 @@ from typing import Optional, List, Union
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
+from ._prompts_generators import generate_prompt
 from ...constant_strings import CONTEXT_CANCEL_MENU
 from ...telegram_api import telegram_api_dispatcher
 from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
-from core.local_storage.schema import Actuator, User
 
 
 class TelegramBotCommand:
@@ -87,7 +87,6 @@ class TelegramBotCommand:
             self.args_to_fill.insert(0, arg_name)
 
     async def get_next_step(self) -> dict:
-        prompt = ""
         message_kwargs = dict()
         argument_to_fill = self.args_to_fill[0]
         argument_info = self.cmd_scheme.args.get(argument_to_fill)
@@ -95,27 +94,10 @@ class TelegramBotCommand:
         options = argument_info.options
         if options:
             message_kwargs["reply_markup"] = self._generate_keyboard(options)
-        # TODO: все, что ниже, в отдельные функции
         message = ""
         if self.validation_errors:
             message += self._get_validation_report()
-        if argument_info.is_user:
-            prompt = await self._get_users_prompt()
-        elif argument_info.is_actuators:
-            prompt = await self._get_actuators_prompt()
-        elif argument_info.is_channels:
-            prompt = await self._get_channels_prompt()
-        elif argument_info.is_granter:
-            # Чтобы получить подсказку по пользователям, имеющим доступ к актуатору,
-            # надо сначала указать сам актуатор (при вызове команды)
-            actuator_name = self.filled_args.get("actuator")
-            if actuator_name is not None:
-                prompt = await self._get_granters_prompt(actuator_name)
-        elif argument_info.is_subscriber:
-            # Like is_granter
-            channel = self.filled_args.get("channel")
-            if channel is not None:
-                prompt = await self._get_subscribers_prompt(channel)
+        prompt = await generate_prompt(argument_info, self.filled_args)
         message += \
             f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
             f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
@@ -124,59 +106,6 @@ class TelegramBotCommand:
 
         message_kwargs["text"] = message
         return message_kwargs
-
-    async def _get_granters_prompt(self, actuator_name: str) -> str:
-        prompt = "<b>Пользователи с доступом к актуатору:</b>\n"
-        granters: List[User] = await telegram_api_dispatcher.observer.actuators.get_granters(actuator_name)
-        if granters:
-            prompt += "".join(
-                f"/{granter.telegram_id} - {granter.name}\n"
-                for granter in granters
-            )
-        else:
-            prompt += "Нет пользователей"
-        return prompt
-
-    async def _get_actuators_prompt(self):
-        prompt = "<b>Зарегистрированные в боте актуаторы:</b>\n"
-        actuators: List[Actuator] = await telegram_api_dispatcher.observer.actuators.get_all()
-        if actuators:
-            prompt += "".join(
-                f"/{actuator.name} - {actuator.description}\n"
-                for actuator in actuators
-            )
-        else:
-            prompt += "Нет зарегистрированных актуаторов"
-        return prompt
-
-    async def _get_users_prompt(self) -> str:
-        prompt = "<b>Зарегистрированные в боте пользователи:</b>\n"
-        users: List[User] = await telegram_api_dispatcher.observer.users.get_all()
-        if users:
-            prompt += "".join(f"/{user.telegram_id} - {user.name}\n" for user in users)
-        else:
-            prompt += "Нет зарегистрированных пользователей"
-        return prompt
-
-    async def _get_subscribers_prompt(self, channel: str) -> str:
-        """ Получить справку по подписчикам канала """
-        subscribers = await telegram_api_dispatcher.observer.channels.get_subscribers(channel)
-        prompt = f"<b>{channel} subscribers:</b>\n"
-        if subscribers:
-            prompt += "".join(f"/{s.telegram_id} - {s.name}\n" for s in subscribers)
-        else:
-            prompt += "No subscribers"
-        return prompt
-
-    async def _get_channels_prompt(self):
-        """ Take prompt about channels """
-        channels = await telegram_api_dispatcher.observer.channels.all_channels()
-        prompt = "<b>Registered channels:</b>\n"
-        if channels:
-            prompt += "".join(f"/{channel.name} - {channel.description}\n" for channel in channels)
-        else:
-            prompt += "No channels"
-        return prompt
 
     def _get_validation_report(self) -> str:
         report = "<b>Следующие аргументы введены с ошибками:</b>\n" \
