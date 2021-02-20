@@ -94,7 +94,7 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
         )._asdict(),
     }
     if cmd == DELETE_ACTUATOR:
-        args.pop("descriptions")
+        args.pop("description")
     cmd_schema = CommandSchema(
         hidden=False,
         behavior__admin={

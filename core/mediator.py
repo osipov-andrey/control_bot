@@ -42,6 +42,9 @@ class ActuatorsInterface(BaseInterface):
         self.memory_storage = memory_storage
         self.connected_actuators = dict()
 
+    def is_connected(self, actuator_name) -> bool:
+        return actuator_name in self.connected_actuators.keys()
+
     def save_actuator_info(self, message: TextMessage):
         """ Сохранить логику актуатора в ОЗУ """
         actuator_name = message.target.target_name
