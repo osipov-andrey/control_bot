@@ -11,7 +11,7 @@ from sqlalchemy.orm import Query
 
 from . import queryes
 from .db_enums import UserEvents
-from .exceptions import AlreadyHasItException, NoSuchUser
+from .exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
 from .schema import *
 
 
@@ -92,6 +92,16 @@ class LocalStorage:
         admins = [User(*admin) for admin in admins]
         return admins
 
+    async def get_channel(self, channel_name: str) -> Channel:
+        user_query = channel_table.select().where(
+            channel_table.c.name == channel_name
+        )
+        channel = await self._execute_query(user_query, fetchall=False)
+        if not channel:
+            raise NoSuchChannel
+        channel = Channel(*channel)
+        return channel
+
     async def all_channels(self) -> List[Channel]:
         query: Query = channel_table.select()
         result = await self._execute_query(query, fetchall=True)
@@ -116,12 +126,11 @@ class LocalStorage:
         return subscribers
 
     async def channel_subscribe(self, user_telegram_id: int, channel: str) -> bool:
-        # Проверим есть ли вообще такой юзер
-        await self.get_user(user_telegram_id)
-        # TODO: использовать этого пользователя в дальнейшем запросе
+        user = await self.get_user(user_telegram_id)
+        channel = await self.get_channel(channel)
         subscribe_query = channels_users_associations.insert().values({
-            "user_id": queryes.get_user_id_query(user_telegram_id),
-            "channel_id": queryes.get_channel_id_query(channel)
+            "user_id": user.id,
+            "channel_id": channel.id
         })
         result = await self._execute_query(subscribe_query, commit=True)
         return bool(result.rowcount)

@@ -9,7 +9,7 @@ from core.bot.handlers.main_menu.users_commands import get_grant_or_revoke_cmd, 
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.local_storage.exceptions import AlreadyHasItException, NoSuchUser
+from core.local_storage.exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
 from core.local_storage.local_storage import LocalStorage
 from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
@@ -37,13 +37,13 @@ async def all_users_handler(message: types.Message, state: FSMContext):
     await message.answer(users)
 
 
-@d.message_handler(commands=[SUBSCRIBE, UNSUBSCRIBE], state=MainMenu.users)
+@d.message_handler(commands=[SUBSCRIBE, UNSUBSCRIBE], state=[MainMenu.users, MainMenu.channels])
 async def subscribe_handler(message: types.Message, state: FSMContext):
 
     user_id = message.chat.id
     is_admin = True  # в state=MainMenu.users может попасть только админ
     cmd_text = delete_cmd_prefix(message.text)
-    cmd = get_subscribe_or_unsubscribe_cmd(cmd_text, user_id, is_admin)
+    cmd = await get_subscribe_or_unsubscribe_cmd(cmd_text, user_id, is_admin)
 
     message_kwargs = {
         "target": MessageTarget(TargetTypes.USER.value, user_id)._asdict()
@@ -52,8 +52,12 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
     async def subscribe_callback(**kwargs):
         user_to_subs_id = kwargs.get("user_id")
         channel = kwargs.get("channel")
-        await d.observer.channels.subscribe(user_to_subs_id, channel)
-        await message.answer(f"Пользователь {user_to_subs_id} подписан на канал {channel}")
+        try:
+            await d.observer.channels.subscribe(user_to_subs_id, channel)
+        except AlreadyHasItException:
+            await message.answer(f"The user {user_to_subs_id} is ALREADY subscribed to the channel {channel}")
+        else:
+            await message.answer(f"The user {user_to_subs_id} is subscribed to the channel {channel}")
 
     async def unsubscribe_callback(**kwargs):
         user_to_subs_id = kwargs.get("user_id")

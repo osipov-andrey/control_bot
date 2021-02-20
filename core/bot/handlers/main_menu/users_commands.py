@@ -5,7 +5,8 @@ from core.bot.telegram_api import telegram_api_dispatcher as d
 # TODO: Всю эту срань надо переписать
 
 
-def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
+async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
+    channels = [c.name for c in await d.observer.channels.all_channels()]
     """
     Схема команды для подписки/отписки на канал.
     Так как для этих двух действий нужны одинаковые аргументы -
@@ -18,16 +19,16 @@ def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
     то для внутренних команд она выполняется (вызывается) в обработчике.
     """
     args = {
+        "channel": ArgScheme(
+            description="Название канала",
+            schema={"type": ArgTypes.STR.value, "allowed": channels},
+            is_channels=True
+        )._asdict(),
         "user_id": ArgScheme(
             description="ID пользователя",
             schema={"type": ArgTypes.INT.value},
             is_user=True if cmd == SUBSCRIBE else False,
-            # is_subscriber=True if cmd == "unsubscribe" else False,
-        )._asdict(),
-        "channel": ArgScheme(
-            description="Название канала",
-            schema={"type": ArgTypes.STR.value}
-            # TODO: options
+            is_subscriber=True if cmd == UNSUBSCRIBE else False,
         )._asdict()
     }
 
@@ -118,7 +119,7 @@ def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
         "channel_name": ArgScheme(
             description="Channel name",
             schema={"type": ArgTypes.STR.value},
-            # is_channels=True,
+            is_channels=True,
         )._asdict(),
         "description": ArgScheme(
             description="Channel description",

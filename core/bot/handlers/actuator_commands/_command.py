@@ -103,14 +103,19 @@ class TelegramBotCommand:
             prompt = await self._get_users_prompt()
         elif argument_info.is_actuators:
             prompt = await self._get_actuators_prompt()
-        elif argument_info.is_subscriber:
-            prompt = await self._get_subscribers_prompt()
+        elif argument_info.is_channels:
+            prompt = await self._get_channels_prompt()
         elif argument_info.is_granter:
             # Чтобы получить подсказку по пользователям, имеющим доступ к актуатору,
             # надо сначала указать сам актуатор (при вызове команды)
             actuator_name = self.filled_args.get("actuator")
             if actuator_name is not None:
                 prompt = await self._get_granters_prompt(actuator_name)
+        elif argument_info.is_subscriber:
+            # Like is_granter
+            channel = self.filled_args.get("channel")
+            if channel is not None:
+                prompt = await self._get_subscribers_prompt(channel)
         message += \
             f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
             f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
@@ -156,6 +161,22 @@ class TelegramBotCommand:
     async def _get_subscribers_prompt(self, channel: str) -> str:
         """ Получить справку по подписчикам канала """
         subscribers = await telegram_api_dispatcher.observer.channels.get_subscribers(channel)
+        prompt = f"<b>{channel} subscribers:</b>\n"
+        if subscribers:
+            prompt += "".join(f"/{s.telegram_id} - {s.name}\n" for s in subscribers)
+        else:
+            prompt += "No subscribers"
+        return prompt
+
+    async def _get_channels_prompt(self):
+        """ Take prompt about channels """
+        channels = await telegram_api_dispatcher.observer.channels.all_channels()
+        prompt = "<b>Registered channels:</b>\n"
+        if channels:
+            prompt += "".join(f"/{channel.name} - {channel.description}\n" for channel in channels)
+        else:
+            prompt += "No channels"
+        return prompt
 
     def _get_validation_report(self) -> str:
         report = "<b>Следующие аргументы введены с ошибками:</b>\n" \
