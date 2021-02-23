@@ -5,41 +5,35 @@ from enum import Enum
 from typing import Dict, Optional, Union
 
 
-class TargetTypes(Enum):
+class TargetType(Enum):
     SERVICE = "service"
     USER = "user"
     CHANNEL = "channel"
 
 
-class ArgTypes(Enum):
+class ArgType(Enum):
     STR = "string"
     INT = "integer"
     LIST = "list"
     # USER = "user"
 
 
-class Behaviors(Enum):
+class Behavior(Enum):
     USER = "user"
     ADMIN = "admin"
     SERVICE = "service"
 
 
-# TODO: replace with dataclass?
-MessageTarget = namedtuple(
-    "MessageTarget",
-    "target_type, target_name, message_id", defaults=(None, )
-)
+@dataclass
+class MessageTarget:
+    target_type: TargetType
+    target_name: str
+    message_id: Optional[str] = None
 
 
-# CommandScheme = namedtuple(
-#     "CommandScheme",
-#     "description, hidden, admin_only, args"
-# )
 @dataclass
 class CommandBehavior:
     description: str
-    # hidden: bool
-    # admin_only: bool
     args: Dict[str, Union['ArgScheme', dict]]
 
     def __post_init__(self):
@@ -54,26 +48,24 @@ class CommandSchema:
     hidden: bool
     behavior__admin: Optional[Union['CommandBehavior', dict]] = None
     behavior__user: Optional[Union['CommandBehavior', dict]] = None
-    # description: str
-    # admin_only: bool
-    # args: Dict[str, Union['ArgScheme', dict]]
 
     def __post_init__(self):
         if self.behavior__admin:
             self.behavior__admin = CommandBehavior(**self.behavior__admin)
         if self.behavior__user:
             self.behavior__user = CommandBehavior(**self.behavior__user)
-        # self.args = {
-        #     arg_name: ArgScheme(**arg_info)
-        #     for arg_name, arg_info in self.args.items()
-        # }
 
 
-ArgScheme = namedtuple(
-    #TODO: to dataclass
-    "ArgScheme",
-    "description, schema, options, is_user, is_subscriber, is_actuators, is_granter", defaults=(None, None, None, None, None)
-)
+@dataclass
+class ArgScheme:
+    description: str
+    schema: dict
+    options: Optional[list] = None
+    is_user: Optional[bool] = False
+    is_actuator: Optional[bool] = False
+    is_granter: Optional[bool] = False
+    is_channel: Optional[bool] = False
+    is_subscriber: Optional[bool] = False
 
 
 def get_log_cover(cover_name: str) -> str:

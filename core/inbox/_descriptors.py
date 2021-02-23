@@ -4,7 +4,7 @@ from typing import List
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
-from .._helpers import MessageTarget, TargetTypes
+from .._helpers import MessageTarget, TargetType
 from ..bot.telegram_api import telegram_api_dispatcher
 
 
@@ -15,7 +15,7 @@ class MessageTargetDescriptor:
 
         instance.__dict__["target"] = target
 
-        if target.target_type == TargetTypes.USER.value:
+        if target.target_type == TargetType.USER.value:
             instance.__dict__["chat_id"] = target.target_name
             instance.__dict__["message_id"] = target.message_id
 

@@ -6,11 +6,11 @@ from typing import Optional, List, Union
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
+from ._prompts_generators import generate_prompt
 from ...constant_strings import CONTEXT_CANCEL_MENU
 from ...telegram_api import telegram_api_dispatcher
-from core._helpers import ArgScheme, ArgTypes, Behaviors, CommandBehavior, CommandSchema
+from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
-from core.local_storage.schema import Actuator, User
 
 
 class TelegramBotCommand:
@@ -43,13 +43,13 @@ class TelegramBotCommand:
         self.cmd: str = cmd
         self.user_id = user_id
         self.message_id = message_id
-        self.behavior = Behaviors.USER.value
+        self.behavior = Behavior.USER.value
         # self.OBSERVER = telegram_api_dispatcher.observer
 
         cmd_info: CommandSchema = telegram_api_dispatcher.observer.actuators.get_command_info(client, cmd)
         if is_admin and cmd_info.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
-            self.behavior = Behaviors.ADMIN.value
+            self.behavior = Behavior.ADMIN.value
         elif cmd_info.behavior__user:
             self.cmd_scheme = cmd_info.behavior__user
         else:  # Такой команды нет, или она admin_only:
@@ -74,7 +74,7 @@ class TelegramBotCommand:
         arg_name = self.args_to_fill.pop(0)
         arg_scheme = self._get_arg_scheme(arg_name)
 
-        if arg_scheme.schema['type'] == ArgTypes.LIST.value:
+        if arg_scheme.schema['type'] == ArgType.LIST.value:
             self.filled_args[arg_name] = arg_value.split(' ')
             return
 
@@ -83,11 +83,9 @@ class TelegramBotCommand:
         if validated:
             self.filled_args[arg_name] = arg_value
         else:
-            # TODO результат валидации в список с ошибками валидации
             self.args_to_fill.insert(0, arg_name)
 
     async def get_next_step(self) -> dict:
-        prompt = ""
         message_kwargs = dict()
         argument_to_fill = self.args_to_fill[0]
         argument_info = self.cmd_scheme.args.get(argument_to_fill)
@@ -95,22 +93,10 @@ class TelegramBotCommand:
         options = argument_info.options
         if options:
             message_kwargs["reply_markup"] = self._generate_keyboard(options)
-        # TODO: все, что ниже, в отдельные функции
         message = ""
         if self.validation_errors:
             message += self._get_validation_report()
-        if argument_info.is_user:
-            prompt = await self._get_users_prompt()
-        elif argument_info.is_actuators:
-            prompt = await self._get_actuators_prompt()
-        elif argument_info.is_subscriber:
-            prompt = await self._get_subscribers_prompt()
-        elif argument_info.is_granter:
-            # Чтобы получить подсказку по пользователям, имеющим доступ к актуатору,
-            # надо сначала указать сам актуатор (при вызове команды)
-            actuator_name = self.filled_args.get("actuator")
-            if actuator_name is not None:
-                prompt = await self._get_granters_prompt(actuator_name)
+        prompt = await generate_prompt(argument_info, self.filled_args)
         message += \
             f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
             f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
@@ -119,43 +105,6 @@ class TelegramBotCommand:
 
         message_kwargs["text"] = message
         return message_kwargs
-
-    async def _get_granters_prompt(self, actuator_name: str) -> str:
-        prompt = "<b>Пользователи с доступом к актуатору:</b>\n"
-        granters: List[User] = await telegram_api_dispatcher.observer.actuators.get_granters(actuator_name)
-        if granters:
-            prompt += "".join(
-                f"/{granter.telegram_id} - {granter.name}\n"
-                for granter in granters
-            )
-        else:
-            prompt += "Нет пользователей"
-        return prompt
-
-    async def _get_actuators_prompt(self):
-        prompt = "<b>Зарегистрированные в боте актуаторы:</b>\n"
-        actuators: List[Actuator] = await telegram_api_dispatcher.observer.actuators.get_all()
-        if actuators:
-            prompt += "".join(
-                f"/{actuator.name} - {actuator.description}\n"
-                for actuator in actuators
-            )
-        else:
-            prompt += "Нет зарегистрированных актуаторов"
-        return prompt
-
-    async def _get_users_prompt(self) -> str:
-        prompt = "<b>Зарегистрированные в боте пользователи:</b>\n"
-        users: List[User] = await telegram_api_dispatcher.observer.users.get_all()
-        if users:
-            prompt += "".join(f"/{user.telegram_id} - {user.name}\n" for user in users)
-        else:
-            prompt += "Нет зарегистрированных пользователей"
-        return prompt
-
-    async def _get_subscribers_prompt(self, channel: str) -> str:
-        """ Получить справку по подписчикам канала """
-        subscribers = await telegram_api_dispatcher.observer.channels.get_subscribers(channel)
 
     def _get_validation_report(self) -> str:
         report = "<b>Следующие аргументы введены с ошибками:</b>\n" \
@@ -182,7 +131,7 @@ class TelegramBotCommand:
             if received_value:
                 arg_scheme = self._get_arg_scheme(required_arg)
 
-                if arg_scheme.schema['type'] == ArgTypes.LIST.value:
+                if arg_scheme.schema['type'] == ArgType.LIST.value:
                     # Если тип аргумента лист - то все,
                     # что есть далее в полученных аргументах - запихиваем в лист
                     self.filled_args[required_arg] = self.list_args[index:]
@@ -203,7 +152,7 @@ class TelegramBotCommand:
             arg_info: ArgScheme,
             received_value: Union[int, str]
     ) -> bool:
-        if arg_info.schema['type'] == ArgTypes.INT.value:
+        if arg_info.schema['type'] == ArgType.INT.value:
             try:  # Телеграм возвращает всегда строки
                 received_value = int(received_value)
             except ValueError:
@@ -220,10 +169,6 @@ class TelegramBotCommand:
     def _get_arg_scheme(self, arg_name: str) -> ArgScheme:
         return self.cmd_scheme.args.get(arg_name)
 
-    # def __repr__(self):
-    #     return f"{self.__class__.__name__}"\
-    #            f"(full_cmd=\"{self._full_cmd}\", user-id=\"{self.user_id}\")"
-
     def __str__(self):
         return f"{self.__class__.__name__}: " \
                f"(cmd={self.cmd}; args={self.list_args}; user-id={self.user_id})"
@@ -236,10 +181,10 @@ class InternalCommand(TelegramBotCommand):
         # self.OBSERVER = telegram_api_dispatcher.observer
         if is_admin and cmd_schema.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_schema.behavior__admin
-            self.behavior = Behaviors.ADMIN.value
+            self.behavior = Behavior.ADMIN.value
         elif cmd_schema.behavior__user:
             self.cmd_scheme = cmd_schema.behavior__user
-            self.behavior = Behaviors.USER.value
+            self.behavior = Behavior.USER.value
         else:  # Такой команды нет, или она admin_only:
             return
         self.cmd = cmd

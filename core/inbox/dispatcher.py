@@ -4,7 +4,7 @@ from typing import Iterable
 
 from .._constants import INTRO_COMMAND
 from .._helpers import Issue, MessageTarget
-from ..inbox.messages import BaseMessage, TargetTypes, message_fabric
+from ..inbox.messages import BaseMessage, TargetType, message_fabric
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,21 +29,21 @@ class InboxDispatcher:
             self.observer.actuators.save_actuator_info(message)
             return
 
-        if message.target.target_type == TargetTypes.USER.value:
+        if message.target.target_type == TargetType.USER.value:
             result_message = await self.observer.send(message)
             result_id = result_message.message_id
 
             await self._check_replies(message, result_id)
             await self._check_issue(message, result_id)
 
-        if message.target.target_type == TargetTypes.CHANNEL.value:
+        if message.target.target_type == TargetType.CHANNEL.value:
             channel = message.target.target_name
             subscribers: Iterable = await self.observer.channels.get_subscribers(channel)
 
             for subs in subscribers:
                 # TODO некрасиво это все
                 new_target = MessageTarget(
-                    target_type=TargetTypes.USER.value,
+                    target_type=TargetType.USER.value,
                     target_name=subs,
                     message_id=message.target.message_id
                 )

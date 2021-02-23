@@ -51,8 +51,7 @@ def get_subscribers(channel_name: str) -> Select:
         channels_users_associations.c.channel_id == channel_id_query
     )
 
-    subscribers_query = select(
-        [users_table.c.telegram_id, ],
+    subscribers_query = users_table.select().where(
         users_table.c.id.in_(users_id_query)
     )
     return subscribers_query

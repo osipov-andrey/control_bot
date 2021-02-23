@@ -1,9 +1,8 @@
 import argparse
 import logging
 
-from .mediator import Mediator
-from .local_storage.migrations import create_tables
-
+from core.mediator import Mediator
+from core.local_storage.migrations import create_tables
 
 logging.basicConfig(level=logging.INFO)
 
