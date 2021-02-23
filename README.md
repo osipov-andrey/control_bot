@@ -38,3 +38,8 @@ http://localhost:8080/sse/ACTUATOR_NAME/events,
 http://localhost:8080/inbox - можно использовать HTTPPublisher 
 библиотеки *cba* с указанием этого URL **(В будущем это будет опционально)**.
 
+## Docker (in work)
+
+1. docker-compose build
+2. docker-compose run app db
+3. docker-compose up -d

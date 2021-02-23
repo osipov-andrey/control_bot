@@ -1,10 +1,12 @@
 import logging
 from asyncio import Queue
+from dataclasses import asdict
 from typing import Iterable
 
-from core._constants import INTRO_COMMAND
-from core._helpers import Issue, MessageTarget
-from core.inbox.messages import BaseMessage, TargetTypes, message_fabric
+from .._constants import INTRO_COMMAND
+from .._helpers import Issue, MessageTarget
+from ..inbox.messages import BaseMessage, TargetType, message_fabric
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,26 +30,26 @@ class InboxDispatcher:
             self.observer.actuators.save_actuator_info(message)
             return
 
-        if message.target.target_type == TargetTypes.USER.value:
+        if message.target.target_type == TargetType.USER.value:
             result_message = await self.observer.send(message)
             result_id = result_message.message_id
 
             await self._check_replies(message, result_id)
             await self._check_issue(message, result_id)
 
-        if message.target.target_type == TargetTypes.CHANNEL.value:
+        if message.target.target_type == TargetType.CHANNEL.value:
             channel = message.target.target_name
             subscribers: Iterable = await self.observer.channels.get_subscribers(channel)
 
             for subs in subscribers:
                 # TODO некрасиво это все
                 new_target = MessageTarget(
-                    target_type=TargetTypes.USER.value,
+                    target_type=TargetType.USER.value,
                     target_name=subs,
                     message_id=message.target.message_id
                 )
                 new_message_dict = dict(message.__dict__)
-                new_message_dict["target"] = new_target._asdict()
+                new_message_dict["target"] = asdict(new_target)
                 new_message_dict["text"] = f"Channel <b>{channel}</b>\n" + new_message_dict["text"]
                 new_message = message_fabric(new_message_dict)
                 await self.dispatch(new_message)

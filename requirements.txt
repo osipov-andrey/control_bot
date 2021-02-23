@@ -1,6 +1,7 @@
 aioamqp==0.14.0
 aiogram==2.11.2
 aiohttp-sse==2.0.0
+aiosqlite~=0.16.1
 PyYAML==5.3.1
 
 

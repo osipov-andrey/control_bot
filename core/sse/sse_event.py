@@ -1,5 +1,7 @@
 import json
-from core._helpers import MessageTarget
+from dataclasses import asdict
+
+from .._helpers import MessageTarget
 
 
 class SSEEvent:
@@ -15,7 +17,7 @@ class SSEEvent:
     ):
         self.event = event
         self.command = command
-        self.target = target._asdict()
+        self.target = asdict(target)
         self.args = args if args else {}
         self.behavior = behavior
 

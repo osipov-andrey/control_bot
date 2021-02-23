@@ -1,7 +1,7 @@
 import aiogram
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from config import config
+from core.config import config
 
 
 __all__ = ['telegram_api_dispatcher', 'state_storage']

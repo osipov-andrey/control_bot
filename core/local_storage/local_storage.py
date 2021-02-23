@@ -1,18 +1,19 @@
-import asyncio
-from functools import wraps
-
 from pathlib import Path
-from sqlite3 import Connection, Cursor, IntegrityError
+from sqlite3 import Cursor, IntegrityError
 from typing import List, Optional, Union
+from functools import wraps
 
 import aiosqlite
 from sqlalchemy import null
 from sqlalchemy.orm import Query
 
-from core.local_storage import queryes
-from core.local_storage.db_enums import UserEvents
-from core.local_storage.exceptions import AlreadyHasItException, NoSuchUser
-from core.local_storage.schema import *
+from . import queryes
+from .db_enums import UserEvents
+from .exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
+from .schema import *
+
+
+PATH_TO_DB = Path(__file__).parent.absolute().joinpath("db_dump").joinpath("control_bot.sqlite")
 
 
 def connect_to_db(method):
@@ -33,7 +34,7 @@ def connect_to_db(method):
 
 
 class LocalStorage:
-    db = Path(__file__).parent.absolute().joinpath("control_bot.db")
+    db = PATH_TO_DB
 
     async def upsert_user(
             self,
@@ -57,12 +58,6 @@ class LocalStorage:
 
         await self._execute_query(query, commit=True)
         return result
-
-    # @connect_to_db
-    # async def check_user_exists(self, user_telegram_id: int, *, connection):
-    #     user = await self.get_user(user_telegram_id, connection=connection)
-    #     if not user:
-    #         raise NoSuchUser
 
     async def get_user(self, tg_id: int) -> User:
         user_query = users_table.select().where(
@@ -89,9 +84,32 @@ class LocalStorage:
         admins = [User(*admin) for admin in admins]
         return admins
 
-    async def save_channel(self, name: str):
-        query: Query = channel_table.insert().values({'name': name})
-        await self._execute_query(query, commit=True)
+    async def get_channel(self, channel_name: str) -> Channel:
+        user_query = channel_table.select().where(
+            channel_table.c.name == channel_name
+        )
+        channel = await self._execute_query(user_query, fetchall=False)
+        if not channel:
+            raise NoSuchChannel
+        channel = Channel(*channel)
+        return channel
+
+    async def all_channels(self) -> List[Channel]:
+        query: Query = channel_table.select()
+        result = await self._execute_query(query, fetchall=True)
+        return [Channel(*channel) for channel in result]
+
+    async def save_channel(self, name: str, description: str) -> bool:
+        query: Query = channel_table.insert().values({"name": name, "description": description})
+        result = await self._execute_query(query, commit=True)
+        return result.rowcount == 1
+
+    async def delete_channel(self, name: str) -> bool:
+        query: Query = channel_table.delete_channel().where(
+            channel_table.c.name == name
+        )
+        result = await self._execute_query(query, commit=True)
+        return result.rowcount == 1
 
     async def get_subscribers(self, channel: str) -> List[User]:
         subscribers_query = queryes.get_subscribers(channel)
@@ -100,12 +118,11 @@ class LocalStorage:
         return subscribers
 
     async def channel_subscribe(self, user_telegram_id: int, channel: str) -> bool:
-        # Проверим есть ли вообще такой юзер
-        await self.get_user(user_telegram_id)
-        # TODO: использовать этого пользователя в дальнейшем запросе
+        user = await self.get_user(user_telegram_id)
+        channel = await self.get_channel(channel)
         subscribe_query = channels_users_associations.insert().values({
-            "user_id": queryes.get_user_id_query(user_telegram_id),
-            "channel_id": queryes.get_channel_id_query(channel)
+            "user_id": user.id,
+            "channel_id": channel.id
         })
         result = await self._execute_query(subscribe_query, commit=True)
         return bool(result.rowcount)
@@ -163,7 +180,7 @@ class LocalStorage:
         return actuators
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
-        channels = await self._execute_query(queryes.get_user_subscribes_query(user_telegram_id))
+        channels = await self._execute_query(queryes.get_user_subscribes_query(user_telegram_id))  # TODO:
         channels = [Channel(**channel) for channel in channels]
         return channels
 
@@ -184,26 +201,3 @@ class LocalStorage:
     @staticmethod
     def _get_sql(query: Query):
         return str(query.compile(compile_kwargs={"literal_binds": True}))
-
-
-# if __name__ == '__main__':
-    # from sqlalchemy import create_engine
-    # from sqlalchemy.engine import reflection
-    #
-    #
-    # engine = create_engine('sqlite:///control_bot.db')
-    # insp = reflection.Inspector.from_engine(engine)
-    # print(insp.get_columns(users_table))
-
-    # store = LocalStorage()
-    # user = asyncio.run(store.get_user(172698654))
-    # admins = asyncio.run(store.get_admins())
-    # print(user)
-    # print(admins)
-    # asyncio.run(store.save_channel('123'))
-
-# id
-# name
-# phone
-# username
-# telegram_id

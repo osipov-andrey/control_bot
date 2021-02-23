@@ -11,5 +11,6 @@ class Command(StatesGroup):
 class MainMenu(StatesGroup):
     main_menu = State()
     users = State()
-    # users = MainMenuUsers()
+    actuators = State()
+    channels = State()
     me = State()

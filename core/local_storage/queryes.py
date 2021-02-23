@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import null, select, delete, insert, update, and_
 from sqlalchemy.sql import Select, Delete, Insert, Update
 
-from core.local_storage.schema import actuators_table, actuators_users_associations, channel_table, \
+from .schema import actuators_table, actuators_users_associations, channel_table, \
     channels_users_associations, \
     users_table
 
@@ -51,8 +51,7 @@ def get_subscribers(channel_name: str) -> Select:
         channels_users_associations.c.channel_id == channel_id_query
     )
 
-    subscribers_query = select(
-        [users_table.c.telegram_id, ],
+    subscribers_query = users_table.select().where(
         users_table.c.id.in_(users_id_query)
     )
     return subscribers_query

@@ -3,7 +3,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, ForeignKeyConstraint, Intege
     Table, \
     UniqueConstraint
 
-from core.local_storage._helpers import create_mapping
+from ._helpers import create_mapping
 
 
 metadata = MetaData()
@@ -55,6 +55,7 @@ channel_table = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True, index=True),
     Column("name", String, unique=True, nullable=False, index=True),
+    Column("description", String, nullable=True),
 )
 Channel = create_mapping(channel_table)
 

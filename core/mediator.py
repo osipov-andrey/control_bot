@@ -1,34 +1,32 @@
 import asyncio
-from abc import ABC
-from typing import List, Optional
-
-import aiogram
 import logging
-
+from abc import ABC
+from typing import List
 from functools import singledispatchmethod
 
+import aiogram
 from aiogram.utils import exceptions
 
-from core._helpers import TargetTypes
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from config import config
+from core.config import config
+from core._helpers import TargetType
+from core.inbox.consumers.rabbit import RabbitConsumer
 from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
     TextMessage, message_fabric
+from core.local_storage.exceptions import NoSuchUser
 from core.local_storage.local_storage import Channel, LocalStorage, User
+from core.memory_storage import ControlBotMemoryStorage
 from core.sse.sse_event import SSEEvent
 from core.sse.sse_server import create_sse_server
-from core.inbox.consumers.rabbit import RabbitConsumer
-from core.memory_storage import ControlBotMemoryStorage
-
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.debug(config)
 
 
 class BaseInterface(ABC):
 
     def __init__(self):
-
         self.db = LocalStorage()
         self.d = d
 
@@ -40,11 +38,14 @@ class ActuatorsInterface(BaseInterface):
         self.memory_storage = memory_storage
         self.connected_actuators = dict()
 
+    def is_connected(self, actuator_name) -> bool:
+        return actuator_name in self.connected_actuators.keys()
+
     def save_actuator_info(self, message: TextMessage):
         """ Сохранить логику актуатора в ОЗУ """
         actuator_name = message.target.target_name
 
-        assert message.target.target_type == TargetTypes.SERVICE.value
+        assert message.target.target_type == TargetType.SERVICE.value
         assert actuator_name in self.connected_actuators
 
         self.memory_storage.save_client(actuator_name, message.commands)
@@ -62,6 +63,12 @@ class ActuatorsInterface(BaseInterface):
         actuator_queue = asyncio.Queue()
         self.connected_actuators[actuator_name] = actuator_queue
         return actuator_queue
+
+    async def create_actuator(self, actuator_name: str, description: str):
+        return await self.db.create_actuator(actuator_name, description)
+
+    async def delete_actuator(self, actuator_name: str):
+        return await self.db.delete_actuator(actuator_name)
 
     async def emit_event(self, actuator_name: str, event: SSEEvent):
         """ Отправить ЕVENT в актуатор """
@@ -97,11 +104,14 @@ class ActuatorsInterface(BaseInterface):
 
 class ChannelsInterface(BaseInterface):
 
-    async def create(self, channel: str):
-        ...
+    async def all_channels(self) -> List[Channel]:
+        return await self.db.all_channels()
 
-    async def delete(self, channel: str):
-        ...
+    async def create_channel(self, channel: str, description: str) -> bool:
+        return await self.db.save_channel(channel, description)
+
+    async def delete_channel(self, channel: str) -> bool:
+        return await self.db.delete_channel(channel)
 
     async def subscribe(self, user_telegram_id: int, channel: str):
         await self.db.channel_subscribe(user_telegram_id, channel)
@@ -127,7 +137,10 @@ class UsersInterface(BaseInterface):
 
     async def is_admin(self, telegram_id: int) -> bool:
         """ Проверка админских прав у пользователя """
-        user: User = await self.db.get_user(telegram_id)
+        try:
+            user: User = await self.db.get_user(telegram_id)
+        except NoSuchUser:
+            return False
         return bool(user.is_admin)
 
     async def get_all(self) -> List[User]:
@@ -146,7 +159,7 @@ class UsersInterface(BaseInterface):
         return result
 
 
-#TODO singletone
+# TODO singletone
 class Mediator:
     """ Класс связывающий различные компоненты программы """
 
@@ -171,7 +184,7 @@ class Mediator:
         # Для доступа к интерфейсам из любой части программы:
         self.d.observer = self
 
-        # asyncio.ensure_future(self._rabbit.listen_to_rabbit())
+        asyncio.ensure_future(self._rabbit.listen_to_rabbit())
         asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
         aiogram.executor.start_polling(self.d, skip_updates=True)
 

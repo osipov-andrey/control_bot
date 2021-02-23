@@ -1,0 +1,21 @@
+version: '3.3'
+
+services:
+  app:
+    build: .
+    command: run
+    image: bot
+    env_file:
+      - .env
+    ports:
+      - "8082:8082"
+    depends_on:
+      - rabbit
+    volumes:
+      - ./core/local_storage/db_dump:/app/core/local_storage/db_dump
+  rabbit:
+    image: "rabbitmq:3-management"
+    command: rabbitmq-server
+    ports:
+      - "15672:15672"
+      - "5672:5672"
