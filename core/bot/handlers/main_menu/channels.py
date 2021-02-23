@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -23,7 +25,7 @@ async def actuators_handler(message: types.Message, state: FSMContext):
             MenuTextButton(DELETE_CHANNEL, "Delete channel"),
             MenuTextButton(SUBSCRIBE, "Subscribe user to channel"),
             MenuTextButton(UNSUBSCRIBE, "Unsubscribe user from channel"),
-            # subscribe, unsubscribe - calling from users submenu  # TODO
+            # subscribe, unsubscribe - calling from users submenu
         ]
     )
     await message.answer(menu)
@@ -37,7 +39,7 @@ async def create_delete_handler(message: types.Message, state: FSMContext):
     cmd = get_create_or_delete_channel_cmd(cmd_text, user_id, is_admin)
 
     message_kwargs = {
-        "target": MessageTarget(TargetType.USER.value, user_id)._asdict()
+        "target": asdict(MessageTarget(TargetType.USER.value, user_id))
     }
 
     async def create_callback(**kwargs):

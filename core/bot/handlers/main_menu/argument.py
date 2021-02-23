@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -13,7 +15,7 @@ from core.bot.states import Command
 @d.message_handler(state=Command.argument_internal)
 async def argument_handler(message: types.Message, state: FSMContext):
     user_id = message.chat.id
-    message_kwargs = {"target": MessageTarget(TargetType.USER.value, user_id)._asdict()}
+    message_kwargs = {"target": asdict(MessageTarget(TargetType.USER.value, user_id))}
     data = await state.get_data()
     cmd: InternalCommand = data.get("cmd")
     argument_value = delete_cmd_prefix(message.text)

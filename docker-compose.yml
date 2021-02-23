@@ -1,7 +1,6 @@
 version: '3.3'
 
 services:
-  # TODO: DB-volume
   app:
     build: .
     command: run
@@ -12,8 +11,9 @@ services:
       - "8082:8082"
     depends_on:
       - rabbit
-    restart: on-failure
-
+#    restart: on-failure
+    volumes:
+      - ./core/local_storage/db_dump:/app/core/local_storage/db_dump
   rabbit:
     image: "rabbitmq:3-management"
     command: rabbitmq-server

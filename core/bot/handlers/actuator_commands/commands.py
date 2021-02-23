@@ -1,6 +1,8 @@
 """
 TgAPI --(cmd)--> Handler --(event)--> Observer
 """
+from dataclasses import asdict
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -30,7 +32,7 @@ async def commands_handler(message: types.Message, state: FSMContext):
 @telegram_api_dispatcher.message_handler(state=Command.arguments)
 async def argument_handler(message: types.Message, state: FSMContext):
     user_id = message.chat.id
-    message_kwargs = {"target": MessageTarget(TargetType.USER.value, user_id)._asdict()}
+    message_kwargs = {"target": asdict(MessageTarget(TargetType.USER.value, user_id))}
     data = await state.get_data()
     cmd: TelegramBotCommand = data.get("cmd")
 
@@ -63,7 +65,7 @@ async def _start_command_workflow(message, state, message_id=None):
     user_id = chat_id = message.chat.id
 
     message_kwargs = {
-        "target": MessageTarget(TargetType.USER.value, user_id, message_id)._asdict()
+        "target": asdict(MessageTarget(TargetType.USER.value, user_id, message_id))
     }
 
     actuator_name, command, args = TelegramBotCommand.parse_cmd_string(message.text)
@@ -153,7 +155,7 @@ async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
     await state.reset_state()
     event = SSEEvent(
         command=cmd.cmd,
-        target=MessageTarget(target_type="user", target_name=cmd.user_id, message_id=message_id),
+        target=MessageTarget(target_type=TargetType.USER.value, target_name=cmd.user_id, message_id=message_id),
         args=cmd.filled_args,
         behavior=cmd.behavior
     )

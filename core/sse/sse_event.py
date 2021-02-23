@@ -1,4 +1,6 @@
 import json
+from dataclasses import asdict
+
 from .._helpers import MessageTarget
 
 
@@ -15,7 +17,7 @@ class SSEEvent:
     ):
         self.event = event
         self.command = command
-        self.target = target._asdict()
+        self.target = asdict(target)
         self.args = args if args else {}
         self.behavior = behavior
 

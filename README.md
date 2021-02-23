@@ -41,4 +41,5 @@ http://localhost:8080/inbox - можно использовать HTTPPublisher
 ## Docker (in work)
 
 1. docker-compose build
-2. docker-compose up -d
+2. docker-compose run app db
+3. docker-compose up -d
