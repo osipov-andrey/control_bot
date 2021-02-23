@@ -43,14 +43,14 @@ async def create_delete_handler(message: types.Message, state: FSMContext):
     }
 
     async def create_callback(**kwargs):
-        channel_name = kwargs.get("channel_name")
+        channel_name = kwargs.get("channel")
         description = kwargs.get("description")
         result = await d.observer.channels.create_channel(channel_name, description)
         # TODO: check result
         await message.answer(f"Channel created: {channel_name} - {description}.")
 
     async def delete_callback(**kwargs):
-        channel_name = kwargs.get("channel_name")
+        channel_name = kwargs.get("channel")
         result = await d.observer.channels.delete_channel(channel_name)
         await message.answer(f"Channel deleted: {channel_name}.")
 

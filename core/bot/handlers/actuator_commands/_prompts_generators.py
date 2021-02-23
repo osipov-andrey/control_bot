@@ -25,6 +25,8 @@ async def generate_prompt(argument_info: ArgScheme, filled_args: dict) -> str:
         channel = filled_args.get("channel")
         if channel is not None:
             prompt = await _get_subscribers_prompt(channel)
+    if prompt:
+        prompt = "\nℹ️" + prompt
     return prompt
 
 

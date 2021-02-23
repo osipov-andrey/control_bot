@@ -46,13 +46,13 @@ async def create_delete_handler(message: types.Message, state: FSMContext):
     }
 
     async def create_callback(**kwargs):
-        actuator_name = kwargs.get("actuator_name")
+        actuator_name = kwargs.get("actuator")
         description = kwargs.get("description")
         await d.observer.actuators.create_actuator(actuator_name, description)
         await message.answer(f"Создан актуатор {actuator_name} - {description}.")
 
     async def delete_callback(**kwargs):
-        actuator_name = kwargs.get("actuator_name")
+        actuator_name = kwargs.get("actuator")
         await d.observer.actuators.delete_actuator(actuator_name)
         await message.answer(f"Удален актуатор {actuator_name}.")
 

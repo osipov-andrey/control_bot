@@ -11,7 +11,6 @@ services:
       - "8082:8082"
     depends_on:
       - rabbit
-#    restart: on-failure
     volumes:
       - ./core/local_storage/db_dump:/app/core/local_storage/db_dump
   rabbit:
