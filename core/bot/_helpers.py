@@ -1,6 +1,7 @@
 from collections import namedtuple
+from dataclasses import dataclass
 from functools import wraps
-from typing import List
+from typing import List, Optional
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -8,7 +9,11 @@ from aiogram.dispatcher import FSMContext
 from .telegram_api import telegram_api_dispatcher
 
 
-MenuTextButton = namedtuple("MenuTextButton", "cmd, description, admin_only", defaults=(False,))
+@dataclass
+class MenuTextButton:
+    cmd: str
+    description: str
+    admin_only: Optional[bool] = False
 
 
 def get_menu(*, commands: List[MenuTextButton], header="", is_admin=False):

@@ -10,9 +10,9 @@ async def generate_prompt(argument_info: ArgScheme, filled_args: dict) -> str:
     prompt = ""
     if argument_info.is_user:
         prompt = await _get_users_prompt()
-    elif argument_info.is_actuators:
+    elif argument_info.is_actuator:
         prompt = await _get_actuators_prompt()
-    elif argument_info.is_channels:
+    elif argument_info.is_channel:
         prompt = await _get_channels_prompt()
     elif argument_info.is_granter:
         # Чтобы получить подсказку по пользователям, имеющим доступ к актуатору,

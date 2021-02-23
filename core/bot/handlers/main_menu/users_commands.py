@@ -1,33 +1,29 @@
+"""
+Module with raw command schemes for using in main menu without actuators.
+This InternalCommands use the same workflow, like taken from actuator schemes.
+
+If in case of actuator commands we write business logic in the actuator,
+then in this case we write logic in the message handlers.
+"""
 from dataclasses import asdict
 
 from core._helpers import ArgScheme, ArgType, CommandSchema
 from core.bot.handlers.actuator_commands._command import InternalCommand
 from core.bot.handlers._static_commands import *
 from core.bot.telegram_api import telegram_api_dispatcher as d
-# TODO: Всю эту срань надо переписать
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
     channels = [c.name for c in await d.observer.channels.all_channels()]
-    """
-    Схема команды для подписки/отписки на канал.
-    Так как для этих двух действий нужны одинаковые аргументы -
-    можно воспользоваться одной и той же командой.
 
-    Собственно команда нужна для ввода аргументов с помощью того же
-    механизма, которым вводятся аргументы для команд актуатора.
-
-    Если в случае команд актуатора бизнес-логика выполняется в актуаторе,
-    то для внутренних команд она выполняется (вызывается) в обработчике.
-    """
     args = {
         "channel": asdict(ArgScheme(
-            description="Название канала",
+            description="Channel name",
             schema={"type": ArgType.STR.value, "allowed": channels},
-            is_channels=True
+            is_channel=True
         )),
         "user_id": asdict(ArgScheme(
-            description="ID пользователя",
+            description="Telegram user ID",
             schema={"type": ArgType.INT.value},
             is_user=True if cmd == SUBSCRIBE else False,
             is_subscriber=True if cmd == UNSUBSCRIBE else False,
@@ -35,19 +31,19 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
     }
 
     cmd_schema = CommandSchema(
-                    hidden=False,
-                    behavior__admin={
-                        "description": "Подписать/отписать пользователя на канал",
-                        "args": args,
-                    },
-                )
+        hidden=False,
+        behavior__admin={
+            "description": "Subscribe/unsubscribe user to channel",
+            "args": args,
+        },
+    )
 
     command = InternalCommand(
-            cmd,
-            user_id,
-            cmd_schema=cmd_schema,
-            is_admin=is_admin,
-        )
+        cmd,
+        user_id,
+        cmd_schema=cmd_schema,
+        is_admin=is_admin,
+    )
     return command
 
 
@@ -55,13 +51,13 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
     actuators = [a.name for a in await d.observer.actuators.get_all()]
     args = {
         "actuator": asdict(ArgScheme(
-            description="Название актуатора",
+            description="Actuator name",
             schema={"type": ArgType.STR.value, "allowed": actuators},
-            is_actuators=True,
+            is_actuator=True,
             options=actuators,
-         )),
+        )),
         "user_id": asdict(ArgScheme(
-            description="ID пользователя",
+            description="Telegram user ID",
             schema={"type": ArgType.INT.value},
             is_user=True if cmd == GRANT else False,
             is_granter=True if cmd == REVOKE else False
@@ -69,28 +65,28 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
     }
 
     cmd_schema = CommandSchema(
-                    hidden=False,
-                    behavior__admin={
-                        "description": "Открыть/закрыть доступ к актуатору",
-                        "args": args,
-                    },
-                )
+        hidden=False,
+        behavior__admin={
+            "description": "Grant/revoke the user rights to the drive",
+            "args": args,
+        },
+    )
 
     command = InternalCommand(
-            cmd,
-            user_id,
-            cmd_schema=cmd_schema,
-            is_admin=is_admin,
-        )
+        cmd,
+        user_id,
+        cmd_schema=cmd_schema,
+        is_admin=is_admin,
+    )
     return command
 
 
 def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
     args = {
-        "actuator_name": asdict(ArgScheme(
-            description="Название актуатора",
+        "actuator": asdict(ArgScheme(
+            description="Actuator name",
             schema={"type": ArgType.STR.value},
-            is_actuators=True,
+            is_actuator=True,
         )),
         "description": asdict(ArgScheme(
             description="Actuator description",
@@ -102,7 +98,7 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
     cmd_schema = CommandSchema(
         hidden=False,
         behavior__admin={
-            "description": "Create/delete_channel actuator",
+            "description": "Create/delete actuator",
             "args": args,
         },
     )
@@ -118,10 +114,10 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
     args = {
-        "channel_name": asdict(ArgScheme(
+        "channel": asdict(ArgScheme(
             description="Channel name",
             schema={"type": ArgType.STR.value},
-            is_channels=True,
+            is_channel=True,
         )),
         "description": asdict(ArgScheme(
             description="Channel description",
@@ -133,7 +129,7 @@ def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
     cmd_schema = CommandSchema(
         hidden=False,
         behavior__admin={
-            "description": "Create/delete_channel channel",
+            "description": "Create/delete channel",
             "args": args,
         },
     )
