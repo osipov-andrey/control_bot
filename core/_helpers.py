@@ -62,9 +62,9 @@ class ArgScheme:
     schema: dict
     options: Optional[list] = None
     is_user: Optional[bool] = False
-    is_actuators: Optional[bool] = False
+    is_actuator: Optional[bool] = False
     is_granter: Optional[bool] = False
-    is_channels: Optional[bool] = False
+    is_channel: Optional[bool] = False
     is_subscriber: Optional[bool] = False
 
 

@@ -83,7 +83,6 @@ class TelegramBotCommand:
         if validated:
             self.filled_args[arg_name] = arg_value
         else:
-            # TODO результат валидации в список с ошибками валидации
             self.args_to_fill.insert(0, arg_name)
 
     async def get_next_step(self) -> dict:
@@ -169,10 +168,6 @@ class TelegramBotCommand:
 
     def _get_arg_scheme(self, arg_name: str) -> ArgScheme:
         return self.cmd_scheme.args.get(arg_name)
-
-    # def __repr__(self):
-    #     return f"{self.__class__.__name__}"\
-    #            f"(full_cmd=\"{self._full_cmd}\", user-id=\"{self.user_id}\")"
 
     def __str__(self):
         return f"{self.__class__.__name__}: " \
