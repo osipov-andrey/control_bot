@@ -6,11 +6,11 @@ from typing import Optional, List, Union
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
-from ._prompts_generators import generate_prompt
-from ...constant_strings import CONTEXT_CANCEL_MENU
-from ...telegram_api import telegram_api_dispatcher
+from core.bot.constant_strings import CONTEXT_CANCEL_MENU
+from core.bot.telegram_api import telegram_api_dispatcher
 from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
+from ._prompts_generators import generate_prompt
 
 
 class TelegramBotCommand:
@@ -18,6 +18,7 @@ class TelegramBotCommand:
 
     @staticmethod
     def parse_cmd_string(cmd_string: str):
+        """ Split command macros """
         assert cmd_string.startswith('/')
 
         full_cmd = cmd_string.split('_')
@@ -44,7 +45,6 @@ class TelegramBotCommand:
         self.user_id = user_id
         self.message_id = message_id
         self.behavior = Behavior.USER.value
-        # self.OBSERVER = telegram_api_dispatcher.observer
 
         cmd_info: CommandSchema = telegram_api_dispatcher.observer.actuators.get_command_info(client, cmd)
         if is_admin and cmd_info.behavior__admin:
@@ -67,8 +67,7 @@ class TelegramBotCommand:
     def fill_status(self):
         if len(self.args_to_fill) == 0:
             return ArgumentsFillStatus.FILLED
-        else:
-            return ArgumentsFillStatus.NOT_FILLED
+        return ArgumentsFillStatus.NOT_FILLED
 
     def fill_argument(self, arg_value):
         arg_name = self.args_to_fill.pop(0)
@@ -177,8 +176,10 @@ class TelegramBotCommand:
 class InternalCommand(TelegramBotCommand):
     """ Команда, порожденная внутри бота """
 
-    def __init__(self, cmd: str, user_id: int, cmd_schema: CommandSchema, arguments: Optional[list] = None, is_admin=False):
-        # self.OBSERVER = telegram_api_dispatcher.observer
+    def __init__(
+            self, cmd: str, user_id: int, cmd_schema: CommandSchema, arguments: Optional[list] = None, is_admin=False
+    ):  # pylint: disable=super-init-not-called
+
         if is_admin and cmd_schema.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_schema.behavior__admin
             self.behavior = Behavior.ADMIN.value
