@@ -7,7 +7,6 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
 from core.bot.constant_strings import CONTEXT_CANCEL_MENU
-from core.bot.telegram_api import telegram_api_dispatcher
 from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 from ._prompts_generators import generate_prompt
@@ -46,7 +45,8 @@ class TelegramBotCommand:
         self.message_id = message_id
         self.behavior = Behavior.USER.value
 
-        cmd_info: CommandSchema = telegram_api_dispatcher.observer.actuators.get_command_info(client, cmd)
+        from mediator import mediator
+        cmd_info: CommandSchema = mediator.actuators.get_command_info(client, cmd)
         if is_admin and cmd_info.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
             self.behavior = Behavior.ADMIN.value
@@ -97,7 +97,7 @@ class TelegramBotCommand:
             message += self._get_validation_report()
         prompt = await generate_prompt(argument_info, self.filled_args)
         message += \
-            f"Заполните следующий аргумент  команды <b>{self.cmd}</b>:\n" \
+            f"Fill in the following <b>{self.cmd}</b> argument:\n" \
             f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
             f"{prompt if prompt else ''}" \
             f"{CONTEXT_CANCEL_MENU}"
@@ -106,7 +106,7 @@ class TelegramBotCommand:
         return message_kwargs
 
     def _get_validation_report(self) -> str:
-        report = "<b>Следующие аргументы введены с ошибками:</b>\n" \
+        report = "<b>The following arguments were entered with errors:</b>\n" \
                  + "\n".join(f"{arg}: {error}" for arg, error in self.validation_errors.items()) \
                  + "\n\n"
         return report
@@ -119,7 +119,7 @@ class TelegramBotCommand:
         return keyboard
 
     def _parse_args_to_fill(self):
-        """ Сравнить полученные аргументы и требуемые """
+        """ Compare Received and Required Arguments """
         required_args = list(self.cmd_scheme.args.keys())
 
         for index, (required_arg, received_value) in enumerate(
@@ -174,7 +174,7 @@ class TelegramBotCommand:
 
 
 class InternalCommand(TelegramBotCommand):
-    """ Команда, порожденная внутри бота """
+    """ The command spawned inside the bot """
 
     def __init__(
             self, cmd: str, user_id: int, cmd_schema: CommandSchema, arguments: Optional[list] = None, is_admin=False

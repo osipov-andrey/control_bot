@@ -10,7 +10,7 @@ from aiogram.types import CallbackQuery
 
 from core._helpers import MessageTarget, TargetType
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
-from core.bot.handlers.actuator_commands._command import TelegramBotCommand
+from core.bot.handlers.actuator_commands.command import TelegramBotCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import state_storage, telegram_api_dispatcher
@@ -60,7 +60,7 @@ async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContex
 
 
 async def _start_command_workflow(message, state, message_id=None):
-    observer = telegram_api_dispatcher.observer
+    from mediator import mediator
     command_state = await state.get_state()
     user_id = chat_id = message.chat.id
 
@@ -70,12 +70,12 @@ async def _start_command_workflow(message, state, message_id=None):
 
     actuator_name, command, args = TelegramBotCommand.parse_cmd_string(message.text)
 
-    if not await observer.users.has_grant(user_id, actuator_name):
+    if not await mediator.users.has_grant(user_id, actuator_name):
         await message.answer(text="Неизвестная команда или у вас нет доступа к данному актуатору")
         await state.reset_state()
         return
 
-    is_admin = await observer.users.is_admin(user_id)
+    is_admin = await mediator.users.is_admin(user_id)
 
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
@@ -86,7 +86,7 @@ async def _start_command_workflow(message, state, message_id=None):
             await state.reset_state()
             return
         finally:
-            await observer.send(message_fabric(message_kwargs))
+            await mediator.send(message_fabric(message_kwargs))
 
         await Command.client.set()
         await state_storage.update_data(
@@ -94,13 +94,11 @@ async def _start_command_workflow(message, state, message_id=None):
             chat=chat_id,
             client=actuator_name,
         )
-        # await state.reset_state()
-        # await Command.command.set()
         return
     elif command is None and command_state is not None:
         # Не указана команда
         message_kwargs["text"] = COMMAND_IS_NOT_FILLED + CONTEXT_CANCEL_MENU
-        await observer.send(message_fabric(message_kwargs))
+        await mediator.send(message_fabric(message_kwargs))
         return
 
     # Указаны клиент и команда:
@@ -119,14 +117,14 @@ async def _start_command_workflow(message, state, message_id=None):
         exception = True
         message_kwargs["text"] = NO_SUCH_CLIENT.format(client=actuator_name)
     if exception:
-        await observer.send(message_fabric(message_kwargs))
+        await mediator.send(message_fabric(message_kwargs))
         await state.reset_state()
 
 
 async def continue_cmd_workflow(
         state, cmd: TelegramBotCommand, message_kwargs, fill_status, message_id=None
 ):
-    observer = telegram_api_dispatcher.observer
+    from mediator import mediator
     cmd_fill_status = cmd.fill_status
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
         # Команда заполнена
@@ -143,15 +141,15 @@ async def continue_cmd_workflow(
         message_kwargs.update(next_step_kwargs)
         # Arguments input state:
         await Command.arguments.set()
-        await observer.send(message_fabric(message_kwargs))
+        await mediator.send(message_fabric(message_kwargs))
     # TODO:
     # elif cmd_fill_status == ArgumentsFillStatus.FAILED:
     #     message_kwargs['text'] = cmd.generate_error_report(fill_status)
-    #     await d.observer.send_message_to_user(**message_kwargs)
+    #     await telegram_dispatcher.observer.send_message_to_user(**message_kwargs)
 
 
 async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
-    observer = telegram_api_dispatcher.observer
+    from mediator import mediator
     await state.reset_state()
     event = SSEEvent(
         command=cmd.cmd,
@@ -159,12 +157,12 @@ async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
         args=cmd.filled_args,
         behavior=cmd.behavior
     )
-    await observer.actuators.emit_event(cmd.client, event)
+    await mediator.actuators.emit_event(cmd.client, event)
 
 
 def get_client_commands(client_name: str, is_admin=False) -> str:
-    observer = telegram_api_dispatcher.observer
-    commands = observer.actuators.get_actuator_info(client_name)
+    from mediator import mediator
+    commands = mediator.actuators.get_actuator_info(client_name)
     message = "Информация о командах:\n"
     for cmd in commands.values():
         if cmd.hidden:

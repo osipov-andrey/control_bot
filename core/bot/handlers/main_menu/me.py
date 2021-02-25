@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 from core.bot._helpers import get_menu, MenuTextButton
 from core.bot.states import MainMenu
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.local_storage.db_enums import UserEvents
+from core.repository._db_enums import UserEvents
 from core.bot.handlers._static_commands import *
 
 
@@ -24,8 +24,8 @@ async def users_handler(message: types.Message):
 
 @d.message_handler(commands=[INTRODUCE], state=MainMenu.me)
 async def introduce_handler(message: types.Message, state: FSMContext):
-    observer = d.observer
-    user_status = await observer.users.upsert(
+    from mediator import mediator
+    user_status = await mediator.users.upsert(
         tg_id=message.from_user.id,
         tg_username=message.from_user.username,
         name=message.from_user.full_name,

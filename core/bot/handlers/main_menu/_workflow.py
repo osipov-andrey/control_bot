@@ -4,10 +4,10 @@ from aiogram.dispatcher import FSMContext
 
 from core.bot.state_enums import ArgumentsFillStatus
 from core.bot.states import Command
-from core.bot.handlers.actuator_commands._command import InternalCommand
-from core.bot.telegram_api import state_storage, telegram_api_dispatcher as d
+from core.bot.handlers.actuator_commands.command import InternalCommand
+from core.bot.telegram_api import state_storage
 from core.inbox.messages import message_fabric
-from core.local_storage.exceptions import NoSuchUser
+from core.repository.exceptions import NoSuchUser
 
 
 async def start_cmd_internal_workflow(
@@ -23,6 +23,7 @@ async def start_cmd_internal_workflow(
     только приспособленный для внутренних нужд бота.
     (Команды главного меню)
     """
+    from mediator import mediator
     cmd_fill_status = cmd.fill_status
 
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
@@ -32,7 +33,8 @@ async def start_cmd_internal_workflow(
         except NoSuchUser:
             # Коллбеки вызываются только здесь.
             # Значит имеет смысл ловить исключения тоже здесь
-            await d.bot.send_message(
+            await mediator.telegram_dispatcher.bot.send_message(
+                # TODO: заменить на mediator.send_message
                 chat_id=state.chat,
                 text="Неизвестный пользователь"
             )
@@ -49,4 +51,4 @@ async def start_cmd_internal_workflow(
         message_kwargs.update(new_kwargs)
         # Arguments input state:
         await Command.argument_internal.set()
-        await d.observer.send(message_fabric(message_kwargs))
+        await mediator.send(message_fabric(message_kwargs))

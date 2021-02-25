@@ -12,7 +12,7 @@ services:
     depends_on:
       - rabbit
     volumes:
-      - ./core/local_storage/db_dump:/app/core/local_storage/db_dump
+      - ./core/repository/db_dump:/app/core/repository/db_dump
   rabbit:
     image: "rabbitmq:3-management"
     command: rabbitmq-server

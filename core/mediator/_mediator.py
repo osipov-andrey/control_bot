@@ -5,7 +5,7 @@ from functools import singledispatchmethod
 import aiogram
 from aiogram.utils import exceptions
 
-from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.bot.telegram_api import telegram_api_dispatcher
 from core.config import config
 from core.inbox.consumers.rabbit import RabbitConsumer
 from core.inbox.dispatcher import InboxDispatcher
@@ -22,7 +22,7 @@ _LOGGER.debug(config)
 __all__ = ['Mediator']
 
 
-class SingletonMeta(type):
+class _SingletonMeta(type):
 
     _instances = {}
 
@@ -33,13 +33,8 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 
-class Mediator(metaclass=SingletonMeta):
+class Mediator(metaclass=_SingletonMeta):
     """ Класс связывающий различные компоненты программы """
-
-    def __new__(cls, *args, **kwargs):
-        if not hasattr(cls, "instance"):
-            cls.instance = super().__new__(cls)
-        return cls.instance
 
     def __init__(self):
 
@@ -53,21 +48,18 @@ class Mediator(metaclass=SingletonMeta):
 
         self.inbox_queue = asyncio.Queue()
         self.inbox_dispatcher = InboxDispatcher(self, self.inbox_queue)
-        self.d = d
+        self.telegram_dispatcher = telegram_api_dispatcher
 
         self._rabbit = RabbitConsumer(**config["rabbit"], inbox_queue=self.inbox_queue)
         self._sse_server = create_sse_server(self)
-        _LOGGER.debug("Mediator initialized!")
-        print("Mediator initialized!")
+        _LOGGER.info("Mediator initialized!")
 
     def run(self):
         # TODO разделить посредник и запускатор программы
         # Для доступа к интерфейсам из любой части программы:
-        self.d.observer = self
-
         asyncio.ensure_future(self._rabbit.listen_to_rabbit())
         asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
-        aiogram.executor.start_polling(self.d, skip_updates=True)
+        aiogram.executor.start_polling(self.telegram_dispatcher, skip_updates=True)
 
     async def send(self, message: BaseMessage):
         """ Отправить сообщение в телеграм """
@@ -88,19 +80,17 @@ class Mediator(metaclass=SingletonMeta):
 
     @_send.register
     async def _(self, message: DocumentMessage):
-        return await self.d.bot.send_document(**message.get_params_to_sent())
+        return await self.telegram_dispatcher.bot.send_document(**message.get_params_to_sent())
 
     @_send.register
     async def _(self, message: TextMessage):
-        return await self.d.bot.send_message(**message.get_params_to_sent())
+        return await self.telegram_dispatcher.bot.send_message(**message.get_params_to_sent())
 
     @_send.register
     async def _(self, message: PhotoMessage):
-        return await self.d.bot.send_photo(**message.get_params_to_sent())
+        return await self.telegram_dispatcher.bot.send_photo(**message.get_params_to_sent())
 
     @_send.register
     async def _(self, message: EditTextMessage):
-        return await self.d.bot.edit_message_text(**message.get_params_to_sent())
+        return await self.telegram_dispatcher.bot.edit_message_text(**message.get_params_to_sent())
 
-
-mediator = Mediator()

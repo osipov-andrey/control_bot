@@ -7,10 +7,10 @@ import aiosqlite
 from sqlalchemy import null
 from sqlalchemy.orm import Query
 
-from . import queryes
-from .db_enums import UserEvents
+from . import _queryes
+from ._db_enums import UserEvents
 from .exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
-from .schema import *
+from ._schema import *
 
 
 PATH_TO_DB = Path(__file__).parent.absolute().joinpath("db_dump").joinpath("control_bot.sqlite")
@@ -22,7 +22,7 @@ def connect_to_db(method):
         try:
             if kwargs.get("connection"):
                 return await method(self, *args, **kwargs)
-            async with aiosqlite.connect(LocalStorage.db) as db:
+            async with aiosqlite.connect(Repository.db) as db:
                 return await method(self, *args, connection=db, **kwargs)
         except IntegrityError as err:
             # Запись нарушает ограничение уникальности
@@ -33,7 +33,7 @@ def connect_to_db(method):
     return wrapper
 
 
-class LocalStorage:
+class Repository:
     db = PATH_TO_DB
 
     async def upsert_user(
@@ -46,12 +46,12 @@ class LocalStorage:
     ):
         try:
             user_exists = await self.get_user(tg_id)
-            query = queryes.update_user(
+            query = _queryes.update_user(
                 tg_id, tg_username, name, phone, is_admin
             )
             result = UserEvents.UPDATED
         except NoSuchUser:
-            query = queryes.insert_user(
+            query = _queryes.insert_user(
                 tg_id, tg_username, name, phone, is_admin
             )
             result = UserEvents.CREATED
@@ -112,7 +112,7 @@ class LocalStorage:
         return result.rowcount == 1
 
     async def get_subscribers(self, channel: str) -> List[User]:
-        subscribers_query = queryes.get_subscribers(channel)
+        subscribers_query = _queryes.get_subscribers(channel)
         subscribers = await self._execute_query(subscribers_query)
         subscribers = [User(*subs) for subs in subscribers]
         return subscribers
@@ -131,7 +131,7 @@ class LocalStorage:
         # Проверим есть ли вообще такой юзер
         await self.get_user(user_telegram_id)
         # TODO: использовать этого пользователя в дальнейшем запросе
-        unsubscribe_query = queryes.get_unsubscribe_query(user_telegram_id, channel)
+        unsubscribe_query = _queryes.get_unsubscribe_query(user_telegram_id, channel)
         result = await self._execute_query(unsubscribe_query, commit=True)
         return bool(result.rowcount)
 
@@ -139,7 +139,7 @@ class LocalStorage:
         # Проверим есть ли вообще такой юзер
         await self.get_user(user_telegram_id)
         # TODO: использовать этого пользователя в дальнейшем запросе
-        grant_query = queryes.grant_query(user_telegram_id, actuator_name)
+        grant_query = _queryes.grant_query(user_telegram_id, actuator_name)
         result = await self._execute_query(grant_query, commit=True)
         return bool(result.rowcount)
 
@@ -147,40 +147,40 @@ class LocalStorage:
         # Проверим есть ли вообще такой юзер
         await self.get_user(user_telegram_id)
         # TODO: использовать этого пользователя в дальнейшем запросе
-        revoke_query = queryes.revoke_query(user_telegram_id, actuator_name)
+        revoke_query = _queryes.revoke_query(user_telegram_id, actuator_name)
         result = await self._execute_query(revoke_query, commit=True)
         return bool(result.rowcount)
 
     async def create_actuator(self, name: str, description: Optional[str] = None):
         result = await self._execute_query(
-            queryes.create_actuator_query(name, description), commit=True
+            _queryes.create_actuator_query(name, description), commit=True
         )
         return result
 
     async def delete_actuator(self, name: str):
         result = await self._execute_query(
-            queryes.delete_actuator_query(name), commit=True
+            _queryes.delete_actuator_query(name), commit=True
         )
         return result
 
     async def user_has_grant(self, user_telegram_id: int, actuator_name: str) -> bool:
         result = await self._execute_query(
-            queryes.get_has_grant_query(user_telegram_id, actuator_name), fetchall=False
+            _queryes.get_has_grant_query(user_telegram_id, actuator_name), fetchall=False
         )
         return bool(result)
 
     async def get_granters(self, actuator_name: str) -> List[User]:
-        granters = await self._execute_query(queryes.get_granters_query(actuator_name))
+        granters = await self._execute_query(_queryes.get_granters_query(actuator_name))
         granters = [User(*user) for user in granters]
         return granters
 
     async def get_actuators(self) -> List[Actuator]:
-        actuators = await self._execute_query(queryes.get_all_actuators())
+        actuators = await self._execute_query(_queryes.get_all_actuators())
         actuators = [Actuator(*actuator) for actuator in actuators]
         return actuators
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
-        channels = await self._execute_query(queryes.get_user_subscribes_query(user_telegram_id))  # TODO:
+        channels = await self._execute_query(_queryes.get_user_subscribes_query(user_telegram_id))  # TODO:
         channels = [Channel(**channel) for channel in channels]
         return channels
 

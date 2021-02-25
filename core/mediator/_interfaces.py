@@ -3,12 +3,11 @@ import logging
 from abc import ABC
 from typing import List
 
-from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.config import config
 from core._helpers import TargetType
 from core.inbox.messages import TextMessage
-from core.local_storage.exceptions import NoSuchUser
-from core.local_storage.local_storage import Channel, LocalStorage, User
+from core.repository.exceptions import NoSuchUser
+from core.repository.repository import Channel, Repository, User
 from core.sse.sse_event import SSEEvent
 
 
@@ -25,8 +24,7 @@ _LOGGER.debug(config)
 class BaseInterface(ABC):
 
     def __init__(self):
-        self.db = LocalStorage()
-        self.d = d
+        self.db = Repository()
 
 
 class ActuatorsInterface(BaseInterface):

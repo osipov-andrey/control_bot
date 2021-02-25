@@ -12,14 +12,13 @@ from core.bot.handlers.main_menu.users_commands import get_grant_or_revoke_cmd, 
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.local_storage.exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
-from core.local_storage.local_storage import LocalStorage
+from core.repository.exceptions import AlreadyHasItException
 from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
 
-@d.message_handler(commands=[USERS])
+@d.message_handler(commands=[USERS], state=MainMenu.users)
 @admin_only
-async def users_handler(message: types.Message, state=MainMenu.users):
+async def users_handler(message: types.Message, state):
     await MainMenu.users.set()
     menu = get_menu(
         header="Users commands: ",
@@ -36,12 +35,14 @@ async def users_handler(message: types.Message, state=MainMenu.users):
 
 @d.message_handler(commands=[ALL_USERS], state=MainMenu.users)
 async def all_users_handler(message: types.Message, state: FSMContext):
-    users = await d.observer.users.get_all()
+    from mediator import mediator
+    users = await mediator.users.get_all()
     await message.answer(users)
 
 
 @d.message_handler(commands=[SUBSCRIBE, UNSUBSCRIBE], state=[MainMenu.users, MainMenu.channels])
 async def subscribe_handler(message: types.Message, state: FSMContext):
+    from mediator import mediator
     user_id = message.chat.id
     is_admin = True  # в state=MainMenu.users может попасть только админ
     cmd_text = delete_cmd_prefix(message.text)
@@ -55,7 +56,7 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
         user_to_subs_id = kwargs.get("user_id")
         channel = kwargs.get("channel")
         try:
-            await d.observer.channels.subscribe(user_to_subs_id, channel)
+            await mediator.channels.subscribe(user_to_subs_id, channel)
         except AlreadyHasItException:
             await message.answer(f"The user {user_to_subs_id} is ALREADY subscribed to the channel {channel}")
         else:
@@ -64,7 +65,7 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
     async def unsubscribe_callback(**kwargs):
         user_to_subs_id = kwargs.get("user_id")
         channel = kwargs.get("channel")
-        await d.observer.channels.unsubscribe(user_to_subs_id, channel)
+        await mediator.channels.unsubscribe(user_to_subs_id, channel)
         await message.answer(f"The user {user_to_subs_id} unsubscribed from channel {channel}")
 
     if cmd_text == SUBSCRIBE:
@@ -81,6 +82,7 @@ async def subscribe_handler(message: types.Message, state: FSMContext):
 
 @d.message_handler(commands=[GRANT, REVOKE], state=[MainMenu.users, MainMenu.actuators])
 async def grant_handler(message: types.Message, state: FSMContext):
+    from mediator import mediator
     user_id = message.chat.id
     is_admin = True  # в state=MainMenu.users может попасть только админ
     cmd_text = delete_cmd_prefix(message.text)
@@ -94,7 +96,7 @@ async def grant_handler(message: types.Message, state: FSMContext):
         user_to_grant_id = kwargs.get("user_id")
         actuator = kwargs.get("actuator")
         try:
-            await d.observer.actuators.grant(user_to_grant_id, actuator)
+            await mediator.actuators.grant(user_to_grant_id, actuator)
             answer = f"User {user_to_grant_id} gained grant to {actuator}"
         except AlreadyHasItException:
             answer = f"User {user_to_grant_id} ALREADY has grant to {actuator}"
@@ -106,7 +108,7 @@ async def grant_handler(message: types.Message, state: FSMContext):
         user_to_revoke_id = kwargs.get("user_id")
         actuator = kwargs.get("actuator")
         # try:
-        await d.observer.actuators.revoke(user_to_revoke_id, actuator)
+        await mediator.actuators.revoke(user_to_revoke_id, actuator)
         await message.answer(f"User {user_to_revoke_id} revoke from {actuator}")
         # except NoSuchUser:
         #     await message.answer("Неизвестный пользователь")

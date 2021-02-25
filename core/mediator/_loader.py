@@ -1,3 +1,4 @@
+""" Dark magic here """
 import importlib.util
 import importlib.abc
 import pathlib
@@ -23,20 +24,20 @@ class MediatorPathFinder(importlib.abc.MetaPathFinder):
 
 
 class MediatorLoader(SourceFileLoader):
-    module = None
+    mediator = None  # SINGLETON !
 
     @classmethod
-    def set_module(cls, module):
-        cls.module = module
+    def save_mediator(cls, mediator):
+        cls.mediator = mediator
 
     def exec_module(self, module):
-        if self.module is None:
-            # SINGLETON !
+        if self.mediator is None:
             super().exec_module(module)
-            module.mediator = module.Mediator()
-            self.set_module(module)
+            mediator = module.Mediator()
+            module.mediator = mediator
+            self.save_mediator(mediator)
         else:
-            module.mediator = self.module.mediator
+            module.mediator = self.mediator
 
 
 sys.meta_path.append(MediatorPathFinder())

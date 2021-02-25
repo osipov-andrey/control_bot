@@ -7,19 +7,19 @@ from core.bot.handlers._static_commands import *
 
 @telegram_api_dispatcher.message_handler(commands=[START])
 async def main_menu_handler(message: types.Message, state):
-    observer = telegram_api_dispatcher.observer
+    from mediator import mediator
     telegram_id = message.from_user.id
-    is_admin = await observer.users.is_admin(telegram_id)
-    admins = await observer.users.get_admins()
+    is_admin = await mediator.users.is_admin(telegram_id)
+    admins = await mediator.users.get_admins()
     if not admins:
-        await _auto_create_admin(observer, message)
+        await _auto_create_admin(mediator, message)
         return
 
     actuators = [
         MenuTextButton(actuator.name, actuator.description)
-        for actuator in await observer.actuators.get_all()
-        if observer.actuators.is_connected(actuator.name)
-        and await observer.users.has_grant(telegram_id, actuator.name)
+        for actuator in await mediator.actuators.get_all()
+        if mediator.actuators.is_connected(actuator.name)
+        and await mediator.users.has_grant(telegram_id, actuator.name)
     ]
     menu = get_menu(
         header="Main menu:",
@@ -35,8 +35,8 @@ async def main_menu_handler(message: types.Message, state):
     await message.answer(menu)
 
 
-async def _auto_create_admin(observer, message: types.Message):
-    await observer.users.upsert(
+async def _auto_create_admin(mediator, message: types.Message):
+    await mediator.users.upsert(
         tg_id=message.from_user.id,
         tg_username=message.from_user.username,
         name=message.from_user.full_name,

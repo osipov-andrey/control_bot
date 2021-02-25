@@ -1,12 +1,9 @@
-from collections import namedtuple
 from dataclasses import dataclass
 from functools import wraps
 from typing import List, Optional
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-
-from .telegram_api import telegram_api_dispatcher
 
 
 @dataclass
@@ -53,10 +50,12 @@ def admin_only(func):
     Данный декоратор предназначен для ограничения доступа
     к описанным в коде бота обработчикам.
     """
+
     @wraps(func)
     async def wrapper(message: types.Message, state: FSMContext, *args, **kwargs):
+        from mediator import mediator
         telegram_id = message.from_user.id
-        is_admin = await telegram_api_dispatcher.observer.users.is_admin(telegram_id)
+        is_admin = await mediator.users.is_admin(telegram_id)
         if is_admin is True:
             return await func(message, state, *args, **kwargs)
         await state.reset_state()

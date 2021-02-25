@@ -33,6 +33,7 @@ async def actuators_handler(message: types.Message, state: FSMContext):
 
 @d.message_handler(commands=[CREATE_CHANNEL, DELETE_CHANNEL], state=MainMenu.channels)
 async def create_delete_handler(message: types.Message, state: FSMContext):
+    from mediator import mediator
     user_id = message.chat.id
     is_admin = True  # в state=MainMenu.channels может попасть только админ
     cmd_text = delete_cmd_prefix(message.text)
@@ -45,13 +46,13 @@ async def create_delete_handler(message: types.Message, state: FSMContext):
     async def create_callback(**kwargs):
         channel_name = kwargs.get("channel")
         description = kwargs.get("description")
-        result = await d.observer.channels.create_channel(channel_name, description)
+        result = await mediator.channels.create_channel(channel_name, description)
         # TODO: check result
         await message.answer(f"Channel created: {channel_name} - {description}.")
 
     async def delete_callback(**kwargs):
         channel_name = kwargs.get("channel")
-        result = await d.observer.channels.delete_channel(channel_name)
+        result = await mediator.channels.delete_channel(channel_name)
         await message.answer(f"Channel deleted: {channel_name}.")
 
     if cmd_text == CREATE_CHANNEL:
@@ -68,8 +69,9 @@ async def create_delete_handler(message: types.Message, state: FSMContext):
 
 @d.message_handler(commands=[ALL_CHANNELS], state=MainMenu.channels)
 async def all_channels_handler(message: types.Message, state: FSMContext):
+    from mediator import mediator
     answer = "<b>All channels:</b>\n"
-    channels = await d.observer.channels.all_channels()
+    channels = await mediator.channels.all_channels()
     if channels:
         answer += "\n".join(f"{channel.name} - {channel.description}" for channel in channels)
     else:

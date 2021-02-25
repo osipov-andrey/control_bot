@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from core.local_storage.migrations import create_tables
+from core.repository.migrations import create_tables
 
 logging.basicConfig(level=logging.INFO)
 

@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import null, select, delete, insert, update, and_
 from sqlalchemy.sql import Select, Delete, Insert, Update
 
-from .schema import actuators_table, actuators_users_associations, channel_table, \
+from ._schema import actuators_table, actuators_users_associations, channel_table, \
     channels_users_associations, \
     users_table
 

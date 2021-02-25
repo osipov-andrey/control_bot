@@ -8,13 +8,13 @@ then in this case we write logic in the message handlers.
 from dataclasses import asdict
 
 from core._helpers import ArgScheme, ArgType, CommandSchema
-from core.bot.handlers.actuator_commands._command import InternalCommand
+from core.bot.handlers.actuator_commands.command import InternalCommand
 from core.bot.handlers._static_commands import *
-from core.bot.telegram_api import telegram_api_dispatcher as d
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    channels = [c.name for c in await d.observer.channels.all_channels()]
+    from mediator import mediator
+    channels = [c.name for c in await mediator.channels.all_channels()]
 
     args = {
         "channel": asdict(ArgScheme(
@@ -48,7 +48,8 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
 
 
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    actuators = [a.name for a in await d.observer.actuators.get_all()]
+    from mediator import mediator
+    actuators = [a.name for a in await mediator.actuators.get_all()]
     args = {
         "actuator": asdict(ArgScheme(
             description="Actuator name",
