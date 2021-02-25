@@ -16,7 +16,7 @@ from core.repository.exceptions import AlreadyHasItException
 from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
 
-@d.message_handler(commands=[USERS], state=MainMenu.users)
+@d.message_handler(commands=[USERS])
 @admin_only
 async def users_handler(message: types.Message, state):
     await MainMenu.users.set()
