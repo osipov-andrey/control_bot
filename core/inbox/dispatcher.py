@@ -1,5 +1,6 @@
 import logging
 from asyncio import Queue
+from dataclasses import asdict
 from typing import Iterable
 
 from .._constants import INTRO_COMMAND
@@ -48,7 +49,7 @@ class InboxDispatcher:
                     message_id=message.target.message_id
                 )
                 new_message_dict = dict(message.__dict__)
-                new_message_dict["target"] = new_target._asdict()
+                new_message_dict["target"] = asdict(new_target)
                 new_message_dict["text"] = f"Channel <b>{channel}</b>\n" + new_message_dict["text"]
                 new_message = message_fabric(new_message_dict)
                 await self.dispatch(new_message)

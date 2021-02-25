@@ -5,7 +5,7 @@ from aiohttp import web
 from aiohttp.web import Application, HTTPBadRequest
 from aiohttp_sse import sse_response
 
-from .._helpers import Behavior, MessageTarget
+from .._helpers import Behavior, MessageTarget, TargetType
 from ..config import config
 from .sse_event import SSEEvent
 
@@ -15,7 +15,7 @@ _PORT = config["sse"]["port"]
 
 
 def get_intro_event(client_name: str) -> SSEEvent:
-    target = MessageTarget("service", client_name)
+    target = MessageTarget(TargetType.SERVICE.value, client_name)
     intro_event = SSEEvent(event="start", command="getAvailableMethods", target=target, behavior=Behavior.SERVICE.value)
     return intro_event
 

@@ -67,7 +67,7 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
     cmd_schema = CommandSchema(
         hidden=False,
         behavior__admin={
-            "description": "Grant/revoke the user rights to the drive",
+            "description": "Grant/revoke the user rights to the drive", # TODO
             "args": args,
         },
     )

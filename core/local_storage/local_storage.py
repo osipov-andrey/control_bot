@@ -13,7 +13,7 @@ from .exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
 from .schema import *
 
 
-PATH_TO_DB = Path(__file__).parent.absolute().joinpath("control_bot.sqlite")
+PATH_TO_DB = Path(__file__).parent.absolute().joinpath("db_dump").joinpath("control_bot.sqlite")
 
 
 def connect_to_db(method):
