@@ -4,7 +4,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from core._helpers import MessageTarget, TargetType
-from core.bot._helpers import admin_only, delete_cmd_prefix, get_menu, MenuTextButton
+from core.bot._helpers import admin_only_func, delete_cmd_prefix, get_menu, MenuTextButton
 from core.bot.handlers._static_commands import *
 from core.bot.handlers.main_menu.users_commands import get_create_or_delete_cmd
 from core.bot.states import MainMenu
@@ -14,7 +14,7 @@ from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
 
 @d.message_handler(commands=[ACTUATORS])
-@admin_only
+@admin_only_func
 async def actuators_handler(message: types.Message, state: FSMContext):
     await MainMenu.actuators.set()
     menu = get_menu(

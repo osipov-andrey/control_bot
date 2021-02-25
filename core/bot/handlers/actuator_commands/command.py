@@ -52,7 +52,7 @@ class TelegramBotCommand:
             self.behavior = Behavior.ADMIN.value
         elif cmd_info.behavior__user:
             self.cmd_scheme = cmd_info.behavior__user
-        else:  # Такой команды нет, или она admin_only:
+        else:  # Такой команды нет, или она admin_only_func:
             return
 
         self.list_args: list = arguments
@@ -186,7 +186,7 @@ class InternalCommand(TelegramBotCommand):
         elif cmd_schema.behavior__user:
             self.cmd_scheme = cmd_schema.behavior__user
             self.behavior = Behavior.USER.value
-        else:  # Такой команды нет, или она admin_only:
+        else:  # Такой команды нет, или она admin_only_func:
             return
         self.cmd = cmd
         self.user_id = user_id

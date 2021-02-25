@@ -39,7 +39,7 @@ def _show_command(is_admin: bool, is_admin_only: bool) -> bool:
     return True
 
 
-def admin_only(func):
+def admin_only_func(func):
     """
     Декоратор для обработчиков команд.
     Закрывает доступ к обработчикам для не-администраторов.
@@ -58,6 +58,28 @@ def admin_only(func):
         is_admin = await mediator.users.is_admin(telegram_id)
         if is_admin is True:
             return await func(message, state, *args, **kwargs)
+        await state.reset_state()
+        return
+
+    return wrapper
+
+
+def admin_only_method(method):
+    """
+    Декоратор для обработчиков команд.
+    Закрывает доступ к обработчикам для не-администраторов.
+
+    В командах актуаторов своя логика разграничения доступа,
+    т.к. команды не известны боту.
+
+    Данный декоратор предназначен для ограничения доступа
+    к описанным в коде бота обработчикам.
+    """
+
+    @wraps(method)
+    async def wrapper(handler_instance, message: types.Message, state: FSMContext, *args, **kwargs):
+        if handler_instance.is_admin is True:
+            return await method(handler_instance, message, state, *args, **kwargs)
         await state.reset_state()
         return
 
