@@ -40,7 +40,12 @@ class AllUsersHandler(MessageHandler):
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         users = await self.mediator.users.get_all()
-        await message.answer(users)
+        text = "\n".join(
+            f"👨🏼‍💻{u.name} - {u.telegram_username} - {u.telegram_id} {'<b>🗿(admin)</b>' if u.is_admin else ''}"
+            for u in users
+        )
+        await message.answer(text, parse_mode="HTML")
+        await state.reset_state()
 
 
 @d.class_message_handler(commands=[SUBSCRIBE], state=[MainMenu.users, MainMenu.channels])
