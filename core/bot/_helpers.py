@@ -15,7 +15,7 @@ class MenuTextButton:
 
 def get_menu(*, commands: List[MenuTextButton], header="", is_admin=False):
     if header:
-        header += '\n'
+        header = f"<b>{header}</b>\n"
     menu = "\n".join(
         f"/{command.cmd} - {command.description}"
         for command in commands if _show_command(is_admin, command.admin_only)

@@ -32,7 +32,7 @@ class UsersHandler(MessageHandler):
                 MenuTextButton(REVOKE, "Revoke user from actuator"),
             ]
         )
-        await message.answer(menu)
+        await self._answer(message, menu)
 
 
 @d.class_message_handler(commands=[ALL_USERS], state=MainMenu.users)
@@ -50,7 +50,7 @@ class AllUsersHandler(MessageHandler):
             )
             for u in users
         )
-        await message.answer(text, parse_mode="HTML")
+        await self._answer(message, text)
         await state.reset_state()
 
 

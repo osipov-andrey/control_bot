@@ -105,7 +105,7 @@ class Repository:
         return result.rowcount == 1
 
     async def delete_channel(self, name: str) -> bool:
-        query: Query = channel_table.delete_channel().where(
+        query: Query = channel_table.delete().where(
             channel_table.c.name == name
         )
         result = await self._execute_query(query, commit=True)

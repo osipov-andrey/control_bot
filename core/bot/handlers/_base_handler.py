@@ -33,3 +33,7 @@ class MessageHandler(ABC):
     @abstractmethod
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         ...
+
+    @staticmethod
+    async def _answer(message, text):
+        await message.answer(text, parse_mode="HTML")
