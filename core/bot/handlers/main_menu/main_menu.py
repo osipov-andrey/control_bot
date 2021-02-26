@@ -11,7 +11,7 @@ from core.bot.handlers._static_commands import *
 class MainMenuHandler(MessageHandler):
     """ Main menu """
 
-    async def execute(self, message: types.Message, state: FSMContext, **kwargs):
+    async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         admins = await self.mediator.users.get_admins()
         if not admins:
             await self._auto_create_admin(message)
