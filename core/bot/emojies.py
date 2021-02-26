@@ -1,0 +1,5 @@
+USER = "👨🏼‍💻"
+ADMIN = "🗿"
+
+ACTUATOR = "🕹"
+ACTUATOR_CONNECTED = "💡"

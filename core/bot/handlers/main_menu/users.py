@@ -3,6 +3,7 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
+from core.bot import emojies
 from core.bot._helpers import admin_only_method, get_menu, MenuTextButton
 from core.bot.handlers._static_commands import *
 from core.bot.handlers.main_menu.users_commands import get_grant_or_revoke_cmd, get_subscribe_or_unsubscribe_cmd
@@ -22,7 +23,7 @@ class UsersHandler(MessageHandler):
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         await MainMenu.users.set()
         menu = get_menu(
-            header="Users commands: ",
+            header=f"{emojies.USER} Users commands: ",
             commands=[
                 MenuTextButton(ALL_USERS, "All bot users"),
                 MenuTextButton(SUBSCRIBE, "Subscribe user to channel"),
@@ -41,7 +42,12 @@ class AllUsersHandler(MessageHandler):
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         users = await self.mediator.users.get_all()
         text = "\n".join(
-            f"👨🏼‍💻{u.name} - {u.telegram_username} - {u.telegram_id} {'<b>🗿(admin)</b>' if u.is_admin else ''}"
+            "{name} - {tg_username} - {tg_id} {is_admin}".format(
+                name=f"{emojies.USER}{u.name}",
+                tg_username=u.telegram_username,
+                tg_id=u.telegram_id,
+                is_admin=f'<b>{emojies.ADMIN}(admin)</b>' if u.is_admin else ''
+            )
             for u in users
         )
         await message.answer(text, parse_mode="HTML")

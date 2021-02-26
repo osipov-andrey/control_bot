@@ -1,14 +1,15 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core.bot.handlers._base_handler import MessageHandler
 from core.bot._helpers import get_menu, MenuTextButton, admin_only_method
+from core.bot import emojies
+from core.bot.handlers._base_handler import MessageHandler
 from core.bot.handlers._static_commands import *
 from core.bot.handlers.main_menu.users_commands import get_create_or_delete_cmd
+from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 
 
 @d.class_message_handler(commands=[ACTUATORS])
@@ -18,7 +19,7 @@ class ActuatorsHandler(MessageHandler):
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         await MainMenu.actuators.set()
         menu = get_menu(
-            header="Actuators menu: ",
+            header=f"{emojies.ACTUATOR} Actuators menu: ",
             commands=[
                 MenuTextButton(ALL_ACTUATORS, "Show all registered actuators"),
                 MenuTextButton(CREATE_ACTUATOR, "Create actuator"),
@@ -38,8 +39,8 @@ class AllActuatorsHandler(MessageHandler):
         actuators = await self.mediator.actuators.get_all()
         text = "\n".join(
             "{connected}{name} - {description}".format(
-                connected='💡' if self.mediator.actuators.is_connected(a.name) else '',
-                name=f"🕹<b>{a.name}</b>",
+                connected=emojies.ACTUATOR_CONNECTED if self.mediator.actuators.is_connected(a.name) else '',
+                name=f"{emojies.ACTUATOR}<b>{a.name}</b>",
                 description=a.description
             ) for a in actuators
         )
