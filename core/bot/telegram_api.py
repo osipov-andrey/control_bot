@@ -10,5 +10,22 @@ _API_TOKEN = config["API_TOKEN"]
 
 _bot = aiogram.Bot(token=_API_TOKEN)
 state_storage = MemoryStorage()
-telegram_api_dispatcher = aiogram.Dispatcher(bot=_bot, storage=state_storage)
 
+
+class CustomDispatcher(aiogram.Dispatcher):
+
+    def class_message_handler(self, *custom_filters, commands=None, regexp=None, content_types=None, state=None,
+                              run_task=None, **kwargs):
+        """ Register Class as message handler """
+        def decorator(class_):
+            handler = class_()
+
+            self.register_message_handler(handler.callback, *custom_filters,
+                                          commands=commands, regexp=regexp, content_types=content_types,
+                                          state=state, run_task=run_task, **kwargs)
+            return class_
+
+        return decorator
+
+
+telegram_api_dispatcher = CustomDispatcher(bot=_bot, storage=state_storage)

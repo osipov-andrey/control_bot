@@ -1,4 +1,5 @@
 from abc import ABC
+from dataclasses import asdict
 
 from ._descriptors import *
 
@@ -46,7 +47,7 @@ class BaseMessage(ABC):
             message_kwargs = self.get_params_to_sent(only_common=True)
             message_kwargs.update(reply)
             message_kwargs["reply_to_message_id"] = reply_to_message_id
-            message_kwargs["target"] = self.target._asdict()
+            message_kwargs["target"] = asdict(self.target)
             reply_message = message_fabric(message_kwargs)
             replies.append(reply_message)
         return replies

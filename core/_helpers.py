@@ -27,7 +27,7 @@ class Behavior(Enum):
 @dataclass
 class MessageTarget:
     target_type: TargetType
-    target_name: str
+    target_name: Union[str, int]
     message_id: Optional[str] = None
 
 
