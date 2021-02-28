@@ -3,64 +3,19 @@ TgAPI --(cmd)--> Handler --(event)--> Observer
 """
 from dataclasses import asdict
 
-from aiogram import types
-from aiogram.dispatcher import FSMContext
-
-from aiogram.types import CallbackQuery
-
 from core._helpers import MessageTarget, TargetType
 from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
-from core.bot.handlers.actuator_commands.command import TelegramBotCommand
+from core.bot.handlers.actuator_commands.actuator_command import ActuatorCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
-from core.bot.telegram_api import state_storage, telegram_api_dispatcher
+from core.bot.telegram_api import state_storage
 from core.bot.template_strings import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
 from core.inbox.messages import message_fabric
 from core.memory_storage import NoSuchActuator, NoSuchCommand
 from core.sse.sse_event import SSEEvent
 
 
-_COMMAND_REGEX = r"^\/([^_]*)_?.*?$"
-
-
-@telegram_api_dispatcher.message_handler(regexp=_COMMAND_REGEX)
-async def commands_handler(message: types.Message, state: FSMContext):
-    print(message)
-    await _start_command_workflow(message, state)
-
-
-@telegram_api_dispatcher.message_handler(state=Command.arguments)
-async def argument_handler(message: types.Message, state: FSMContext):
-    user_id = message.chat.id
-    message_kwargs = {"target": asdict(MessageTarget(TargetType.USER.value, user_id))}
-    data = await state.get_data()
-    cmd: TelegramBotCommand = data.get("cmd")
-
-    argument_value = message.text
-    cmd.fill_argument(argument_value)
-
-    await continue_cmd_workflow(state, cmd, message_kwargs, CommandFillStatus.FILL_ARGUMENTS)
-
-
-@telegram_api_dispatcher.message_handler(state=Command.client)
-async def client_commands_handler(message: types.Message, state: FSMContext):
-    """ Вызов команд из меню клиента """
-    await _start_command_workflow(message, state)
-
-
-@telegram_api_dispatcher.callback_query_handler(lambda callback_query: True, state='*')
-async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContext):
-    # Обязательно сразу сделать answer, чтобы убрать "часики" после нажатия на кнопку.
-    await callback_query.answer('Button has been Pressed')
-
-    message = callback_query.message
-    message.text = callback_query.data
-
-    await _start_command_workflow(message, state, message.message_id)
-
-
-async def _start_command_workflow(message, state, message_id=None):
-    from mediator import mediator
+async def start_actuator_command_workflow(message, state, mediator, message_id=None):
     command_state = await state.get_state()
     user_id = chat_id = message.chat.id
 
@@ -68,7 +23,7 @@ async def _start_command_workflow(message, state, message_id=None):
         "target": asdict(MessageTarget(TargetType.USER.value, user_id, message_id))
     }
 
-    actuator_name, command, args = TelegramBotCommand.parse_cmd_string(message.text)
+    actuator_name, command, args = ActuatorCommand.parse_cmd_string(message.text)
 
     if not await mediator.users.has_grant(user_id, actuator_name):
         await message.answer(text="Неизвестная команда или у вас нет доступа к данному актуатору")
@@ -80,7 +35,7 @@ async def _start_command_workflow(message, state, message_id=None):
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
         try:
-            message_kwargs["text"] = get_client_commands(actuator_name, is_admin)
+            message_kwargs["text"] = get_client_commands(mediator, actuator_name, is_admin)
         except NoSuchActuator:
             message_kwargs["text"] = "Неизвестный актуатор!"
             await state.reset_state()
@@ -104,11 +59,11 @@ async def _start_command_workflow(message, state, message_id=None):
     # Указаны клиент и команда:
     exception = False
     try:
-        cmd = TelegramBotCommand(actuator_name, command, args, user_id, is_admin)
+        cmd = ActuatorCommand(actuator_name, command, args, user_id, is_admin)
         if not cmd.cmd_scheme:
             return
         await continue_cmd_workflow(
-            state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND, message_id
+            state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND, mediator, message_id
         )
     except NoSuchCommand as e:
         exception = True
@@ -122,13 +77,12 @@ async def _start_command_workflow(message, state, message_id=None):
 
 
 async def continue_cmd_workflow(
-        state, cmd: TelegramBotCommand, message_kwargs, fill_status, message_id=None
+        state, cmd: ActuatorCommand, message_kwargs, fill_status, mediator, message_id=None
 ):
-    from mediator import mediator
     cmd_fill_status = cmd.fill_status
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
         # Команда заполнена
-        await _finish_cmd_workflow(state, cmd, message_id)
+        await _finish_cmd_workflow(state, cmd, mediator, message_id)
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
         # Команда не заполнена:
 
@@ -148,8 +102,7 @@ async def continue_cmd_workflow(
     #     await telegram_dispatcher.observer.send_message_to_user(**message_kwargs)
 
 
-async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
-    from mediator import mediator
+async def _finish_cmd_workflow(state, cmd: ActuatorCommand, mediator, message_id=None):
     await state.reset_state()
     event = SSEEvent(
         command=cmd.cmd,
@@ -160,8 +113,7 @@ async def _finish_cmd_workflow(state, cmd: TelegramBotCommand, message_id=None):
     await mediator.actuators.emit_event(cmd.client, event)
 
 
-def get_client_commands(client_name: str, is_admin=False) -> str:
-    from mediator import mediator
+def get_client_commands(mediator, client_name: str, is_admin=False) -> str:
     commands = mediator.actuators.get_actuator_info(client_name)
     message = "Информация о командах:\n"
     for cmd in commands.values():

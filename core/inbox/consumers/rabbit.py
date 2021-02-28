@@ -32,19 +32,13 @@ class RabbitConsumer:
         self.inbox_queue = inbox_queue
 
     async def listen_to_rabbit(self):
-        while 1:
-            try:
-                transport, protocol = await aioamqp.connect(
-                    self.host, self.port,
-                    login=self.login, password=self.password, login_method='PLAIN'
-                )
-                channel: Channel = await protocol.channel()
-                await channel.queue_declare("telegram", durable=True)
-                await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
-                return
-            except ConnectionRefusedError:
-                await asyncio.sleep(5)
-                continue
+        transport, protocol = await aioamqp.connect(
+            self.host, self.port,
+            login=self.login, password=self.password, login_method='PLAIN'
+        )
+        channel: Channel = await protocol.channel()
+        await channel.queue_declare("telegram", durable=True)
+        await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
 
     async def _callback(self, channel, body, envelope, properties):
         _LOGGER.info("Get message from rabbit: %s", body)

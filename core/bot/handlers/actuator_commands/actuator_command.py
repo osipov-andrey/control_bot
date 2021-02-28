@@ -9,10 +9,10 @@ from cerberus import Validator
 from core.bot.constant_strings import CONTEXT_CANCEL_MENU
 from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
-from ._prompts_generators import generate_prompt
+from core.bot.handlers._prompts_generators import generate_prompt
 
 
-class TelegramBotCommand:
+class ActuatorCommand:
     """ Команда, полученная из телеги """
 
     @staticmethod
@@ -171,29 +171,3 @@ class TelegramBotCommand:
     def __str__(self):
         return f"{self.__class__.__name__}: " \
                f"(cmd={self.cmd}; args={self.list_args}; user-id={self.user_id})"
-
-
-class InternalCommand(TelegramBotCommand):
-    """ The command spawned inside the bot """
-
-    def __init__(
-            self, cmd: str, user_id: int, cmd_schema: CommandSchema, arguments: Optional[list] = None, is_admin=False
-    ):  # pylint: disable=super-init-not-called
-
-        if is_admin and cmd_schema.behavior__admin:
-            self.cmd_scheme: CommandBehavior = cmd_schema.behavior__admin
-            self.behavior = Behavior.ADMIN.value
-        elif cmd_schema.behavior__user:
-            self.cmd_scheme = cmd_schema.behavior__user
-            self.behavior = Behavior.USER.value
-        else:  # Такой команды нет, или она admin_only_func:
-            return
-        self.cmd = cmd
-        self.user_id = user_id
-        self.list_args: list = arguments if arguments else []
-        self.filled_args = dict()
-        self.args_to_fill = list()
-
-        self.validation_errors = dict()
-
-        self._parse_args_to_fill()

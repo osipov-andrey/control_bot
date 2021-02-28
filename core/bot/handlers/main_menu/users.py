@@ -6,8 +6,8 @@ from aiogram.dispatcher import FSMContext
 from core.bot import emojies
 from core.bot._helpers import admin_only_method, get_menu, MenuTextButton
 from core.bot.handlers._static_commands import *
-from core.bot.handlers.main_menu.users_commands import get_grant_or_revoke_cmd, get_subscribe_or_unsubscribe_cmd
-from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
+from core.bot.handlers.main_menu._internal_commands_schemas import get_grant_or_revoke_cmd, get_subscribe_or_unsubscribe_cmd
+from core.bot.handlers.main_menu._internal_commands_workflow import start_cmd_internal_workflow
 from core.bot.handlers._base_handler import MessageHandler
 from core.repository.exceptions import AlreadyHasItException, NoSuchUser
 from core.bot.states import MainMenu

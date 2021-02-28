@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 
 from core.bot.state_enums import ArgumentsFillStatus
 from core.bot.states import Command
-from core.bot.handlers.actuator_commands.command import InternalCommand
+from core.bot.handlers.main_menu._internal_command import InternalCommand
 from core.bot.telegram_api import state_storage
 from core.inbox.messages import message_fabric
 from core.repository.exceptions import NoSuchUser
