@@ -10,6 +10,7 @@ from core.bot.handlers.main_menu._workflow import start_cmd_internal_workflow
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.bot.template_strings import generate_channel_report
 
 
 @d.class_message_handler(commands=[CHANNELS])
@@ -37,9 +38,7 @@ class AllChannelsHandler(MessageHandler):
     """ Show all channels """
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         channels = await self.mediator.channels.all_channels()
-        text = "\n".join(f"{emojies.CHANNEL}<b>{c.name}</b> - {c.description}" for c in channels)
-        if not text:
-            text = "No channels!"
+        text = "<b>All channels:</b>\n" + generate_channel_report(channels)
         await self._answer(message, text)
         await state.reset_state()
 

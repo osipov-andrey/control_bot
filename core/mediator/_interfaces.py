@@ -119,6 +119,10 @@ class ChannelsInterface(BaseInterface):
         subscribers = await self.db.get_subscribers(channel)
         return subscribers
 
+    async def get_subscribes(self, user_telegram_id: int):
+        channels = await self.db.get_user_subscribes(user_telegram_id)
+        return channels
+
 
 class UsersInterface(BaseInterface):
 

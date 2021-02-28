@@ -5,3 +5,5 @@ ACTUATOR = "🕹"
 ACTUATOR_CONNECTED = "💡"
 
 CHANNEL = "📡"
+
+ME = "🦹🏽"

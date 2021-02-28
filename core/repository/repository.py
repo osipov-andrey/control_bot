@@ -181,7 +181,7 @@ class Repository:
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
         channels = await self._execute_query(_queryes.get_user_subscribes_query(user_telegram_id))  # TODO:
-        channels = [Channel(**channel) for channel in channels]
+        channels = [Channel(*channel) for channel in channels]
         return channels
 
     @connect_to_db
@@ -200,4 +200,5 @@ class Repository:
 
     @staticmethod
     def _get_sql(query: Query):
-        return str(query.compile(compile_kwargs={"literal_binds": True}))
+        query = str(query.compile(compile_kwargs={"literal_binds": True}))
+        return query

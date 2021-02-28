@@ -57,6 +57,17 @@ def get_subscribers(channel_name: str) -> Select:
     return subscribers_query
 
 
+def get_user_subscribes_query(tg_id: int) -> Select:
+    select_query = channel_table.select().select_from(
+        channel_table.join(channels_users_associations,
+                           and_(
+                               channels_users_associations.c.user_id == get_user_id_query(tg_id),
+                               channel_table.c.id == channels_users_associations.c.channel_id
+                           ))
+    )
+    return select_query
+
+
 def insert_user(
         tg_id: int,
         tg_username: str,
