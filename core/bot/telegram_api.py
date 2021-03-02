@@ -27,5 +27,15 @@ class CustomDispatcher(aiogram.Dispatcher):
 
         return decorator
 
+    def class_callback_query_handler(self, *custom_filters, state=None, run_task=None, **kwargs):
+        """ Register Class as callback query handler """
+        def decorator(class_):
+            handler = class_()
+            self.register_callback_query_handler(handler.callback, *custom_filters,
+                                                 state=state, run_task=run_task, **kwargs)
+            return class_
+
+        return decorator
+
 
 telegram_api_dispatcher = CustomDispatcher(bot=_bot, storage=state_storage)

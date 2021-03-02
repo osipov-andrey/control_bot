@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 from dataclasses import asdict
-from typing import Optional
+from typing import Optional, Union
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -18,10 +18,11 @@ class MessageHandler(ABC):
 
     @property
     def mediator(self):
+        """ Dynamically pluggable import """
         from mediator import mediator
         return mediator
 
-    async def callback(self, message: types.Message, state: FSMContext, **kwargs):
+    async def callback(self, message: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs):
         self.user_telegram_id = message.from_user.id
         self.is_admin = await self.mediator.users.is_admin(self.user_telegram_id)
         self.kwargs_to_answer = {
@@ -31,7 +32,7 @@ class MessageHandler(ABC):
         await self.handle(message, state, **kwargs)
 
     @abstractmethod
-    async def handle(self, message: types.Message, state: FSMContext, **kwargs):
+    async def handle(self, message: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs):
         ...
 
     @staticmethod
