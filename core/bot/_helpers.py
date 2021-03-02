@@ -20,7 +20,7 @@ def get_menu(*, commands: List[MenuTextButton], header="", is_admin=False):
         f"/{command.cmd} - {command.description}"
         for command in commands if _show_command(is_admin, command.admin_only)
     )
-    menu = header + menu + "\n\n/cancel - отмена текущего действия"
+    menu = header + menu
     return menu
 
 

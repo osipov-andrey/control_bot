@@ -34,7 +34,7 @@ class MainMenuHandler(MessageHandler):
                      ] + actuators,
             is_admin=self.is_admin
         )
-        await message.answer(menu)
+        await self._answer(message, menu)
 
     async def _auto_create_admin(self, message: types.Message):
         await self.mediator.users.upsert(
@@ -43,4 +43,4 @@ class MainMenuHandler(MessageHandler):
             name=message.from_user.full_name,
             is_admin=True
         )
-        await message.answer("You are now the bot administrator")
+        await self._answer(message, "You are now the bot administrator")

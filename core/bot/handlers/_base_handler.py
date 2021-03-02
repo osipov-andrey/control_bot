@@ -6,6 +6,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from core._helpers import MessageTarget, TargetType, get_mediator
+from core.bot._notification_constants import CONTEXT_CANCEL_MENU
 
 
 class MessageHandler(ABC):
@@ -35,4 +36,5 @@ class MessageHandler(ABC):
 
     @staticmethod
     async def _answer(message, text):
+        text += f"\n{CONTEXT_CANCEL_MENU}"
         await message.answer(text, parse_mode="HTML")
