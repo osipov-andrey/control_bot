@@ -5,7 +5,7 @@ from typing import Optional, Union
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core._helpers import MessageTarget, TargetType
+from core._helpers import MessageTarget, TargetType, get_mediator
 
 
 class MessageHandler(ABC):
@@ -18,9 +18,7 @@ class MessageHandler(ABC):
 
     @property
     def mediator(self):
-        """ Dynamically pluggable import """
-        from mediator import mediator
-        return mediator
+        return get_mediator()
 
     async def callback(self, message: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs):
         self.user_telegram_id = message.from_user.id

@@ -8,8 +8,8 @@ then in this case we write logic in the message handlers.
 from dataclasses import asdict
 
 from core._helpers import ArgScheme, ArgType, CommandSchema
-from core.bot.handlers.main_menu._internal_command import InternalCommand
-from core.bot.handlers._static_commands import *
+from core.bot.commands.internal._internal_command import InternalCommand
+from core.bot._command_constants import *
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:

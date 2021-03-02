@@ -1,5 +1,4 @@
 import datetime
-from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Optional, Union
@@ -84,3 +83,9 @@ class Issue:
 
     def __post_init__(self):
         self.time_ = datetime.datetime.now()
+
+
+def get_mediator():
+    """ Dynamically pluggable import """
+    from mediator import mediator
+    return mediator

@@ -1,14 +1,7 @@
-from itertools import zip_longest
-from uuid import UUID
+from typing import Optional
 
-from typing import Optional, List, Union
-
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-from cerberus import Validator
-
-
-from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
-from core.bot.handlers.actuator_commands.actuator_command import ActuatorCommand
+from core._helpers import Behavior, CommandBehavior, CommandSchema
+from core.bot.commands.actuator.actuator_command import ActuatorCommand
 
 
 class InternalCommand(ActuatorCommand):

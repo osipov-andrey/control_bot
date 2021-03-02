@@ -3,8 +3,8 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from core.bot.handlers._base_handler import MessageHandler
-from core.bot.handlers.actuator_commands.actuator_command import ActuatorCommand
-from core.bot.handlers.actuator_commands.actuator_commands_workflow import start_actuator_command_workflow, \
+from core.bot.commands.actuator.actuator_command import ActuatorCommand
+from core.bot.commands.actuator.actuator_commands_workflow import start_actuator_command_workflow, \
     continue_cmd_workflow
 from core.bot.state_enums import CommandFillStatus
 from core.bot.states import Command

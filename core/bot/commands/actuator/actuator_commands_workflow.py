@@ -4,12 +4,12 @@ TgAPI --(cmd)--> Handler --(event)--> Observer
 from dataclasses import asdict
 
 from core._helpers import MessageTarget, TargetType
-from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
-from core.bot.handlers.actuator_commands.actuator_command import ActuatorCommand
+from core.bot._notification_constants import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
+from core.bot.commands.actuator.actuator_command import ActuatorCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import state_storage
-from core.bot.template_strings import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
+from core.bot._notification_templates import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
 from core.inbox.messages import message_fabric
 from core.memory_storage import NoSuchActuator, NoSuchCommand
 from core.sse.sse_event import SSEEvent
