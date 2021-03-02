@@ -111,7 +111,7 @@ async def _finish_cmd_workflow(state, cmd: ActuatorCommand, mediator, message_id
 
 def get_client_commands(mediator, client_name: str, is_admin=False) -> str:
     commands = mediator.actuators.get_actuator_info(client_name)
-    message = f"{COMMAND_INFO}:\n"
+    message = f"{COMMANDS_INFO}:\n"
     for cmd in commands.values():
         if cmd.hidden:
             continue
