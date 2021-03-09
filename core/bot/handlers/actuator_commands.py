@@ -1,10 +1,10 @@
+""" Actuator commands handlers """
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.types import CallbackQuery
 
 from core.bot.handlers._base_handler import MessageHandler
-from core.bot.handlers.actuator_commands.actuator_command import ActuatorCommand
-from core.bot.handlers.actuator_commands.actuator_commands_workflow import start_actuator_command_workflow, \
+from core.bot.commands.actuator.actuator_command import ActuatorCommand
+from core.bot.commands.actuator.actuator_commands_workflow import start_actuator_command_workflow, \
     continue_cmd_workflow
 from core.bot.state_enums import CommandFillStatus
 from core.bot.states import Command
@@ -15,15 +15,9 @@ _COMMAND_REGEX = r"^\/([^_]*)_?.*?$"
 
 
 @d.class_message_handler(regexp=_COMMAND_REGEX)
+@d.class_message_handler(state=Command.client)
 class ActuatorCommandHandler(MessageHandler):
     """ Handle actuator command """
-    async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        await start_actuator_command_workflow(message, state, self.mediator)
-
-
-@d.class_message_handler(state=Command.client)
-class ActuatorMenuCommandHandler(MessageHandler):
-    """ Handle actuator command called from the actuator menu """
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         await start_actuator_command_workflow(message, state, self.mediator)
 
@@ -41,13 +35,11 @@ class FillingArgumentHandler(MessageHandler):
         )
 
 
-@d.callback_query_handler(lambda callback_query: True, state='*')
-async def inline_buttons_handler(callback_query: CallbackQuery, state: FSMContext):
-    from mediator import mediator
-    # Обязательно сразу сделать answer, чтобы убрать "часики" после нажатия на кнопку.
-    await callback_query.answer('Button has been Pressed')
-
-    message = callback_query.message
-    message.text = callback_query.data
-
-    await start_actuator_command_workflow(message, state, mediator, message.message_id)
+@d.class_callback_query_handler(state='*')
+class InlineButtonHandler(MessageHandler):
+    """ Handling an inline button click """
+    async def handle(self, callback_query: types.CallbackQuery, state: FSMContext, **kwargs):
+        await callback_query.answer("Button has been Pressed")
+        message = callback_query.message
+        message.text = callback_query.data
+        await start_actuator_command_workflow(message, state, self.mediator, message.message_id)

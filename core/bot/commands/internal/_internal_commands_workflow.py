@@ -2,9 +2,11 @@ from typing import Callable, Optional
 
 from aiogram.dispatcher import FSMContext
 
+from core._helpers import get_mediator
+from core.bot._notification_constants import UNKNOWN_USER
 from core.bot.state_enums import ArgumentsFillStatus
 from core.bot.states import Command
-from core.bot.handlers.main_menu._internal_command import InternalCommand
+from core.bot.commands.internal._internal_command import InternalCommand
 from core.bot.telegram_api import state_storage
 from core.inbox.messages import message_fabric
 from core.repository.exceptions import NoSuchUser
@@ -19,28 +21,22 @@ async def start_cmd_internal_workflow(
     message_id=None,
 ):
     """
-    Тот же механизм, что используется в обработке команд актуатора,
-    только приспособленный для внутренних нужд бота.
-    (Команды главного меню)
+    The same mechanism that is used in the processing of actuator commands,
+    only adapted for the internal needs of the bot.
+    (Main menu commands)
     """
-    from mediator import mediator
+    mediator = get_mediator()
     cmd_fill_status = cmd.fill_status
 
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
-        # Команда заполнена
         try:
             await callback(**cmd.filled_args)
         except NoSuchUser:
-            # Коллбеки вызываются только здесь.
-            # Значит имеет смысл ловить исключения тоже здесь
-            await mediator.telegram_dispatcher.bot.send_message(
-                # TODO: заменить на mediator.send_message
-                chat_id=state.chat,
-                text="Неизвестный пользователь"
+            await mediator.send(
+                message_fabric(dict(chat_id=state.chat, text=UNKNOWN_USER))
             )
         await state.reset_state()
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
-        # Команда не заполнена:
         await state_storage.update_data(
             user=cmd.user_id,
             chat=cmd.user_id,

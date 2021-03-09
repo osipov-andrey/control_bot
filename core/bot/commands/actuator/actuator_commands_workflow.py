@@ -4,12 +4,12 @@ TgAPI --(cmd)--> Handler --(event)--> Observer
 from dataclasses import asdict
 
 from core._helpers import MessageTarget, TargetType
-from core.bot.constant_strings import COMMAND_IS_NOT_FILLED, CONTEXT_CANCEL_MENU
-from core.bot.handlers.actuator_commands.actuator_command import ActuatorCommand
+from core.bot._notification_constants import *
+from core.bot.commands.actuator.actuator_command import ActuatorCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import state_storage
-from core.bot.template_strings import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
+from core.bot._notification_templates import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
 from core.inbox.messages import message_fabric
 from core.memory_storage import NoSuchActuator, NoSuchCommand
 from core.sse.sse_event import SSEEvent
@@ -26,7 +26,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
     actuator_name, command, args = ActuatorCommand.parse_cmd_string(message.text)
 
     if not await mediator.users.has_grant(user_id, actuator_name):
-        await message.answer(text="Неизвестная команда или у вас нет доступа к данному актуатору")
+        await message.answer(text=UNKNOWN_COMMAND_OR_ACTUATOR)
         await state.reset_state()
         return
 
@@ -37,7 +37,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
         try:
             message_kwargs["text"] = get_client_commands(mediator, actuator_name, is_admin)
         except NoSuchActuator:
-            message_kwargs["text"] = "Неизвестный актуатор!"
+            message_kwargs["text"] = UNKNOWN_ACTUATOR
             await state.reset_state()
             return
         finally:
@@ -96,10 +96,6 @@ async def continue_cmd_workflow(
         # Arguments input state:
         await Command.arguments.set()
         await mediator.send(message_fabric(message_kwargs))
-    # TODO:
-    # elif cmd_fill_status == ArgumentsFillStatus.FAILED:
-    #     message_kwargs['text'] = cmd.generate_error_report(fill_status)
-    #     await telegram_dispatcher.observer.send_message_to_user(**message_kwargs)
 
 
 async def _finish_cmd_workflow(state, cmd: ActuatorCommand, mediator, message_id=None):
@@ -115,7 +111,7 @@ async def _finish_cmd_workflow(state, cmd: ActuatorCommand, mediator, message_id
 
 def get_client_commands(mediator, client_name: str, is_admin=False) -> str:
     commands = mediator.actuators.get_actuator_info(client_name)
-    message = "Информация о командах:\n"
+    message = f"{COMMANDS_INFO}:\n"
     for cmd in commands.values():
         if cmd.hidden:
             continue

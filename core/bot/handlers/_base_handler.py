@@ -1,11 +1,12 @@
 from abc import abstractmethod, ABC
 from dataclasses import asdict
-from typing import Optional
+from typing import Optional, Union
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core._helpers import MessageTarget, TargetType
+from core._helpers import MessageTarget, TargetType, get_mediator
+from core.bot._notification_constants import CONTEXT_CANCEL_MENU
 
 
 class MessageHandler(ABC):
@@ -18,10 +19,9 @@ class MessageHandler(ABC):
 
     @property
     def mediator(self):
-        from mediator import mediator
-        return mediator
+        return get_mediator()
 
-    async def callback(self, message: types.Message, state: FSMContext, **kwargs):
+    async def callback(self, message: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs):
         self.user_telegram_id = message.from_user.id
         self.is_admin = await self.mediator.users.is_admin(self.user_telegram_id)
         self.kwargs_to_answer = {
@@ -31,9 +31,10 @@ class MessageHandler(ABC):
         await self.handle(message, state, **kwargs)
 
     @abstractmethod
-    async def handle(self, message: types.Message, state: FSMContext, **kwargs):
+    async def handle(self, message: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs):
         ...
 
     @staticmethod
     async def _answer(message, text):
+        text += f"\n{CONTEXT_CANCEL_MENU}"
         await message.answer(text, parse_mode="HTML")
