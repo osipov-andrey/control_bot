@@ -1,7 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, ForeignKeyConstraint, Integer, MetaData, \
-    PrimaryKeyConstraint, String, \
-    Table, \
-    UniqueConstraint
+from sqlalchemy import Table, Column, MetaData, Boolean, Integer, String
+from sqlalchemy import ForeignKey, PrimaryKeyConstraint, UniqueConstraint
 
 from ._helpers import create_mapping
 
