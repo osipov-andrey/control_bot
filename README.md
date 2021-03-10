@@ -17,12 +17,14 @@
 ## Запуск
 
 1. Идем в телеграм в `@BotFather`, создаем бот, получаем HTTP API токен.
-2. Создаем файл *.env* и заполняем (рядом и по образцу с *.env.template*).
-3. Запускаем:
-> pip install -r requirements.txt 
+2. Заходим в папку *config* и копируем **config.yaml.template** -> **config.yaml**
+3. В конфиге указываем HTTP API токен, параметры для подключения к кролику, хост и порт для SSE сервера.
+   Настраиваем логирование *(пока нет)*
+4. Запускаем:
+> pip install -r requirements.txt && pip install .
 >
-> python -m core db
-> 
+> cd core/repository && alembic upgrade head && cd ../..
+>  
 > python -m core run
 
 5. Заходим в вашего бота в телеграме, жмем `\start`.
@@ -34,8 +36,7 @@ SSE-сервер будет работать по адресу:
 http://localhost:8080/sse/ACTUATOR_NAME/events,
 где HOST, PORT - из конфига, ACTUATOR_NAME - имя подключаемого актуатора.
 
-## Docker (in work)
+## Docker
 
 1. docker-compose build
-2. docker-compose run app db
-3. docker-compose up -d
+2. docker-compose up -d
