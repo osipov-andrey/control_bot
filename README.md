@@ -21,9 +21,11 @@
 3. В конфиге указываем HTTP API токен, параметры для подключения к кролику, хост и порт для SSE сервера.
    Настраиваем логирование *(пока нет)*
 4. Запускаем:
-> pip install -r requirements.txt 
+> pip install -r requirements.txt && pip install .
 >
-> python main.py
+> cd core/repository && alembic upgrade head && cd ../..
+>  
+> python -m core run
 
 5. Заходим в вашего бота в телеграме, жмем `\start`.
    Должно прийти сообщение, что вы теперь админ бота.
