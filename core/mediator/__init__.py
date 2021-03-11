@@ -1,8 +1,6 @@
-"""
-Module for importing mediator.
+from .mediator import Mediator
 
-Import locally at runtime:
 
-from mediator import mediator
-"""
-from . import _loader
+__all__ = [
+    'Mediator',
+]

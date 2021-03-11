@@ -84,8 +84,3 @@ class Issue:
     def __post_init__(self):
         self.time_ = datetime.datetime.now()
 
-
-def get_mediator():
-    """ Dynamically pluggable import """
-    from mediator import mediator
-    return mediator

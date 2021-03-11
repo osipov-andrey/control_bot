@@ -1,7 +1,8 @@
 from typing import List
 
-from core._helpers import ArgScheme, get_mediator
-from core.repository._schema import User, Actuator
+from core._helpers import ArgScheme
+from core.repository import User, Actuator
+from core.mediator.dependency import MediatorDependency
 
 
 async def generate_prompt(argument_info: ArgScheme, filled_args: dict) -> str:
@@ -31,7 +32,7 @@ async def generate_prompt(argument_info: ArgScheme, filled_args: dict) -> str:
 
 async def _get_granters_prompt(actuator_name: str) -> str:
     prompt = f"<b>Users with {actuator_name} grant:</b>\n"
-    granters: List[User] = await get_mediator().actuators.get_granters(actuator_name)
+    granters: List[User] = await MediatorDependency.mediator.actuators.get_granters(actuator_name)
     if granters:
         prompt += "".join(
             f"/{granter.telegram_id} - {granter.name}\n"
@@ -44,7 +45,7 @@ async def _get_granters_prompt(actuator_name: str) -> str:
 
 async def _get_actuators_prompt():
     prompt = "<b>Registered actuators:</b>\n"
-    actuators: List[Actuator] = await get_mediator().actuators.get_all()
+    actuators: List[Actuator] = await MediatorDependency.mediator.actuators.get_all()
     if actuators:
         prompt += "".join(
             f"/{actuator.name} - {actuator.description}\n"
@@ -57,7 +58,7 @@ async def _get_actuators_prompt():
 
 async def _get_users_prompt() -> str:
     prompt = "<b>Registered users:</b>\n"
-    users: List[User] = await get_mediator().users.get_all()
+    users: List[User] = await MediatorDependency.mediator.users.get_all()
     if users:
         prompt += "".join(f"/{user.telegram_id} - {user.name}\n" for user in users)
     else:
@@ -67,7 +68,7 @@ async def _get_users_prompt() -> str:
 
 async def _get_subscribers_prompt(channel: str) -> str:
     """ Take prompt about channel subscribers """
-    subscribers = await get_mediator().channels.get_subscribers(channel)
+    subscribers = await MediatorDependency.mediator.channels.get_subscribers(channel)
     prompt = f"<b>{channel} subscribers:</b>\n"
     if subscribers:
         prompt += "".join(f"/{s.telegram_id} - {s.name}\n" for s in subscribers)
@@ -78,7 +79,7 @@ async def _get_subscribers_prompt(channel: str) -> str:
 
 async def _get_channels_prompt():
     """ Take prompt about channels """
-    channels = await get_mediator().channels.all_channels()
+    channels = await MediatorDependency.mediator.channels.all_channels()
     prompt = "<b>Registered channels:</b>\n"
     if channels:
         prompt += "".join(f"/{channel.name} - {channel.description}\n" for channel in channels)
