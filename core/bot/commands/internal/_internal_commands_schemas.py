@@ -10,11 +10,11 @@ from dataclasses import asdict
 from core._helpers import ArgScheme, ArgType, CommandSchema
 from core.bot.commands.internal._internal_command import InternalCommand
 from core.bot._command_constants import *
+from core.mediator.dependency import MediatorDependency
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    from mediator import mediator
-    channels = [c.name for c in await mediator.channels.all_channels()]
+    channels = [c.name for c in await MediatorDependency.mediator.channels.all_channels()]
 
     args = {
         "channel": asdict(ArgScheme(
@@ -48,8 +48,7 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
 
 
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    from mediator import mediator
-    actuators = [a.name for a in await mediator.actuators.get_all()]
+    actuators = [a.name for a in await MediatorDependency.mediator.actuators.get_all()]
     args = {
         "actuator": asdict(ArgScheme(
             description="Actuator name",

@@ -5,6 +5,7 @@ from typing import List
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 
 from .._helpers import MessageTarget, TargetType
+from core.mediator.dependency import MediatorDependency
 
 
 class MessageTargetDescriptor:
@@ -77,10 +78,9 @@ class CaptionDescriptor:
 class MessageIssue:
 
     def __set__(self, instance, value: dict):
-        from mediator import mediator
 
         if value["resolved"] is True:
-            problem_issue = mediator.memory_storage.resolve_issue(value["issue_id"])
+            problem_issue = MediatorDependency.mediator.memory_storage.resolve_issue(value["issue_id"])
             if problem_issue:
                 instance.__dict__["reply_to_message_id"] = problem_issue.reply_to_message_id
         instance.__dict__["issue"] = value

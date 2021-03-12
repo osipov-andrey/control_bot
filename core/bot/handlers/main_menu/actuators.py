@@ -29,7 +29,7 @@ class ActuatorsHandler(MessageHandler):
                 # grant, revoke - calling from users submenu
             ]
         )
-        await message.answer(menu)
+        await self._answer(message, menu)
 
 
 @d.class_message_handler(commands=[ALL_ACTUATORS], state=MainMenu.actuators)
@@ -37,14 +37,15 @@ class AllActuatorsHandler(MessageHandler):
     """ Show all actuators """
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         actuators = await self.mediator.actuators.get_all()
-        text = "\n".join(
+        text = f"{emojies.ACTUATOR} Registered actuators: \n\n"
+        text += "\n".join(
             "{connected}{name} - {description}".format(
                 connected=emojies.ACTUATOR_CONNECTED if self.mediator.actuators.is_connected(a.name) else '',
                 name=f"{emojies.ACTUATOR}<b>{a.name}</b>",
                 description=a.description
             ) for a in actuators
         )
-        await message.answer(text, parse_mode="HTML")
+        await self._answer(message, text)
         await state.reset_state()
 
 
@@ -58,7 +59,7 @@ class CreateActuatorHandler(MessageHandler):
             actuator_name = kwargs_.get("actuator")
             description = kwargs_.get("description")
             await self.mediator.actuators.create_actuator(actuator_name, description)
-            await message.answer(f"Mediator created : {actuator_name} - {description}.")
+            await self._answer(message, f"Mediator created : {actuator_name} - {description}.")
 
         await start_cmd_internal_workflow(
             state, cmd, self.kwargs_to_answer, CommandFillStatus.FILL_COMMAND, callback=create_callback
@@ -74,7 +75,7 @@ class DeleteActuatorHandler(MessageHandler):
         async def delete_callback(**kwargs_):
             actuator_name = kwargs_.get("actuator")
             await self.mediator.actuators.delete_actuator(actuator_name)
-            await message.answer(f"Mediator deleted {actuator_name}.")
+            await self._answer(message, f"Mediator deleted {actuator_name}.")
 
         await start_cmd_internal_workflow(
             state, cmd, self.kwargs_to_answer, CommandFillStatus.FILL_COMMAND, callback=delete_callback

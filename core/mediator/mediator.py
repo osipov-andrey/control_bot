@@ -14,6 +14,7 @@ from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, Edit
 from core.memory_storage import ControlBotMemoryStorage
 from core.sse.sse_server import create_sse_server
 from ._interfaces import *
+from .dependency import MediatorDependency
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.debug(config)
@@ -55,6 +56,7 @@ class Mediator(metaclass=_SingletonMeta):
         _LOGGER.info("Mediator initialized!")
 
     def run(self):
+        MediatorDependency.add_mediator(self)
         # TODO разделить посредник и запускатор программы
         # Для доступа к интерфейсам из любой части программы:
         asyncio.ensure_future(self._rabbit.listen_to_rabbit())

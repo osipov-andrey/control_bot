@@ -7,12 +7,13 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
 from core.bot._notification_constants import CONTEXT_CANCEL_MENU
-from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema, get_mediator
+from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 from core.bot.handlers._prompts_generators import generate_prompt
+from core.mediator.dependency import MediatorDependency
 
 
-class ActuatorCommand:
+class ActuatorCommand(MediatorDependency):
     """ Команда, полученная из телеги """
 
     @staticmethod
@@ -45,7 +46,7 @@ class ActuatorCommand:
         self.message_id = message_id
         self.behavior = Behavior.USER.value
 
-        cmd_info: CommandSchema = get_mediator().actuators.get_command_info(client, cmd)
+        cmd_info: CommandSchema = self.mediator.actuators.get_command_info(client, cmd)
         if is_admin and cmd_info.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
             self.behavior = Behavior.ADMIN.value
