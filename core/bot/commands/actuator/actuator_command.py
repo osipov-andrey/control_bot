@@ -9,7 +9,7 @@ from cerberus import Validator
 from core.bot._notification_constants import CONTEXT_CANCEL_MENU
 from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
-from core.bot.handlers._prompts_generators import generate_prompt
+from core.bot._prompts_generators import generate_prompt
 from core.mediator.dependency import MediatorDependency
 
 

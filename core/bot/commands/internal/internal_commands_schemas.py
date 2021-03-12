@@ -8,7 +8,7 @@ then in this case we write logic in the message handlers.
 from dataclasses import asdict
 
 from core._helpers import ArgScheme, ArgType, CommandSchema
-from core.bot.commands.internal._internal_command import InternalCommand
+from core.bot.commands.internal.internal_command import InternalCommand
 from core.bot._command_constants import *
 from core.mediator.dependency import MediatorDependency
 

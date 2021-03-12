@@ -5,8 +5,8 @@ from core.bot._helpers import get_menu, MenuTextButton, admin_only_method
 from core.bot import emojies
 from core.bot.handlers._base_handler import MessageHandler
 from core.bot._command_constants import *
-from core.bot.commands.internal._internal_commands_schemas import get_create_or_delete_cmd
-from core.bot.commands.internal._internal_commands_workflow import start_cmd_internal_workflow
+from core.bot.commands.internal.internal_commands_schemas import get_create_or_delete_cmd
+from core.bot.commands.internal.internal_commands_workflow import start_cmd_internal_workflow
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d

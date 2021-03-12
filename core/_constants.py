@@ -1,1 +1,0 @@
-INTRO_COMMAND = 'getAvailableMethods'

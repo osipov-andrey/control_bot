@@ -1,6 +1,3 @@
-"""
-TgAPI --(cmd)--> Handler --(event)--> Observer
-"""
 from dataclasses import asdict
 
 from core._helpers import MessageTarget, TargetType

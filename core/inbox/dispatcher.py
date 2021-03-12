@@ -3,12 +3,13 @@ from asyncio import Queue
 from dataclasses import asdict
 from typing import Iterable
 
-from .._constants import INTRO_COMMAND
 from .._helpers import Issue, MessageTarget
 from ..inbox.messages import BaseMessage, TargetType, message_fabric
 
 
 _LOGGER = logging.getLogger(__name__)
+
+INTRO_COMMAND = 'getAvailableMethods'
 
 
 class InboxDispatcher:
