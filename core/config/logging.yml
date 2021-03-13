@@ -1,0 +1,28 @@
+version: 1
+
+disable_existing_loggers: false
+
+formatters:
+  main:
+    format: "%(levelname)-8s [%(asctime)s] %(name)32s::%(funcName)-18s  :line:%(lineno)-8s - %(message)s"
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+handlers:
+  file:
+    '()': ext://core.config._logging.gzip_rotating_handler
+    filename: control_bot.log
+    when: midnight
+    formatter: main
+    backupCount: 14
+    encoding: utf-8
+  console:
+    class: logging.StreamHandler
+    formatter: main
+
+loggers: []
+
+root:
+  level: DEBUG
+  handlers:
+    - file
+    - console

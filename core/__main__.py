@@ -1,8 +1,10 @@
 import argparse
-import logging
+from logging.config import dictConfig
 from core.mediator import Mediator
+from . import config
 
-logging.basicConfig(level=logging.INFO)
+dictConfig(config.config["logging"])
+
 
 if __name__ == '__main__':
     mediator = Mediator()
