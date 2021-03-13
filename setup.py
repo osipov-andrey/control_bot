@@ -37,6 +37,7 @@ setup(
         ],
     },
     packages=find_packages(exclude=['tests']),
+    data_files=[("", ["core/config/logging.yml"])],
 
     include_package_data=True
 )

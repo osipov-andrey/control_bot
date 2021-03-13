@@ -12,6 +12,7 @@ services:
       - rabbit
     volumes:
       - ./core/repository/db_dump:/app/core/repository/db_dump
+      - ./logs:/app/logs
   rabbit:
     image: "rabbitmq:3-management"
     command: rabbitmq-server
