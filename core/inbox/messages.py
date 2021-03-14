@@ -4,14 +4,23 @@ from dataclasses import asdict
 from ._descriptors import *
 
 
-def create_message():
+def create_message(
+        target: MessageTarget,
+        text: str,
+        # Add new parameters as needed
+) -> 'BaseMessage':
     """
     Adapter for build messages with message fabric
     """
-    pass
+    return inbox_message_fabric(
+        dict(
+            target=asdict(target),
+            text=text
+        )
+    )
 
 
-def message_fabric(message_body: dict) -> 'BaseMessage':
+def inbox_message_fabric(message_body: dict) -> 'BaseMessage':
     """
     We receive a message from the actuator in the form of a dictionary.
     That's why we need this factory.
@@ -42,7 +51,7 @@ class BaseMessage(ABC):
             setattr(self, key, value)
 
     def get_params_to_sent(self, only_common=False) -> dict:
-        """ Собирает параметры для отправки сообщения через aiogram """
+        """ Gathers parameters for sending a message via aiogram """
         if only_common:
             params = self._COMMON_PARAMS_TO_SENT
         else:
@@ -57,7 +66,7 @@ class BaseMessage(ABC):
             message_kwargs.update(reply)
             message_kwargs["reply_to_message_id"] = reply_to_message_id
             message_kwargs["target"] = asdict(self.target)
-            reply_message = message_fabric(message_kwargs)
+            reply_message = inbox_message_fabric(message_kwargs)
             replies.append(reply_message)
         return replies
 

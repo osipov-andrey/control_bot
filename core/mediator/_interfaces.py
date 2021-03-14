@@ -6,8 +6,8 @@ from typing import List
 from core import exceptions
 from core.bot import emojies
 from core.config import config
-from core._helpers import TargetType
-from core.inbox.messages import TextMessage
+from core._helpers import TargetType, MessageTarget
+from core.inbox.messages import TextMessage, create_message
 from core.mediator.dependency import MediatorDependency
 from core.exceptions import NoSuchUser
 from core.repository.repository import Channel, Repository, User
@@ -90,7 +90,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         return granters
 
     async def turn_on_actuator(self, actuator_name: str) -> asyncio.Queue:
-        """ Подключить к интерфейсу новый актуатор  """
+        """ Turn on the actuator  """
         admins = await self.mediator.users.get_admins()
         if self.is_connected(actuator_name):
             text = f"{emojies.ACTUATOR_ALREADY_TURNED_ON} Actuator {actuator_name} already turned ON!"
@@ -105,10 +105,11 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
             result = actuator_queue
 
         for user in users:
-            await self.mediator.telegram_dispatcher.bot.send_message(
-                chat_id=user.telegram_id,
+            message = create_message(
+                target=MessageTarget(target_type=TargetType.USER.value, target_name=user.telegram_id),
                 text=text
             )
+            await self.mediator.send(message)
         if result:
             return result
         else:
@@ -121,10 +122,11 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         admins = await self.mediator.users.get_admins()
         granters = await self.get_granters(actuator_name)
         for user in set(admins + granters):
-            await self.mediator.telegram_dispatcher.bot.send_message(
-                chat_id=user.telegram_id,
+            message = create_message(
+                target=MessageTarget(target_type=TargetType.USER.value, target_name=user.telegram_id),
                 text=f"{emojies.ACTUATOR_TURNED_OFF} Actuator {actuator_name} has been turned OFF!"
             )
+            await self.mediator.send(message)
 
 
 class ChannelsInterface(BaseInterface):

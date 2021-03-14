@@ -5,7 +5,7 @@ import logging
 
 from aioamqp.channel import Channel
 
-from ..messages import message_fabric
+from ..messages import inbox_message_fabric
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,5 +52,5 @@ class RabbitConsumer:
         _LOGGER.info("Get message from rabbit: %s", body)
         body = body.decode()
         body = json.loads(body)
-        message = message_fabric(body)
+        message = inbox_message_fabric(body)
         await self.inbox_queue.put(message)

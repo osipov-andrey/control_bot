@@ -4,7 +4,7 @@ from dataclasses import asdict
 from typing import Iterable
 
 from .._helpers import Issue, MessageTarget
-from ..inbox.messages import BaseMessage, TargetType, message_fabric
+from ..inbox.messages import BaseMessage, TargetType, inbox_message_fabric
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class InboxDispatcher:
                 new_message_dict = dict(message.__dict__)
                 new_message_dict["target"] = asdict(new_target)
                 new_message_dict["text"] = f"Channel <b>{channel}</b>\n" + new_message_dict["text"]
-                new_message = message_fabric(new_message_dict)
+                new_message = inbox_message_fabric(new_message_dict)
                 await self.dispatch(new_message)
 
     async def _check_replies(self, message: BaseMessage, reply_to_message_id: int):

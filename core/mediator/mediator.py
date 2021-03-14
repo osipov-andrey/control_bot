@@ -10,7 +10,7 @@ from core.config import config
 from core.inbox.consumers.rabbit import RabbitConsumer
 from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
-    TextMessage, message_fabric
+    TextMessage, inbox_message_fabric
 from core.memory_storage import ControlBotMemoryStorage
 from core.sse.sse_server import create_sse_server
 from ._interfaces import *
@@ -72,7 +72,7 @@ class Mediator(metaclass=_SingletonMeta):
                 "text": "Message is too long!",
                 "target": message.target
             }
-            error_message = message_fabric(message_params)
+            error_message = inbox_message_fabric(message_params)
             return await self._send(error_message)
 
     @singledispatchmethod
