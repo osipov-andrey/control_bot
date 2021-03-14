@@ -38,12 +38,15 @@ def inbox_message_fabric(message_body: dict) -> 'BaseMessage':
 
 
 class BaseMessage(ABC):
+    """
+    ABC-class for incoming message from inbox.
+    """
     _COMMON_PARAMS_TO_SENT = ('chat_id', 'reply_markup', 'parse_mode', 'reply_to_message_id')
     _PARAMS_TO_SENT = tuple()
 
-    target = MessageTargetDescriptor()
-    reply_markup = InlineButtonsDescriptor()
-    issue = MessageIssue()
+    target: MessageTarget = MessageTargetDescriptor()
+    reply_markup: List[dict] = InlineButtonsDescriptor()
+    issue: dict = MessageIssueDescriptor()
 
     def __init__(self, message_body: dict):
         self.parse_mode = 'HTML'
@@ -91,11 +94,11 @@ class EditTextMessage(TextMessage):
 class DocumentMessage(BaseMessage):
     _PARAMS_TO_SENT = ('document', 'caption')
 
-    document = DocumentDescriptor()
+    document: dict = DocumentDescriptor()
 
 
 class PhotoMessage(BaseMessage):
     _PARAMS_TO_SENT = ('photo', 'caption')
 
-    image = PhotoDescriptor()
-    message = CaptionDescriptor()
+    image: str = PhotoDescriptor()  # Base64
+    text: str = CaptionDescriptor()

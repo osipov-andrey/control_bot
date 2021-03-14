@@ -42,7 +42,6 @@ class MessageCaptionDescriptor:
 class DocumentDescriptor:
 
     def __set__(self, instance, value: dict):
-        # TODO: валидация параметров в value
         content = value["content"]
         filename = value["filename"]
         caption = value["caption"]
@@ -57,7 +56,7 @@ class DocumentDescriptor:
 
 class PhotoDescriptor:
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value: bytes):
         instance.__dict__["photo"] = base64.b64decode(value)
 
 
@@ -67,7 +66,7 @@ class CaptionDescriptor:
         instance.__dict__["caption"] = value
 
 
-class MessageIssue:
+class MessageIssueDescriptor:
 
     def __set__(self, instance, value: dict):
 
