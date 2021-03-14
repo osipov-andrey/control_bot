@@ -3,8 +3,10 @@ import logging
 
 from aiohttp import web
 from aiohttp.web import Application, HTTPBadRequest
+from aiohttp.web_exceptions import HTTPTooManyRequests
 from aiohttp_sse import sse_response
 
+from .. import exceptions
 from .._helpers import Behavior, MessageTarget, TargetType
 from ..config import config
 from .sse_event import SSEEvent
@@ -25,9 +27,11 @@ async def sse_connect(request):
 
     bot = request.app["bot"]
 
-    events_queue: asyncio.Queue = bot.actuators.new_sse_connection(client_name)
-    if not events_queue:
-        raise HTTPBadRequest()
+    try:
+        events_queue: asyncio.Queue = await bot.actuators.turn_on_actuator(client_name)
+    except exceptions.ActuatorAlreadyConnected:
+        raise HTTPTooManyRequests()
+
     log.info(
         f"{request.remote} has been joined to terminal: {client_name}"
     )
@@ -49,7 +53,7 @@ async def sse_connect(request):
                 await response.send(event.data, event=event.event)
                 events_queue.task_done()
         finally:
-            bot.actuators.stop_sse_connection(client_name)
+            await bot.actuators.turn_off_actuator(client_name)
             log.info(
                 f"{request._transport_peername[0]} has been left from terminal: {client_name}"
             )
@@ -60,7 +64,5 @@ def create_sse_server(bot):
     app = Application()
     app["bot"] = bot
     app.router.add_route("GET", "/sse/{client_name}/events", sse_connect)
-    from core.inbox.consumers.http import consume_message
-    app.router.add_route("POST", "/inbox", consume_message)
     asyncio.ensure_future(web._run_app(app, host=_HOST, port=_PORT))
     return app

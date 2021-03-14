@@ -7,9 +7,9 @@ import aiosqlite
 from sqlalchemy import null
 from sqlalchemy.orm import Query
 
+from core.exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
 from . import _queryes
 from ._db_enums import UserEvents
-from .exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
 from ._schema import *
 
 

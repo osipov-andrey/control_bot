@@ -1,4 +1,4 @@
-from . import exceptions
+from core import exceptions
 from .repository import Repository
 from ._schema import *
 

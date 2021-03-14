@@ -8,7 +8,7 @@ from core.bot.states import Command
 from core.bot.commands.internal.internal_command import InternalCommand
 from core.bot.telegram_api import state_storage
 from core.inbox.messages import message_fabric
-from core.repository.exceptions import NoSuchUser
+from core.exceptions import NoSuchUser
 from core.mediator.dependency import MediatorDependency
 
 
