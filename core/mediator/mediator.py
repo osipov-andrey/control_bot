@@ -69,8 +69,7 @@ class Mediator(metaclass=_SingletonMeta):
             return await self._send(message)
         except aiogram.utils.exceptions.MessageIsTooLong:
             message_params = {
-                # TODO: заменить этот параметр на 'text', начиная с левера
-                "message": "Message is too long!",
+                "text": "Message is too long!",
                 "target": message.target
             }
             error_message = message_fabric(message_params)

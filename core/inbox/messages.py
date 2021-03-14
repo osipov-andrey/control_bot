@@ -4,8 +4,18 @@ from dataclasses import asdict
 from ._descriptors import *
 
 
-def message_fabric(message_body: dict):
+def create_message():
+    """
+    Adapter for build messages with message fabric
+    """
+    pass
 
+
+def message_fabric(message_body: dict) -> 'BaseMessage':
+    """
+    We receive a message from the actuator in the form of a dictionary.
+    That's why we need this factory.
+    """
     target = message_body["target"]
 
     if "document" in message_body:
@@ -23,9 +33,8 @@ class BaseMessage(ABC):
     _PARAMS_TO_SENT = tuple()
 
     target = MessageTargetDescriptor()
-    buttons = InlineButtonsDescriptor()
+    reply_markup = InlineButtonsDescriptor()
     issue = MessageIssue()
-    # replies = MessageReplies()
 
     def __init__(self, message_body: dict):
         self.parse_mode = 'HTML'
@@ -64,8 +73,6 @@ class BaseMessage(ABC):
 
 class TextMessage(BaseMessage):
     _PARAMS_TO_SENT = ('text', 'entities')
-
-    message = MessageTextDescriptor()
 
 
 class EditTextMessage(TextMessage):

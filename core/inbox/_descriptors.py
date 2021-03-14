@@ -23,7 +23,6 @@ class MessageTargetDescriptor:
 class InlineButtonsDescriptor:
 
     def __set__(self, instance, value: List[dict]):
-        # TODO: изменить параметр в telegram_lever с 'buttons' на 'reply_markup'
         instance.__dict__["reply_markup"] = self._generate_inline_buttons(value)
 
     @staticmethod
@@ -32,13 +31,6 @@ class InlineButtonsDescriptor:
         for button in buttons:
             inline_keyboard.insert(InlineKeyboardButton(**button))
         return inline_keyboard
-
-
-class MessageTextDescriptor:
-
-    def __set__(self, instance, value: str):
-        # TODO: изменить параметр в telegram_lever с 'message' на 'text'
-        instance.__dict__["text"] = value
 
 
 class MessageCaptionDescriptor:
