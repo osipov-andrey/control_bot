@@ -10,15 +10,16 @@ COPY . .
 RUN pip install virtualenv
 RUN virtualenv venv && ./venv/bin/pip3 install wheel && ./venv/bin/pip3 install .
 
-RUN ls
 RUN sh find_deps.sh ./venv/ > deps.txt
 
 FROM alpine:latest 
 WORKDIR /app
+
 COPY --from=build /app/core/ /app/core/
 COPY --from=build /app/deps.txt .
 COPY --from=build /app/venv/ /app/venv/
 COPY --from=build /app/startup.sh /app/startup.sh
+
 RUN apk update \
     && apk add python3
 RUN cat deps.txt \
