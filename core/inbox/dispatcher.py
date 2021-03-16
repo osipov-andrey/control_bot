@@ -43,10 +43,9 @@ class InboxDispatcher:
             subscribers: Iterable = await self.observer.channels.get_subscribers(channel)
 
             for subs in subscribers:
-                # TODO некрасиво это все
                 new_target = MessageTarget(
                     target_type=TargetType.USER.value,
-                    target_name=subs,
+                    target_name=subs.telegram_id,
                     message_id=message.target.message_id
                 )
                 new_message_dict = dict(message.__dict__)
