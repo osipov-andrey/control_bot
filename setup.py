@@ -37,7 +37,10 @@ setup(
         ],
     },
     packages=find_packages(exclude=['tests']),
-    data_files=[("", ["core/config/logging.yml"])],
+    data_files=[
+        ("", ["core/config/logging.yml"]),
+        ("", ["core/repository/alembic.ini"])
+    ],
 
     include_package_data=True
 )
