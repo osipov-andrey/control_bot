@@ -4,6 +4,7 @@ import json
 import logging
 
 from aioamqp.channel import Channel
+from core.config import config
 
 from ..messages import inbox_message_fabric
 
@@ -45,7 +46,7 @@ class RabbitConsumer:
                 continue
 
         channel: Channel = await protocol.channel()
-        await channel.queue_declare("telegram", durable=True)
+        await channel.queue_declare(config["rabbit"]["rabbit_queue"], durable=True)
         await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
 
     async def _callback(self, channel, body, envelope, properties):

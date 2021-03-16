@@ -1,8 +1,8 @@
 import base64
 import io
-from typing import List
+from typing import List, Union
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputFile
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputFile
 
 from .._helpers import MessageTarget, TargetType
 from core.mediator.dependency import MediatorDependency
@@ -22,8 +22,11 @@ class MessageTargetDescriptor:
 
 class InlineButtonsDescriptor:
 
-    def __set__(self, instance, value: List[dict]):
-        instance.__dict__["reply_markup"] = self._generate_inline_buttons(value)
+    def __set__(self, instance, value: Union[ReplyKeyboardMarkup, List[dict]]):
+        if isinstance(value, ReplyKeyboardMarkup):
+            instance.__dict__["reply_markup"] = value
+        else:
+            instance.__dict__["reply_markup"] = self._generate_inline_buttons(value)
 
     @staticmethod
     def _generate_inline_buttons(buttons: List[dict]) -> InlineKeyboardMarkup:
