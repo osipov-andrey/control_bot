@@ -8,7 +8,7 @@ from core.bot.states import Command
 from core.bot.telegram_api import state_storage
 from core.bot._notification_templates import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
 from core.inbox.messages import inbox_message_fabric
-from core.memory_storage import NoSuchActuator, NoSuchCommand
+from core.exceptions import NoSuchActuatorInRAM, NoSuchCommand
 from core.sse.sse_event import SSEEvent
 
 
@@ -33,7 +33,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
         # Пришло только имя клиента - показываем возможные команды
         try:
             message_kwargs["text"] = get_client_commands(mediator, actuator_name, is_admin)
-        except NoSuchActuator:
+        except NoSuchActuatorInRAM:
             message_kwargs["text"] = UNKNOWN_ACTUATOR
             await state.reset_state()
             return
@@ -65,7 +65,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
     except NoSuchCommand as e:
         exception = True
         message_kwargs["text"] = COMMAND_IS_NOT_EXIST.format(command=e.cmd)
-    except NoSuchActuator:
+    except NoSuchActuatorInRAM:
         exception = True
         message_kwargs["text"] = NO_SUCH_CLIENT.format(client=actuator_name)
     if exception:

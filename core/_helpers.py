@@ -1,7 +1,7 @@
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 
 class TargetType(Enum):
@@ -28,43 +28,6 @@ class MessageTarget:
     target_type: TargetType
     target_name: Union[str, int]
     message_id: Optional[str] = None
-
-
-@dataclass
-class CommandBehavior:
-    description: str
-    args: Dict[str, Union['ArgScheme', dict]]
-
-    def __post_init__(self):
-        self.args = {
-            arg_name: ArgScheme(**arg_info)
-            for arg_name, arg_info in self.args.items()
-        }
-
-
-@dataclass
-class CommandSchema:
-    hidden: bool
-    behavior__admin: Optional[Union['CommandBehavior', dict]] = None
-    behavior__user: Optional[Union['CommandBehavior', dict]] = None
-
-    def __post_init__(self):
-        if self.behavior__admin:
-            self.behavior__admin = CommandBehavior(**self.behavior__admin)
-        if self.behavior__user:
-            self.behavior__user = CommandBehavior(**self.behavior__user)
-
-
-@dataclass
-class ArgScheme:
-    description: str
-    schema: dict
-    options: Optional[list] = None
-    is_user: Optional[bool] = False
-    is_actuator: Optional[bool] = False
-    is_granter: Optional[bool] = False
-    is_channel: Optional[bool] = False
-    is_subscriber: Optional[bool] = False
 
 
 def get_log_cover(cover_name: str) -> str:

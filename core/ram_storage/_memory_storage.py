@@ -1,25 +1,16 @@
-from ._helpers import CommandSchema, Issue
-
-
-class NoSuchActuator(Exception):
-    """ No such client """
-
-
-class NoSuchCommand(Exception):
-    """ No such command for client"""
-    def __init__(self, cmd: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.cmd = cmd
+from core._helpers import Issue
+from core.exceptions import NoSuchActuatorInRAM, NoSuchCommand
+from ._command_schema import CommandSchema
 
 
 class ControlBotMemoryStorage:
-    """ Хранит информацию о командах подключенных клиентов, об issues и т.п..."""
+    """ Stores in RAM information about connected actuators, issues, etc."""
+
     def __init__(self):
         self._storage = dict()
         self._issue_storage = dict()
 
     def save_client(self, client_name: str, commands_info: dict):
-        # TODO: schema validation
 
         commands_info = {
             cmd: CommandSchema(**info)
@@ -34,7 +25,7 @@ class ControlBotMemoryStorage:
         try:
             return self._storage[client_name]
         except KeyError:
-            raise NoSuchActuator(client_name)
+            raise NoSuchActuatorInRAM(client_name)
 
     def get_command_info(self, client_name: str, command: str):
         try:

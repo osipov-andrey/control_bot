@@ -11,7 +11,7 @@ from core.inbox.consumers.rabbit import RabbitConsumer
 from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
     TextMessage, inbox_message_fabric
-from core.memory_storage import ControlBotMemoryStorage
+from core.ram_storage._memory_storage import ControlBotMemoryStorage
 from core.sse.sse_server import create_sse_server
 from ._interfaces import *
 from .dependency import MediatorDependency

@@ -7,7 +7,8 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from cerberus import Validator
 
 from core.bot._notification_constants import CONTEXT_CANCEL_MENU
-from core._helpers import ArgScheme, ArgType, Behavior, CommandBehavior, CommandSchema
+from core._helpers import ArgType, Behavior
+from core.ram_storage import ArgInfo, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 from core.bot._prompts_generators import generate_prompt
 from core.mediator.dependency import MediatorDependency
@@ -73,7 +74,7 @@ class ActuatorCommand(MediatorDependency):
         arg_name = self.args_to_fill.pop(0)
         arg_scheme = self._get_arg_scheme(arg_name)
 
-        if arg_scheme.schema['type'] == ArgType.LIST.value:
+        if arg_scheme.arg_schema.type == ArgType.LIST.value:
             self.filled_args[arg_name] = arg_value.split(' ')
             return
 
@@ -127,16 +128,16 @@ class ActuatorCommand(MediatorDependency):
             if not required_arg:
                 break
             if received_value:
-                arg_scheme = self._get_arg_scheme(required_arg)
+                arg_info = self._get_arg_scheme(required_arg)
 
-                if arg_scheme.schema['type'] == ArgType.LIST.value:
+                if arg_info.arg_schema.type == ArgType.LIST.value:
                     # Если тип аргумента лист - то все,
                     # что есть далее в полученных аргументах - запихиваем в лист
                     self.filled_args[required_arg] = self.list_args[index:]
                     break
                     # лист может быть только в конце аргументов
 
-                validated = self._validate_arg(required_arg, arg_scheme, received_value)
+                validated = self._validate_arg(required_arg, arg_info, received_value)
                 if validated:
                     self.filled_args[required_arg] = received_value
                 else:
@@ -147,15 +148,15 @@ class ActuatorCommand(MediatorDependency):
     def _validate_arg(
             self,
             arg_name: str,
-            arg_info: ArgScheme,
+            arg_info: ArgInfo,
             received_value: Union[int, str]
     ) -> bool:
-        if arg_info.schema['type'] == ArgType.INT.value:
+        if arg_info.arg_schema.type == ArgType.INT.value:
             try:  # Телеграм возвращает всегда строки
                 received_value = int(received_value)
             except ValueError:
                 pass  # Цербер скажет это за меня
-        v = Validator({arg_name: arg_info.schema})
+        v = Validator({arg_name: arg_info.cerberus_schema})
         validation = v.validate({arg_name: received_value})
         if validation is False:
             self.validation_errors.update(v.errors)
@@ -164,7 +165,7 @@ class ActuatorCommand(MediatorDependency):
                 self.validation_errors.pop(arg_name)
         return validation
 
-    def _get_arg_scheme(self, arg_name: str) -> ArgScheme:
+    def _get_arg_scheme(self, arg_name: str) -> ArgInfo:
         return self.cmd_scheme.args.get(arg_name)
 
     def __str__(self):
