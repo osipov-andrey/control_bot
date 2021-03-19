@@ -1,6 +1,5 @@
-from core._helpers import Issue
+from core.inbox.models import Issue, CommandSchema
 from core.exceptions import NoSuchActuatorInRAM, NoSuchCommand
-from ._command_schema import CommandSchema
 
 
 class ControlBotMemoryStorage:

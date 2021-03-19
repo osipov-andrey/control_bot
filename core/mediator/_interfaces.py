@@ -6,7 +6,7 @@ from typing import List
 from core import exceptions
 from core.bot import emojies
 from core.config import config
-from core._helpers import TargetType, MessageTarget
+from core.inbox.models import TargetType, MessageTarget
 from core.inbox.messages import TextMessage, create_message
 from core.mediator.dependency import MediatorDependency
 from core.exceptions import NoSuchUser
@@ -97,7 +97,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
             users = admins
             result = None
         else:
-            actuator_queue = asyncio.Queue()
+            actuator_queue: asyncio.Queue = asyncio.Queue()
             self.connected_actuators[actuator_name] = actuator_queue
             granters = await self.get_granters(actuator_name)
             users = set(admins + granters)

@@ -1,23 +1,25 @@
 import base64
 import io
-from typing import List, Union
+from typing import List, Union, Generic, TypeVar
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputFile
 
-from .._helpers import MessageTarget, TargetType
+from core.inbox.models import MessageTarget, TargetType
 from core.mediator.dependency import MediatorDependency
 
 
 class MessageTargetDescriptor:
 
-    def __set__(self, instance, value: dict):
-        target = MessageTarget(**value)
+    def __set__(self, instance, value: MessageTarget):
 
-        instance.__dict__["target"] = target
+        instance.__dict__["target"] = value
 
-        if target.target_type == TargetType.USER.value:
-            instance.__dict__["chat_id"] = target.target_name
-            instance.__dict__["message_id"] = target.message_id
+        if value.target_type == TargetType.USER.value:
+            instance.__dict__["chat_id"] = value.target_name
+            instance.__dict__["message_id"] = value.message_id
+
+    def __get__(self, instance, owner) -> MessageTarget:
+        return instance.__dict__.get("target")
 
 
 class InlineButtonsDescriptor:
@@ -27,6 +29,9 @@ class InlineButtonsDescriptor:
             instance.__dict__["reply_markup"] = value
         else:
             instance.__dict__["reply_markup"] = self._generate_inline_buttons(value)
+
+    def __get__(self, instance, owner) -> List[dict]:
+        return instance.__dict__.get("reply_markup")
 
     @staticmethod
     def _generate_inline_buttons(buttons: List[dict]) -> InlineKeyboardMarkup:
@@ -79,8 +84,5 @@ class MessageIssueDescriptor:
                 instance.__dict__["reply_to_message_id"] = problem_issue.reply_to_message_id
         instance.__dict__["issue"] = value
 
-    def __get__(self, instance, owner):
-        if isinstance(instance.__dict__.get("issue"), self.__class__):
-            return
+    def __get__(self, instance, owner) -> dict:
         return instance.__dict__.get("issue")
-

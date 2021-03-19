@@ -1,7 +1,7 @@
 import json
 from dataclasses import asdict
 
-from .._helpers import MessageTarget
+from core.inbox.models import MessageTarget
 
 
 class SSEEvent:
@@ -17,20 +17,21 @@ class SSEEvent:
     ):
         self.event = event
         self.command = command
-        self.target = asdict(target)
+        self.target = target
         self.args = args if args else {}
         self.behavior = behavior
 
     @property
     def data(self):
-        return json.dumps(
+        json_ = json.dumps(
             {
                 "command": self.command,
-                "target": self.target,
+                "target": self.target.dict(),
                 "args": self.args,
                 "behavior": self.behavior,
             }
         )
+        return json_
 
     def __repr__(self):
         return f"{self.__class__.__name__}(" \

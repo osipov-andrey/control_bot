@@ -1,10 +1,9 @@
 import logging
 from asyncio import Queue
-from dataclasses import asdict
 from typing import Iterable
 
-from .._helpers import Issue, MessageTarget
-from ..inbox.messages import BaseMessage, TargetType, inbox_message_fabric
+from core.inbox.models import Issue, MessageTarget, TargetType
+from core.inbox.messages import BaseMessage, inbox_message_fabric
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ class InboxDispatcher:
             await self.dispatch(message)
 
     async def dispatch(self, message: BaseMessage):
-        # TODO if target.message_id: ...
+
         if message.cmd == INTRO_COMMAND:
             self.observer.actuators.save_actuator_info(message)
             return
@@ -47,9 +46,9 @@ class InboxDispatcher:
                     target_type=TargetType.USER.value,
                     target_name=subs.telegram_id,
                     message_id=message.target.message_id
-                )
+                ).json()
                 new_message_dict = dict(message.__dict__)
-                new_message_dict["target"] = asdict(new_target)
+                new_message_dict["target"] = new_target
                 new_message_dict["text"] = f"Channel <b>{channel}</b>\n" + new_message_dict["text"]
                 new_message = inbox_message_fabric(new_message_dict)
                 await self.dispatch(new_message)

@@ -6,9 +6,10 @@ from aiohttp.web import Application, HTTPBadRequest
 from aiohttp.web_exceptions import HTTPTooManyRequests
 from aiohttp_sse import sse_response
 
-from .. import exceptions
-from .._helpers import Behavior, MessageTarget, TargetType
-from ..config import config
+from core import exceptions
+from core.inbox.models import MessageTarget, TargetType
+from core._helpers import Behavior
+from core.config import config
 from .sse_event import SSEEvent
 
 log = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ _PORT = config["sse"]["port"]
 
 
 def get_intro_event(client_name: str) -> SSEEvent:
-    target = MessageTarget(TargetType.SERVICE.value, client_name)
+    target = MessageTarget(target_type=TargetType.SERVICE.value, target_name=client_name)
     intro_event = SSEEvent(event="start", command="getAvailableMethods", target=target, behavior=Behavior.SERVICE.value)
     return intro_event
 

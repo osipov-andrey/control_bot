@@ -14,7 +14,7 @@ from core.bot._notification_templates import generate_channel_report
 
 
 @d.class_message_handler(commands=[CHANNELS])
-class ActuatorsHandler(MessageHandler):
+class ChannelsHandler(MessageHandler):
     """ Actuators submenu """
     @admin_only_method
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):

@@ -5,10 +5,9 @@ This InternalCommands use the same workflow, like taken from actuator schemes.
 If in case of actuator commands we write business logic in the actuator,
 then in this case we write logic in the message handlers.
 """
-from dataclasses import asdict
 
 from core._helpers import ArgType
-from core.ram_storage._command_schema import ArgInfo, CommandSchema
+from core.inbox.models import ArgInfo, CommandSchema
 from core.bot.commands.internal.internal_command import InternalCommand
 from core.bot._command_constants import *
 from core.mediator.dependency import MediatorDependency
@@ -18,17 +17,17 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
     channels = [c.name for c in await MediatorDependency.mediator.channels.all_channels()]
 
     args = {
-        "channel": asdict(ArgInfo(
+        "channel": ArgInfo(
             description="Channel name",
             arg_schema={"type": ArgType.STR.value, "allowed": channels},
             is_channel=True
-        )),
-        "user_id": asdict(ArgInfo(
+        ).json(),
+        "user_id": ArgInfo(
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
             is_user=True if cmd == SUBSCRIBE else False,
             is_subscriber=True if cmd == UNSUBSCRIBE else False,
-        ))
+        ).json()
     }
 
     cmd_schema = CommandSchema(
@@ -51,24 +50,24 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
     actuators = [a.name for a in await MediatorDependency.mediator.actuators.get_all()]
     args = {
-        "actuator": asdict(ArgInfo(
+        "actuator": ArgInfo(
             description="Actuator name",
             arg_schema={"type": ArgType.STR.value, "allowed": actuators},
             is_actuator=True,
             options=actuators,
-        )),
-        "user_id": asdict(ArgInfo(
+        ).json(),
+        "user_id": ArgInfo(
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
             is_user=True if cmd == GRANT else False,
             is_granter=True if cmd == REVOKE else False
-        )),
+        ).json(),
     }
 
     cmd_schema = CommandSchema(
         hidden=False,
         behavior__admin={
-            "description": "Grant/revoke the user rights to the drive", # TODO
+            "description": "Grant/revoke the user rights to the drive",
             "args": args,
         },
     )
@@ -84,15 +83,15 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
     args = {
-        "actuator": asdict(ArgInfo(
+        "actuator": ArgInfo(
             description="Actuator name",
             arg_schema={"type": ArgType.STR.value},
             is_actuator=True,
-        )),
-        "description": asdict(ArgInfo(
+        ).json(),
+        "description": ArgInfo(
             description="Actuator description",
             arg_schema={"type": ArgType.STR.value},
-        )),
+        ).json(),
     }
     if cmd == DELETE_ACTUATOR:
         args.pop("description")
@@ -115,15 +114,15 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
     args = {
-        "channel": asdict(ArgInfo(
+        "channel": ArgInfo(
             description="Channel name",
             arg_schema={"type": ArgType.STR.value},
             is_channel=True,
-        )),
-        "description": asdict(ArgInfo(
+        ).json(),
+        "description": ArgInfo(
             description="Channel description",
             arg_schema={"type": ArgType.STR.value},
-        )),
+        ).json(),
     }
     if cmd == DELETE_CHANNEL:
         args.pop("description")

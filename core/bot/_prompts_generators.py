@@ -1,6 +1,6 @@
 from typing import List
 
-from core.ram_storage import ArgInfo
+from core.inbox.models import ArgInfo
 from core.repository import User, Actuator
 from core.mediator.dependency import MediatorDependency
 

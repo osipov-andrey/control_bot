@@ -1,7 +1,7 @@
 from typing import Optional
 
 from core._helpers import Behavior
-from core.ram_storage._command_schema import CommandBehavior, CommandSchema
+from core.inbox.models import CommandBehavior, CommandSchema
 from core.bot.commands.actuator.actuator_command import ActuatorCommand
 
 

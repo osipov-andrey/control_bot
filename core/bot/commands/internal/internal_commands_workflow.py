@@ -17,7 +17,7 @@ async def start_cmd_internal_workflow(
     cmd: InternalCommand,
     message_kwargs,
     fill_status,
-    callback: Optional[Callable],
+    callback: Callable,
     message_id=None,
 ):
     """

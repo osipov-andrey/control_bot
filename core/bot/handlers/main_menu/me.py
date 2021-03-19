@@ -11,7 +11,7 @@ from core.bot._command_constants import *
 
 
 @d.class_message_handler(commands=[ME])
-class UsersHandler(MessageHandler):
+class MeHandler(MessageHandler):
     """ Private office submenu """
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         await MainMenu.me.set()

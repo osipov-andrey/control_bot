@@ -1,6 +1,6 @@
-from dataclasses import asdict
+import logging
 
-from core._helpers import MessageTarget, TargetType
+from core.inbox.models import MessageTarget, TargetType
 from core.bot._notification_constants import *
 from core.bot.commands.actuator.actuator_command import ActuatorCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
@@ -12,12 +12,15 @@ from core.exceptions import NoSuchActuatorInRAM, NoSuchCommand
 from core.sse.sse_event import SSEEvent
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 async def start_actuator_command_workflow(message, state, mediator, message_id=None):
     command_state = await state.get_state()
     user_id = chat_id = message.chat.id
 
     message_kwargs = {
-        "target": asdict(MessageTarget(TargetType.USER.value, user_id, message_id))
+        "target": MessageTarget(target_type=TargetType.USER.value, target_name=user_id, message_id=message_id)
     }
 
     actuator_name, command, args = ActuatorCommand.parse_cmd_string(message.text)
@@ -34,6 +37,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
         try:
             message_kwargs["text"] = get_client_commands(mediator, actuator_name, is_admin)
         except NoSuchActuatorInRAM:
+            _LOGGER.warning("No actuator %s in RAM!", actuator_name)
             message_kwargs["text"] = UNKNOWN_ACTUATOR
             await state.reset_state()
             return

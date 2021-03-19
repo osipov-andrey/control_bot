@@ -25,7 +25,7 @@ __all__ = ['Mediator']
 
 class _SingletonMeta(type):
 
-    _instances = {}
+    _instances: dict = dict()
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -80,18 +80,18 @@ class Mediator(metaclass=_SingletonMeta):
         ...
 
     @_send.register
-    async def _(self, message: DocumentMessage):
+    async def _send_document(self, message: DocumentMessage):
         return await self.telegram_dispatcher.bot.send_document(**message.get_params_to_sent())
 
     @_send.register
-    async def _(self, message: TextMessage):
+    async def _send_text(self, message: TextMessage):
         return await self.telegram_dispatcher.bot.send_message(**message.get_params_to_sent())
 
     @_send.register
-    async def _(self, message: PhotoMessage):
+    async def _send_photo(self, message: PhotoMessage):
         return await self.telegram_dispatcher.bot.send_photo(**message.get_params_to_sent())
 
     @_send.register
-    async def _(self, message: EditTextMessage):
+    async def _edit_text(self, message: EditTextMessage):
         return await self.telegram_dispatcher.bot.edit_message_text(**message.get_params_to_sent())
 

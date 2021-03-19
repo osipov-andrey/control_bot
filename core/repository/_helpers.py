@@ -1,11 +1,12 @@
 from collections import namedtuple
+from typing import Type
 
 from sqlalchemy import Table
 
 
-def create_mapping(table: Table) -> namedtuple:
+def create_mapping(table: Table) -> Type[tuple]:
     fields = table.c.keys()
-    name = to_pascal_case(table.name)
+    name: str = to_pascal_case(table.name)
     mapping = namedtuple(name, fields)
     return mapping
 

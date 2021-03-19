@@ -3,11 +3,12 @@ import aioamqp
 import json
 import logging
 
+import pydantic
 from aioamqp.channel import Channel
 from core.config import config
 
 from ..messages import inbox_message_fabric
-
+from ..models import ActuatorMessage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,5 +54,9 @@ class RabbitConsumer:
         _LOGGER.info("Get message from rabbit: %s", body)
         body = body.decode()
         body = json.loads(body)
-        message = inbox_message_fabric(body)
+        try:
+            message = ActuatorMessage(**body)
+        except pydantic.ValidationError as e:
+            _LOGGER.error(e.json())
+            raise
         await self.inbox_queue.put(message)

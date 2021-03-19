@@ -14,7 +14,7 @@ def create_message(
     """
     return inbox_message_fabric(
         dict(
-            target=asdict(target),
+            target=target,
             text=text
         )
     )
@@ -31,7 +31,7 @@ def inbox_message_fabric(message_body: dict) -> 'BaseMessage':
         return DocumentMessage(message_body)
     elif "image" in message_body:
         return PhotoMessage(message_body)
-    elif target.get("message_id") is not None:
+    elif target.message_id is not None:
         return EditTextMessage(message_body)
     else:
         return TextMessage(message_body)
@@ -42,11 +42,11 @@ class BaseMessage(ABC):
     ABC-class for incoming message from inbox.
     """
     _COMMON_PARAMS_TO_SENT = ('chat_id', 'reply_markup', 'parse_mode', 'reply_to_message_id')
-    _PARAMS_TO_SENT = tuple()
+    _PARAMS_TO_SENT: tuple = tuple()
 
-    target: MessageTarget = MessageTargetDescriptor()
-    reply_markup: List[dict] = InlineButtonsDescriptor()
-    issue: dict = MessageIssueDescriptor()
+    target = MessageTargetDescriptor()
+    reply_markup = InlineButtonsDescriptor()
+    issue = MessageIssueDescriptor()
 
     def __init__(self, message_body: dict):
         self.parse_mode = 'HTML'
@@ -68,7 +68,7 @@ class BaseMessage(ABC):
             message_kwargs = self.get_params_to_sent(only_common=True)
             message_kwargs.update(reply)
             message_kwargs["reply_to_message_id"] = reply_to_message_id
-            message_kwargs["target"] = asdict(self.target)
+            message_kwargs["target"] = self.target.json()
             reply_message = inbox_message_fabric(message_kwargs)
             replies.append(reply_message)
         return replies
