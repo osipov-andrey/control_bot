@@ -57,6 +57,6 @@ class RabbitConsumer:
         try:
             message = ActuatorMessage(**body)
         except pydantic.ValidationError as e:
-            _LOGGER.error(e.json())
+            _LOGGER.error("Validation error! %s", e.json())
             raise
         await self.inbox_queue.put(message)

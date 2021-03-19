@@ -10,11 +10,6 @@ class ControlBotMemoryStorage:
         self._issue_storage = dict()
 
     def save_client(self, client_name: str, commands_info: dict):
-
-        commands_info = {
-            cmd: CommandSchema(**info)
-            for cmd, info in commands_info.items()
-        }
         self._storage[client_name] = commands_info
 
     def remove_client(self, client_name: str):

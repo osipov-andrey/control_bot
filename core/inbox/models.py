@@ -33,6 +33,7 @@ class Reply(BaseModel):
     def not_empty_reply(cls, values: dict):
         if not (values.get("image") or values.get("text")):
             raise ValueError("Empty reply!")
+        return values
 
 
 class ArgSchema(BaseModel):
@@ -78,6 +79,7 @@ class CommandSchema(BaseModel):
     def must_have_at_least_one_behavior(cls, values: dict):
         if not (values.get("behavior__admin") or values.get("behavior__user")):
             raise ValueError("Empty behaviors!")
+        return values
 
 
 class Issue(BaseModel):
@@ -114,8 +116,8 @@ class ActuatorMessage(BaseModel):
     """
     _id: UUID
     cmd: str
-    sender_name: str
     target: MessageTarget
+    sender_name: Optional[str] = None
     subject: Optional[str] = None
     text: Optional[str] = None
     image: Optional[List[str]] = None  # Base64

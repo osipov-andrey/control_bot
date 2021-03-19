@@ -41,6 +41,8 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
             message_kwargs["text"] = UNKNOWN_ACTUATOR
             await state.reset_state()
             return
+        except Exception as e:
+            pass
         finally:
             await mediator.send(inbox_message_fabric(message_kwargs))
 
