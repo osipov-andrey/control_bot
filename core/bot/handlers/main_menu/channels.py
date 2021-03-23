@@ -5,8 +5,8 @@ from core.bot._helpers import get_menu, MenuTextButton, admin_only_method
 from core.bot import emojies
 from core.bot.handlers._base_handler import MessageHandler
 from core.bot._command_constants import *
-from core.bot.commands.internal._internal_commands_schemas import get_create_or_delete_channel_cmd
-from core.bot.commands.internal._internal_commands_workflow import start_cmd_internal_workflow
+from core.bot.commands.internal.internal_commands_schemas import get_create_or_delete_channel_cmd
+from core.bot.commands.internal.internal_commands_workflow import start_cmd_internal_workflow
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
@@ -14,7 +14,7 @@ from core.bot._notification_templates import generate_channel_report
 
 
 @d.class_message_handler(commands=[CHANNELS])
-class ActuatorsHandler(MessageHandler):
+class ChannelsHandler(MessageHandler):
     """ Actuators submenu """
     @admin_only_method
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
@@ -53,8 +53,11 @@ class CreateChannelHandler(MessageHandler):
             channel_name = kwargs_.get("channel")
             description = kwargs_.get("description")
             result = await self.mediator.channels.create_channel(channel_name, description)
-            # TODO: check result
-            await message.answer(f"Channel created: {channel_name} - {description}.")
+            if result:
+                text = f"Channel created: {channel_name} - {description}."
+            else:
+                text = f"Channel NOT created: {channel_name} - {description}!"
+            await self._answer(message, text)
 
         await start_cmd_internal_workflow(
             state, cmd, self.kwargs_to_answer, CommandFillStatus.FILL_COMMAND, callback=create_callback

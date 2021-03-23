@@ -1,6 +1,7 @@
 #! /bin/sh
 
 cd core/repository
-alembic upgrade head
+../../venv/bin/alembic upgrade head
 cd ../..
-python -m core run
+while ! nc -z "${RABBIT_HOST}" "${RABBIT_PORT}"; do sleep 3; done
+./venv/bin/python3 -m core run

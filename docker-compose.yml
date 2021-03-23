@@ -12,9 +12,15 @@ services:
       - rabbit
     volumes:
       - ./core/repository/db_dump:/app/core/repository/db_dump
+      - ./logs:/app/logs
   rabbit:
     image: "rabbitmq:3-management"
     command: rabbitmq-server
     ports:
       - "15672:15672"
       - "5672:5672"
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "5672" ]
+      interval: 5s
+      timeout: 15s
+      retries: 1

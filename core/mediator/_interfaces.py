@@ -3,10 +3,13 @@ import logging
 from abc import ABC
 from typing import List
 
+from core import exceptions
+from core.bot import emojies
 from core.config import config
-from core._helpers import TargetType
-from core.inbox.messages import TextMessage
-from core.repository.exceptions import NoSuchUser
+from core.inbox.models import TargetType, ActuatorMessage
+from core.inbox.messages import OutgoingMessage
+from core.mediator.dependency import MediatorDependency
+from core.exceptions import NoSuchUser
 from core.repository.repository import Channel, Repository, User
 from core.sse.sse_event import SSEEvent
 
@@ -27,7 +30,7 @@ class BaseInterface(ABC):
         self.db = Repository()
 
 
-class ActuatorsInterface(BaseInterface):
+class ActuatorsInterface(BaseInterface, MediatorDependency):
 
     def __init__(self, memory_storage):
         super().__init__()
@@ -37,7 +40,7 @@ class ActuatorsInterface(BaseInterface):
     def is_connected(self, actuator_name) -> bool:
         return actuator_name in self.connected_actuators.keys()
 
-    def save_actuator_info(self, message: TextMessage):
+    def save_actuator_info(self, message: ActuatorMessage):
         """ Сохранить логику актуатора в ОЗУ """
         actuator_name = message.target.target_name
 
@@ -53,12 +56,6 @@ class ActuatorsInterface(BaseInterface):
     def get_actuator_info(self, actuator_name: str):
         """ Получить информацию о всех командах актуатора """
         return self.memory_storage.get_client_info(actuator_name)
-
-    def new_sse_connection(self, actuator_name: str) -> asyncio.Queue:
-        """ Подключить к интерфейсу новый актуатор  """
-        actuator_queue = asyncio.Queue()
-        self.connected_actuators[actuator_name] = actuator_queue
-        return actuator_queue
 
     async def create_actuator(self, actuator_name: str, description: str):
         return await self.db.create_actuator(actuator_name, description)
@@ -92,10 +89,41 @@ class ActuatorsInterface(BaseInterface):
         granters = await self.db.get_granters(actuator_name)
         return granters
 
-    def stop_sse_connection(self, actuator_name: str):
-        """ Подключить актуатор от интерфейса """
+    async def turn_on_actuator(self, actuator_name: str) -> asyncio.Queue:
+        """ Turn on the actuator  """
+        admins = await self.mediator.users.get_admins()
+        if self.is_connected(actuator_name):
+            text = f"{emojies.ACTUATOR_ALREADY_TURNED_ON} Actuator {actuator_name} already turned ON!"
+            users = admins
+            result = None
+        else:
+            actuator_queue: asyncio.Queue = asyncio.Queue()
+            self.connected_actuators[actuator_name] = actuator_queue
+            granters = await self.get_granters(actuator_name)
+            users = set(admins + granters)
+            text = f"{emojies.ACTUATOR_TURNED_ON} Actuator {actuator_name} has been turned ON!"
+            result = actuator_queue
+
+        for user in users:
+            message = OutgoingMessage(chat_id=user.telegram_id, text=text)
+            await self.mediator.send(message)
+        if result:
+            return result
+        else:
+            raise exceptions.ActuatorAlreadyConnected
+
+    async def turn_off_actuator(self, actuator_name: str):
+        """ Turn off the actuator """
         self.connected_actuators.pop(actuator_name)
         self.memory_storage.remove_client(actuator_name)
+        admins = await self.mediator.users.get_admins()
+        granters = await self.get_granters(actuator_name)
+        for user in set(admins + granters):
+            message = OutgoingMessage(
+                chat_id=user.telegram_id,
+                text=f"{emojies.ACTUATOR_TURNED_OFF} Actuator {actuator_name} has been turned OFF!"
+            )
+            await self.mediator.send(message)
 
 
 class ChannelsInterface(BaseInterface):

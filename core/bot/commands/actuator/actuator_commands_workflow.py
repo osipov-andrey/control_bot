@@ -1,27 +1,25 @@
-"""
-TgAPI --(cmd)--> Handler --(event)--> Observer
-"""
-from dataclasses import asdict
+import logging
 
-from core._helpers import MessageTarget, TargetType
+from core.inbox.models import MessageTarget, TargetType
 from core.bot._notification_constants import *
 from core.bot.commands.actuator.actuator_command import ActuatorCommand
 from core.bot.state_enums import ArgumentsFillStatus, CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import state_storage
 from core.bot._notification_templates import COMMAND_IS_NOT_EXIST, NO_SUCH_CLIENT
-from core.inbox.messages import message_fabric
-from core.memory_storage import NoSuchActuator, NoSuchCommand
+from core.inbox.messages import OutgoingMessage
+from core.exceptions import NoSuchActuatorInRAM, NoSuchCommand
 from core.sse.sse_event import SSEEvent
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def start_actuator_command_workflow(message, state, mediator, message_id=None):
     command_state = await state.get_state()
     user_id = chat_id = message.chat.id
 
-    message_kwargs = {
-        "target": asdict(MessageTarget(TargetType.USER.value, user_id, message_id))
-    }
+    message_kwargs = {"chat_id": user_id, "message_id": message_id}
 
     actuator_name, command, args = ActuatorCommand.parse_cmd_string(message.text)
 
@@ -36,12 +34,13 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
         # Пришло только имя клиента - показываем возможные команды
         try:
             message_kwargs["text"] = get_client_commands(mediator, actuator_name, is_admin)
-        except NoSuchActuator:
+        except NoSuchActuatorInRAM:
+            _LOGGER.warning("No actuator %s in RAM!", actuator_name)
             message_kwargs["text"] = UNKNOWN_ACTUATOR
             await state.reset_state()
             return
         finally:
-            await mediator.send(message_fabric(message_kwargs))
+            await mediator.send(OutgoingMessage(**message_kwargs))
 
         await Command.client.set()
         await state_storage.update_data(
@@ -53,7 +52,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
     elif command is None and command_state is not None:
         # Не указана команда
         message_kwargs["text"] = COMMAND_IS_NOT_FILLED + CONTEXT_CANCEL_MENU
-        await mediator.send(message_fabric(message_kwargs))
+        await mediator.send(OutgoingMessage(**message_kwargs))
         return
 
     # Указаны клиент и команда:
@@ -68,11 +67,11 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
     except NoSuchCommand as e:
         exception = True
         message_kwargs["text"] = COMMAND_IS_NOT_EXIST.format(command=e.cmd)
-    except NoSuchActuator:
+    except NoSuchActuatorInRAM:
         exception = True
         message_kwargs["text"] = NO_SUCH_CLIENT.format(client=actuator_name)
     if exception:
-        await mediator.send(message_fabric(message_kwargs))
+        await mediator.send(OutgoingMessage(**message_kwargs))
         await state.reset_state()
 
 
@@ -95,7 +94,7 @@ async def continue_cmd_workflow(
         message_kwargs.update(next_step_kwargs)
         # Arguments input state:
         await Command.arguments.set()
-        await mediator.send(message_fabric(message_kwargs))
+        await mediator.send(OutgoingMessage(**message_kwargs))
 
 
 async def _finish_cmd_workflow(state, cmd: ActuatorCommand, mediator, message_id=None):

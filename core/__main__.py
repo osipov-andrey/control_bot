@@ -1,11 +1,13 @@
 import argparse
-import logging
+from logging.config import dictConfig
+from core.mediator import Mediator
+from . import config
 
+dictConfig(config.config["logging"])
 
-logging.basicConfig(level=logging.INFO)
 
 if __name__ == '__main__':
-    from mediator import mediator
+    mediator = Mediator()
 
     parser = argparse.ArgumentParser(prog="Bot", )
     subparsers = parser.add_subparsers(help="Operating mode")

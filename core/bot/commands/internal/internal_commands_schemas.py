@@ -5,29 +5,29 @@ This InternalCommands use the same workflow, like taken from actuator schemes.
 If in case of actuator commands we write business logic in the actuator,
 then in this case we write logic in the message handlers.
 """
-from dataclasses import asdict
 
-from core._helpers import ArgScheme, ArgType, CommandSchema
-from core.bot.commands.internal._internal_command import InternalCommand
+from core._helpers import ArgType
+from core.inbox.models import ArgInfo, CommandSchema
+from core.bot.commands.internal.internal_command import InternalCommand
 from core.bot._command_constants import *
+from core.mediator.dependency import MediatorDependency
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    from mediator import mediator
-    channels = [c.name for c in await mediator.channels.all_channels()]
+    channels = [c.name for c in await MediatorDependency.mediator.channels.all_channels()]
 
     args = {
-        "channel": asdict(ArgScheme(
+        "channel": ArgInfo(
             description="Channel name",
-            schema={"type": ArgType.STR.value, "allowed": channels},
+            arg_schema={"type": ArgType.STR.value, "allowed": channels},
             is_channel=True
-        )),
-        "user_id": asdict(ArgScheme(
+        ).dict(),
+        "user_id": ArgInfo(
             description="Telegram user ID",
-            schema={"type": ArgType.INT.value},
+            arg_schema={"type": ArgType.INT.value},
             is_user=True if cmd == SUBSCRIBE else False,
             is_subscriber=True if cmd == UNSUBSCRIBE else False,
-        ))
+        ).dict()
     }
 
     cmd_schema = CommandSchema(
@@ -48,27 +48,26 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
 
 
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    from mediator import mediator
-    actuators = [a.name for a in await mediator.actuators.get_all()]
+    actuators = [a.name for a in await MediatorDependency.mediator.actuators.get_all()]
     args = {
-        "actuator": asdict(ArgScheme(
+        "actuator": ArgInfo(
             description="Actuator name",
-            schema={"type": ArgType.STR.value, "allowed": actuators},
+            arg_schema={"type": ArgType.STR.value, "allowed": actuators},
             is_actuator=True,
             options=actuators,
-        )),
-        "user_id": asdict(ArgScheme(
+        ).dict(),
+        "user_id": ArgInfo(
             description="Telegram user ID",
-            schema={"type": ArgType.INT.value},
+            arg_schema={"type": ArgType.INT.value},
             is_user=True if cmd == GRANT else False,
             is_granter=True if cmd == REVOKE else False
-        )),
+        ).dict(),
     }
 
     cmd_schema = CommandSchema(
         hidden=False,
         behavior__admin={
-            "description": "Grant/revoke the user rights to the drive", # TODO
+            "description": "Grant/revoke the user rights to the drive",
             "args": args,
         },
     )
@@ -84,15 +83,15 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
     args = {
-        "actuator": asdict(ArgScheme(
+        "actuator": ArgInfo(
             description="Actuator name",
-            schema={"type": ArgType.STR.value},
+            arg_schema={"type": ArgType.STR.value},
             is_actuator=True,
-        )),
-        "description": asdict(ArgScheme(
+        ).dict(),
+        "description": ArgInfo(
             description="Actuator description",
-            schema={"type": ArgType.STR.value},
-        )),
+            arg_schema={"type": ArgType.STR.value},
+        ).dict(),
     }
     if cmd == DELETE_ACTUATOR:
         args.pop("description")
@@ -115,15 +114,15 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
     args = {
-        "channel": asdict(ArgScheme(
+        "channel": ArgInfo(
             description="Channel name",
-            schema={"type": ArgType.STR.value},
+            arg_schema={"type": ArgType.STR.value},
             is_channel=True,
-        )),
-        "description": asdict(ArgScheme(
+        ).dict(),
+        "description": ArgInfo(
             description="Channel description",
-            schema={"type": ArgType.STR.value},
-        )),
+            arg_schema={"type": ArgType.STR.value},
+        ).dict(),
     }
     if cmd == DELETE_CHANNEL:
         args.pop("description")
