@@ -47,6 +47,10 @@ class ArgSchema(BaseModel):
     regex: Optional[str] = None
     allowed: Optional[list] = None
 
+    def dict(self, *args, **kwargs):
+        d: dict = super().dict(*args, **kwargs)
+        return {key: value for key, value in d.items() if value}
+
 
 class ArgInfo(BaseModel):
     """ Actuator command argument description """
@@ -86,7 +90,7 @@ class Issue(BaseModel):
     """ Notification of the occurrence or resolution of a problem """
     issue_id: str
     resolved: bool
-    reply_to_message_id: int
+    reply_to_message_id: Optional[int] = None
     time_: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now())
 
 
@@ -120,7 +124,7 @@ class ActuatorMessage(BaseModel):
     sender_name: Optional[str] = None
     subject: Optional[str] = None
     text: Optional[str] = None
-    image: Optional[List[str]] = None  # Base64
+    image: Optional[str] = None  # Base64
     document: Optional[Document] = None
     issue: Optional[Issue] = None
     commands: Optional[Dict[str, CommandSchema]] = None

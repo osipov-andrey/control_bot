@@ -9,8 +9,8 @@ from core.bot.telegram_api import telegram_api_dispatcher
 from core.config import config
 from core.inbox.consumers.rabbit import RabbitConsumer
 from core.inbox.dispatcher import InboxDispatcher
-from core.inbox.messages import BaseMessage, DocumentMessage, PhotoMessage, EditTextMessage, \
-    TextMessage, inbox_message_fabric
+from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, \
+    TextMessage, OutgoingMessage
 from core.ram_storage._memory_storage import ControlBotMemoryStorage
 from core.sse.sse_server import create_sse_server
 from ._interfaces import *
@@ -63,16 +63,15 @@ class Mediator(metaclass=_SingletonMeta):
         asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
         aiogram.executor.start_polling(self.telegram_dispatcher, skip_updates=True)
 
-    async def send(self, message: BaseMessage):
+    async def send(self, message: OutgoingMessage):
         """ Отправить сообщение в телеграм """
         try:
             return await self._send(message)
         except aiogram.utils.exceptions.MessageIsTooLong:
-            message_params = {
-                "text": "Message is too long!",
-                "target": message.target
-            }
-            error_message = inbox_message_fabric(message_params)
+            error_message = OutgoingMessage(
+                chat_id=message.chat_id,
+                text="Message is too long!"
+            )
             return await self._send(error_message)
 
     @singledispatchmethod

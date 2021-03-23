@@ -156,7 +156,7 @@ class ActuatorCommand(MediatorDependency):
                 received_value = int(received_value)
             except ValueError:
                 pass  # Цербер скажет это за меня
-        v = Validator({arg_name: arg_info.arg_schema.json()})
+        v = Validator({arg_name: arg_info.arg_schema.dict()})
         validation = v.validate({arg_name: received_value})
         if validation is False:
             self.validation_errors.update(v.errors)

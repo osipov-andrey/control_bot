@@ -7,7 +7,6 @@ import pydantic
 from aioamqp.channel import Channel
 from core.config import config
 
-from ..messages import inbox_message_fabric
 from ..models import ActuatorMessage
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +33,7 @@ class RabbitConsumer:
         self.inbox_queue = inbox_queue
 
     async def listen_to_rabbit(self):
+        # TODO: выбросить
         for trying in range(5):
             try:
                 transport, protocol = await aioamqp.connect(
