@@ -53,8 +53,11 @@ class CreateChannelHandler(MessageHandler):
             channel_name = kwargs_.get("channel")
             description = kwargs_.get("description")
             result = await self.mediator.channels.create_channel(channel_name, description)
-            # TODO: check result
-            await message.answer(f"Channel created: {channel_name} - {description}.")
+            if result:
+                text = f"Channel created: {channel_name} - {description}."
+            else:
+                text = f"Channel NOT created: {channel_name} - {description}!"
+            await self._answer(message, text)
 
         await start_cmd_internal_workflow(
             state, cmd, self.kwargs_to_answer, CommandFillStatus.FILL_COMMAND, callback=create_callback

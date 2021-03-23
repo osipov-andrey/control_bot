@@ -1,21 +1,12 @@
-from typing import Optional, Tuple
 import base64
 import io
+from typing import Optional, Tuple, Union
 from typing import List
-from aiogram.types import MessageEntity
-
-from core.mediator.dependency import MediatorDependency
-
-from .models import ActuatorMessage, TargetType
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputFile
 
-
-def _generate_inline_buttons(buttons: List[dict]) -> InlineKeyboardMarkup:
-    inline_keyboard = InlineKeyboardMarkup(row_width=2)
-    for button in buttons:
-        inline_keyboard.insert(InlineKeyboardButton(**button))
-    return inline_keyboard
+from .models import ActuatorMessage, TargetType
+from core.mediator.dependency import MediatorDependency
 
 
 def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> 'OutgoingMessage':
@@ -62,8 +53,7 @@ class OutgoingMessage:
             self,
             *,
             chat_id: str,
-            reply_markup: Optional[ReplyKeyboardMarkup] = None,
-            # TODO где кнопки выбора?
+            reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
             reply_to_message_id: Optional[int] = None,
             parse_mode: str = "HTML",
             replies: Optional[List] = None,
@@ -79,7 +69,7 @@ class OutgoingMessage:
         if issue:
             self._check_issue(issue)
 
-    def get_params_to_sent(self, only_common=False) -> dict:  # TODO: property
+    def get_params_to_sent(self, only_common=False) -> dict:
         """ Gathers parameters for sending a message via aiogram """
         if only_common:
             params = self._COMMON_PARAMS_TO_SENT
@@ -112,22 +102,20 @@ class OutgoingMessage:
 
 
 class TextMessage(OutgoingMessage):
-    _PARAMS_TO_SENT = ('text', 'entities', 'reply_to_message_id')
+    _PARAMS_TO_SENT = ('text', 'reply_to_message_id')
 
     def __init__(
             self,
             *,
             text: str,
-            entities: Optional[List[MessageEntity]] = None,  # TODO: что это?
             **kwargs
     ):
         super(TextMessage, self).__init__(**kwargs)
         self.text = text
-        self.entities = entities
 
 
 class EditTextMessage(TextMessage):
-    _PARAMS_TO_SENT = ('text', 'entities', 'message_id')
+    _PARAMS_TO_SENT = ('text', 'message_id')
 
     def __init__(self, *, message_id: int, **kwargs):
         super(EditTextMessage, self).__init__(**kwargs)
@@ -161,3 +149,10 @@ class PhotoMessage(OutgoingMessage):
         super(PhotoMessage, self).__init__(**kwargs)
         self.photo = base64.b64decode(image)
         self.caption = text
+
+
+def _generate_inline_buttons(buttons: List[dict]) -> InlineKeyboardMarkup:
+    inline_keyboard = InlineKeyboardMarkup(row_width=2)
+    for button in buttons:
+        inline_keyboard.insert(InlineKeyboardButton(**button))
+    return inline_keyboard
