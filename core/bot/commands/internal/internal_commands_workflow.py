@@ -7,8 +7,8 @@ from core.bot.state_enums import ArgumentsFillStatus
 from core.bot.states import Command
 from core.bot.commands.internal.internal_command import InternalCommand
 from core.bot.telegram_api import state_storage
-from core.inbox.messages import inbox_message_fabric
 from core.exceptions import NoSuchUser
+from core.inbox.messages import OutgoingMessage
 from core.mediator.dependency import MediatorDependency
 
 
@@ -17,7 +17,7 @@ async def start_cmd_internal_workflow(
     cmd: InternalCommand,
     message_kwargs,
     fill_status,
-    callback: Optional[Callable],
+    callback: Callable,
     message_id=None,
 ):
     """
@@ -33,7 +33,7 @@ async def start_cmd_internal_workflow(
             await callback(**cmd.filled_args)
         except NoSuchUser:
             await mediator.send(
-                inbox_message_fabric(dict(chat_id=state.chat, text=UNKNOWN_USER))
+                OutgoingMessage(chat_id=state.chat, text=UNKNOWN_USER)
             )
         await state.reset_state()
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
@@ -47,4 +47,4 @@ async def start_cmd_internal_workflow(
         message_kwargs.update(new_kwargs)
         # Arguments input state:
         await Command.argument_internal.set()
-        await mediator.send(inbox_message_fabric(message_kwargs))
+        await mediator.send(OutgoingMessage(**message_kwargs))

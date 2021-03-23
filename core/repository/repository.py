@@ -66,7 +66,7 @@ class Repository:
         user = await self._execute_query(user_query, fetchall=False)
         if not user:
             raise NoSuchUser
-        user = User(*user)
+        user: User = User(*user)
         return user
 
     async def get_all_users(self):
@@ -176,12 +176,12 @@ class Repository:
 
     async def get_actuators(self) -> List[Actuator]:
         actuators = await self._execute_query(_queryes.get_all_actuators())
-        actuators = [Actuator(*actuator) for actuator in actuators]
+        actuators: list = [Actuator(*actuator) for actuator in actuators]
         return actuators
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
-        channels = await self._execute_query(_queryes.get_user_subscribes_query(user_telegram_id))  # TODO:
-        channels = [Channel(*channel) for channel in channels]
+        channels = await self._execute_query(_queryes.get_user_subscribes_query(user_telegram_id))
+        channels: list = [Channel(*channel) for channel in channels]
         return channels
 
     @connect_to_db

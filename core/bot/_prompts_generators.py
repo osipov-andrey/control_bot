@@ -1,11 +1,11 @@
 from typing import List
 
-from core._helpers import ArgScheme
+from core.inbox.models import ArgInfo
 from core.repository import User, Actuator
 from core.mediator.dependency import MediatorDependency
 
 
-async def generate_prompt(argument_info: ArgScheme, filled_args: dict) -> str:
+async def generate_prompt(argument_info: ArgInfo, filled_args: dict) -> str:
     """ Generate prompt for the current argument during command invocation """
     prompt = ""
     if argument_info.is_user:

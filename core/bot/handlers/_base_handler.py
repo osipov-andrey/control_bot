@@ -1,11 +1,9 @@
 from abc import abstractmethod, ABC
-from dataclasses import asdict
 from typing import Optional, Union
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core._helpers import MessageTarget, TargetType
 from core.bot._notification_constants import CONTEXT_CANCEL_MENU
 from core.mediator.dependency import MediatorDependency
 
@@ -22,7 +20,7 @@ class MessageHandler(ABC, MediatorDependency):
         self.is_admin = await self.mediator.users.is_admin(self.user_telegram_id)
         self.kwargs_to_answer = {
             # kwargs for sending a message to the user
-            "target": asdict(MessageTarget(TargetType.USER.value, self.user_telegram_id))
+            "chat_id": self.user_telegram_id
         }
         await self.handle(message, state, **kwargs)
 

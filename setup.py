@@ -31,6 +31,7 @@ setup(
         "PyYAML==5.3.1",
         "SQLAlchemy~=1.3.22",
         "setuptools~=53.0.0",
+        "pydantic~=1.8.1",
     ],
     extras_require={
         'dev': [

@@ -1,57 +1,73 @@
-from abc import ABC
-from dataclasses import asdict
+import base64
+import io
+from typing import Optional, Tuple, Union
+from typing import List
 
-from ._descriptors import *
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputFile
+
+from .models import ActuatorMessage, TargetType
+from core.mediator.dependency import MediatorDependency
 
 
-def create_message(
-        target: MessageTarget,
-        text: str,
-        # Add new parameters as needed
-) -> 'BaseMessage':
+def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> 'OutgoingMessage':
     """
-    Adapter for build messages with message fabric
-    """
-    return inbox_message_fabric(
-        dict(
-            target=asdict(target),
-            text=text
-        )
-    )
-
-
-def inbox_message_fabric(message_body: dict) -> 'BaseMessage':
-    """
-    We receive a message from the actuator in the form of a dictionary.
+    We receive a message from the actuator in the form of a pydantic model 'ActuatorMessage'.
     That's why we need this factory.
     """
-    target = message_body["target"]
 
-    if "document" in message_body:
-        return DocumentMessage(message_body)
-    elif "image" in message_body:
-        return PhotoMessage(message_body)
-    elif target.get("message_id") is not None:
-        return EditTextMessage(message_body)
-    else:
-        return TextMessage(message_body)
+    message_kwargs: dict = message.dict()
+    if kwargs:
+        message_kwargs.update(kwargs)
+
+    message = ActuatorMessage(**message_kwargs)
+
+    target_type = message.target.target_type
+    if target_type != TargetType.USER.value:
+        raise ValueError(f"Unsupported message type for outgoing message! [{target_type}]")
+    message_kwargs["chat_id"] = message.target.target_name
+    message_kwargs["message_id"] = message.target.message_id
+
+    reply_markup = message_kwargs.get("reply_markup")
+    if reply_markup:
+        message_kwargs["reply_markup"] = _generate_inline_buttons(reply_markup)
+
+    return OutgoingMessage(**message_kwargs)
 
 
-class BaseMessage(ABC):
-    """
-    ABC-class for incoming message from inbox.
-    """
-    _COMMON_PARAMS_TO_SENT = ('chat_id', 'reply_markup', 'parse_mode', 'reply_to_message_id')
-    _PARAMS_TO_SENT = tuple()
+class OutgoingMessage:
+    _COMMON_PARAMS_TO_SENT = ('chat_id', 'reply_markup', 'parse_mode')
+    _PARAMS_TO_SENT: tuple = tuple()
 
-    target: MessageTarget = MessageTargetDescriptor()
-    reply_markup: List[dict] = InlineButtonsDescriptor()
-    issue: dict = MessageIssueDescriptor()
+    def __new__(cls, *args, **kwargs):
+        if kwargs.get("document"):
+            msg = object.__new__(DocumentMessage)
+        elif kwargs.get("image"):
+            msg = object.__new__(PhotoMessage)
+        elif kwargs.get("message_id"):
+            msg = object.__new__(EditTextMessage)
+        else:
+            msg = object.__new__(TextMessage)
+        return msg
 
-    def __init__(self, message_body: dict):
-        self.parse_mode = 'HTML'
-        for key, value in message_body.items():
-            setattr(self, key, value)
+    def __init__(
+            self,
+            *,
+            chat_id: str,
+            reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
+            reply_to_message_id: Optional[int] = None,
+            parse_mode: str = "HTML",
+            replies: Optional[List] = None,
+            issue: Optional[dict] = None,
+            **kwargs
+    ):
+        self.chat_id = chat_id
+        self.reply_markup = reply_markup
+        self.reply_to_message_id = reply_to_message_id
+        self.parse_mode = parse_mode
+        self.replies = replies
+        self.issue = issue
+        if issue:
+            self._check_issue(issue)
 
     def get_params_to_sent(self, only_common=False) -> dict:
         """ Gathers parameters for sending a message via aiogram """
@@ -61,44 +77,82 @@ class BaseMessage(ABC):
             params = self._COMMON_PARAMS_TO_SENT + self._PARAMS_TO_SENT
         return {key: value for key, value in self.__dict__.items() if key in params}
 
-    def prepare_replies(self, reply_to_message_id) -> List['BaseMessage']:
+    def get_replies(self, reply_to_message_id) -> List['OutgoingMessage']:
         replies = []
         for reply in self.replies:
             reply: dict
             message_kwargs = self.get_params_to_sent(only_common=True)
             message_kwargs.update(reply)
             message_kwargs["reply_to_message_id"] = reply_to_message_id
-            message_kwargs["target"] = asdict(self.target)
-            reply_message = inbox_message_fabric(message_kwargs)
+            reply_message = OutgoingMessage(**message_kwargs)
             replies.append(reply_message)
         return replies
 
-    def __getattr__(self, item):
-        return self.__dict__.get(item)
+    def _check_issue(self, issue: dict):
+        if issue.get("resolved"):
+            problem_issue = MediatorDependency.mediator.memory_storage.resolve_issue(issue.get("issue_id"))
+            if problem_issue:
+                self.reply_to_message_id = problem_issue.reply_to_message_id
 
     def __str__(self):
         values = '\n'.join(f'{key}: {value}' for key, value in self.__dict__.items())
-        return f"\n{'#'*20} TelegramLeverMessage {'#'*20}" \
+        return f"\n{'#' * 20} TelegramLeverMessage {'#' * 20}" \
                f"\n{values}" \
-               f"\n{'#'*20}{' '*22}{'#'*20}"
+               f"\n{'#' * 20}{' ' * 22}{'#' * 20}"
 
 
-class TextMessage(BaseMessage):
-    _PARAMS_TO_SENT = ('text', 'entities')
+class TextMessage(OutgoingMessage):
+    _PARAMS_TO_SENT = ('text', 'reply_to_message_id')
+
+    def __init__(
+            self,
+            *,
+            text: str,
+            **kwargs
+    ):
+        super(TextMessage, self).__init__(**kwargs)
+        self.text = text
 
 
 class EditTextMessage(TextMessage):
-    _PARAMS_TO_SENT = ('text', 'entities', 'message_id')
+    _PARAMS_TO_SENT = ('text', 'message_id')
+
+    def __init__(self, *, message_id: int, **kwargs):
+        super(EditTextMessage, self).__init__(**kwargs)
+        self.message_id = message_id
 
 
-class DocumentMessage(BaseMessage):
-    _PARAMS_TO_SENT = ('document', 'caption')
+class DocumentMessage(OutgoingMessage):
+    _PARAMS_TO_SENT = ('document', 'caption', 'reply_to_message_id')
 
-    document: dict = DocumentDescriptor()
+    def __init__(self, *, document: dict, **kwargs):
+        super(DocumentMessage, self).__init__(**kwargs)
+        self.document, self.caption = self._get_document(document)
+
+    @staticmethod
+    def _get_document(document: dict) -> Tuple[InputFile, str]:
+        content = document.get("content")
+        filename = document.get("filename")
+        caption = document.get("caption")
+
+        text_file = InputFile(
+            io.StringIO(content),
+            filename=filename
+        )
+        return text_file, caption
 
 
-class PhotoMessage(BaseMessage):
-    _PARAMS_TO_SENT = ('photo', 'caption')
+class PhotoMessage(OutgoingMessage):
+    _PARAMS_TO_SENT = ('photo', 'caption', 'reply_to_message_id')
 
-    image: str = PhotoDescriptor()  # Base64
-    text: str = CaptionDescriptor()
+    def __init__(self, *, image: str, text: str, **kwargs):
+        super(PhotoMessage, self).__init__(**kwargs)
+        self.photo = base64.b64decode(image)
+        self.caption = text
+
+
+def _generate_inline_buttons(buttons: List[dict]) -> InlineKeyboardMarkup:
+    inline_keyboard = InlineKeyboardMarkup(row_width=2)
+    for button in buttons:
+        inline_keyboard.insert(InlineKeyboardButton(**button))
+    return inline_keyboard

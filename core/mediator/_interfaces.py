@@ -6,8 +6,8 @@ from typing import List
 from core import exceptions
 from core.bot import emojies
 from core.config import config
-from core._helpers import TargetType, MessageTarget
-from core.inbox.messages import TextMessage, create_message
+from core.inbox.models import TargetType, ActuatorMessage
+from core.inbox.messages import OutgoingMessage
 from core.mediator.dependency import MediatorDependency
 from core.exceptions import NoSuchUser
 from core.repository.repository import Channel, Repository, User
@@ -40,7 +40,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
     def is_connected(self, actuator_name) -> bool:
         return actuator_name in self.connected_actuators.keys()
 
-    def save_actuator_info(self, message: TextMessage):
+    def save_actuator_info(self, message: ActuatorMessage):
         """ Сохранить логику актуатора в ОЗУ """
         actuator_name = message.target.target_name
 
@@ -97,7 +97,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
             users = admins
             result = None
         else:
-            actuator_queue = asyncio.Queue()
+            actuator_queue: asyncio.Queue = asyncio.Queue()
             self.connected_actuators[actuator_name] = actuator_queue
             granters = await self.get_granters(actuator_name)
             users = set(admins + granters)
@@ -105,10 +105,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
             result = actuator_queue
 
         for user in users:
-            message = create_message(
-                target=MessageTarget(target_type=TargetType.USER.value, target_name=user.telegram_id),
-                text=text
-            )
+            message = OutgoingMessage(chat_id=user.telegram_id, text=text)
             await self.mediator.send(message)
         if result:
             return result
@@ -122,8 +119,8 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         admins = await self.mediator.users.get_admins()
         granters = await self.get_granters(actuator_name)
         for user in set(admins + granters):
-            message = create_message(
-                target=MessageTarget(target_type=TargetType.USER.value, target_name=user.telegram_id),
+            message = OutgoingMessage(
+                chat_id=user.telegram_id,
                 text=f"{emojies.ACTUATOR_TURNED_OFF} Actuator {actuator_name} has been turned OFF!"
             )
             await self.mediator.send(message)
