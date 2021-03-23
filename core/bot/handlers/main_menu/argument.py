@@ -1,7 +1,6 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from core.inbox.models import MessageTarget, TargetType
 from core.bot._helpers import delete_cmd_prefix
 from core.bot.state_enums import CommandFillStatus
 from core.bot.commands.internal.internal_command import InternalCommand
@@ -12,8 +11,7 @@ from core.bot.states import Command
 
 @d.message_handler(state=Command.argument_internal)
 async def argument_handler(message: types.Message, state: FSMContext):
-    user_id = message.chat.id
-    message_kwargs = {"target": MessageTarget(target_type=TargetType.USER.value, target_name=user_id).json()}
+    message_kwargs = {"chat_id": message.chat.id}
     data = await state.get_data()
     cmd: InternalCommand = data.get("cmd")
     argument_value = delete_cmd_prefix(message.text)

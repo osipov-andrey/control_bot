@@ -21,13 +21,13 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
             description="Channel name",
             arg_schema={"type": ArgType.STR.value, "allowed": channels},
             is_channel=True
-        ).json(),
+        ).dict(),
         "user_id": ArgInfo(
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
             is_user=True if cmd == SUBSCRIBE else False,
             is_subscriber=True if cmd == UNSUBSCRIBE else False,
-        ).json()
+        ).dict()
     }
 
     cmd_schema = CommandSchema(
@@ -55,13 +55,13 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
             arg_schema={"type": ArgType.STR.value, "allowed": actuators},
             is_actuator=True,
             options=actuators,
-        ).json(),
+        ).dict(),
         "user_id": ArgInfo(
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
             is_user=True if cmd == GRANT else False,
             is_granter=True if cmd == REVOKE else False
-        ).json(),
+        ).dict(),
     }
 
     cmd_schema = CommandSchema(
@@ -87,11 +87,11 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
             description="Actuator name",
             arg_schema={"type": ArgType.STR.value},
             is_actuator=True,
-        ).json(),
+        ).dict(),
         "description": ArgInfo(
             description="Actuator description",
             arg_schema={"type": ArgType.STR.value},
-        ).json(),
+        ).dict(),
     }
     if cmd == DELETE_ACTUATOR:
         args.pop("description")
@@ -118,11 +118,11 @@ def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
             description="Channel name",
             arg_schema={"type": ArgType.STR.value},
             is_channel=True,
-        ).json(),
+        ).dict(),
         "description": ArgInfo(
             description="Channel description",
             arg_schema={"type": ArgType.STR.value},
-        ).json(),
+        ).dict(),
     }
     if cmd == DELETE_CHANNEL:
         args.pop("description")
