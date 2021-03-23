@@ -6,8 +6,8 @@ from core.bot.handlers._base_handler import MessageHandler
 from core.bot._helpers import get_menu, MenuTextButton
 from core.bot.states import MainMenu
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.repository._db_enums import UserEvents
-from core.bot._command_constants import *
+from core.repository.db_enums import UserEvents
+from core.bot._command_constants import ME, INTRODUCE, MY_ID, MY_CHANNELS
 
 
 @d.class_message_handler(commands=[ME])

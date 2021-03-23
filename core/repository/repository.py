@@ -9,7 +9,7 @@ from sqlalchemy.orm import Query
 
 from core.exceptions import AlreadyHasItException, NoSuchUser, NoSuchChannel
 from . import _queryes
-from ._db_enums import UserEvents
+from .db_enums import UserEvents
 from ._schema import *
 
 

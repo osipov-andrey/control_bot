@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 from core.bot._helpers import get_menu, MenuTextButton
 from core.bot.handlers._base_handler import MessageHandler
 from core.bot.telegram_api import telegram_api_dispatcher
-from core.bot._command_constants import *
+from core.bot._command_constants import START, USERS, CHANNELS, ACTUATORS, ME
 
 
 @telegram_api_dispatcher.class_message_handler(commands=[START])

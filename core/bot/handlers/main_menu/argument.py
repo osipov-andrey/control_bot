@@ -10,7 +10,8 @@ from core.bot.states import Command
 
 
 @d.message_handler(state=Command.argument_internal)
-async def argument_handler(message: types.Message, state: FSMContext):
+async def argument_handler(message: types.Message, state: FSMContext):  # TODO: class-based
+    """ Handling Command Argument Input """
     message_kwargs = {"chat_id": message.chat.id}
     data = await state.get_data()
     cmd: InternalCommand = data.get("cmd")

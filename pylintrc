@@ -4,7 +4,7 @@ disable =
     missing-module-docstring
 
 [FORMAT]
-max-line-length = 120,
+max-line-length = 120
 
 [DESIGN]
 max-attributes=11

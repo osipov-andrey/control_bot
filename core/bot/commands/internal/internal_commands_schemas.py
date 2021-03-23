@@ -9,11 +9,12 @@ then in this case we write logic in the message handlers.
 from core._helpers import ArgType
 from core.inbox.models import ArgInfo, CommandSchema
 from core.bot.commands.internal.internal_command import InternalCommand
-from core.bot._command_constants import *
+from core.bot._command_constants import SUBSCRIBE, GRANT, REVOKE, DELETE_ACTUATOR, DELETE_CHANNEL, UNSUBSCRIBE
 from core.mediator.dependency import MediatorDependency
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
+    """ Generate schema for subscribe/unsubscribe main-menu commands """
     channels = [c.name for c in await MediatorDependency.mediator.channels.all_channels()]
 
     args = {
@@ -25,8 +26,8 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
         "user_id": ArgInfo(
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
-            is_user=True if cmd == SUBSCRIBE else False,
-            is_subscriber=True if cmd == UNSUBSCRIBE else False,
+            is_user=(cmd == SUBSCRIBE),
+            is_subscriber=(cmd == UNSUBSCRIBE),
         ).dict()
     }
 
@@ -48,6 +49,7 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
 
 
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
+    """ Generate schema for grant/revoke main-menu commands """
     actuators = [a.name for a in await MediatorDependency.mediator.actuators.get_all()]
     args = {
         "actuator": ArgInfo(
@@ -59,8 +61,8 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
         "user_id": ArgInfo(
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
-            is_user=True if cmd == GRANT else False,
-            is_granter=True if cmd == REVOKE else False
+            is_user=(cmd == GRANT),
+            is_granter=(cmd == REVOKE)
         ).dict(),
     }
 
@@ -82,6 +84,7 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 
 def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
+    """ Generate schema for create/delete actuator main-menu commands """
     args = {
         "actuator": ArgInfo(
             description="Actuator name",
@@ -113,6 +116,7 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 
 def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
+    """ Generate schema for create/delete channel main-menu commands """
     args = {
         "channel": ArgInfo(
             description="Channel name",
