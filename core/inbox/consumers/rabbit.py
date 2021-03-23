@@ -33,18 +33,11 @@ class RabbitConsumer:
         self.inbox_queue = inbox_queue
 
     async def listen_to_rabbit(self):
-        # TODO: выбросить
-        for trying in range(5):
-            try:
-                transport, protocol = await aioamqp.connect(
-                    self.host, self.port,
-                    login=self.login, password=self.password, login_method='PLAIN'
-                )
-            except ConnectionError as err:
-                await asyncio.sleep(1)
-                if trying == 4:
-                    raise err
-                continue
+
+        transport, protocol = await aioamqp.connect(
+            self.host, self.port,
+            login=self.login, password=self.password, login_method='PLAIN'
+        )
 
         channel: Channel = await protocol.channel()
         await channel.queue_declare(config["rabbit"]["rabbit_queue"], durable=True)
