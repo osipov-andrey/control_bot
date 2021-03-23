@@ -5,7 +5,7 @@ module_name = 'core'
 
 setup(
     name=module_name,
-    version='0.0.1',
+    version='0.1.0',
     author='Andrey Osipov',
     platforms='all',
     classifiers=[
