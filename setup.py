@@ -1,10 +1,10 @@
 from setuptools import find_packages, setup
 
 
-module_name = 'core'
+MODULE_NAME = 'core'
 
 setup(
-    name=module_name,
+    name=MODULE_NAME,
     version='0.1.0',
     author='Andrey Osipov',
     platforms='all',

@@ -5,8 +5,8 @@ from typing import List
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputFile
 
-from .models import ActuatorMessage, TargetType
 from core.mediator.dependency import MediatorDependency
+from .models import ActuatorMessage, TargetType
 
 
 def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> 'OutgoingMessage':
@@ -35,6 +35,7 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> 'OutgoingMe
 
 
 class OutgoingMessage:
+    """ Message to send to Telegram API """
     _COMMON_PARAMS_TO_SENT = ('chat_id', 'reply_markup', 'parse_mode')
     _PARAMS_TO_SENT: tuple = tuple()
 
@@ -78,6 +79,10 @@ class OutgoingMessage:
         return {key: value for key, value in self.__dict__.items() if key in params}
 
     def get_replies(self, reply_to_message_id) -> List['OutgoingMessage']:
+        """
+        Generate message object for replies.
+        :param reply_to_message_id - message id in chat
+        """
         replies = []
         for reply in self.replies:
             reply: dict
@@ -102,6 +107,7 @@ class OutgoingMessage:
 
 
 class TextMessage(OutgoingMessage):
+    """ Message only with text """
     _PARAMS_TO_SENT = ('text', 'reply_to_message_id')
 
     def __init__(
@@ -110,23 +116,25 @@ class TextMessage(OutgoingMessage):
             text: str,
             **kwargs
     ):
-        super(TextMessage, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.text = text
 
 
 class EditTextMessage(TextMessage):
+    """ Message that will edit an existing one """
     _PARAMS_TO_SENT = ('text', 'message_id')
 
     def __init__(self, *, message_id: int, **kwargs):
-        super(EditTextMessage, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.message_id = message_id
 
 
 class DocumentMessage(OutgoingMessage):
+    """ Message with document """
     _PARAMS_TO_SENT = ('document', 'caption', 'reply_to_message_id')
 
     def __init__(self, *, document: dict, **kwargs):
-        super(DocumentMessage, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.document, self.caption = self._get_document(document)
 
     @staticmethod
@@ -143,10 +151,11 @@ class DocumentMessage(OutgoingMessage):
 
 
 class PhotoMessage(OutgoingMessage):
+    """ Message with image """
     _PARAMS_TO_SENT = ('photo', 'caption', 'reply_to_message_id')
 
     def __init__(self, *, image: str, text: str, **kwargs):
-        super(PhotoMessage, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.photo = base64.b64decode(image)
         self.caption = text
 
