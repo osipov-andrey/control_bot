@@ -8,3 +8,9 @@ repos:
     hooks:
     -   id: black
         args: [--config=pyproject.toml]
+#-   repo: git://github.com/luismayta/pre-commit-mypy
+#    sha: ''  # Use the sha you want to point at
+#    hooks:
+#    -   id: mypy
+#        args:
+#        - --ignore-missing-imports

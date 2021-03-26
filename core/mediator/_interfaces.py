@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from abc import ABC
-from typing import List
+from typing import List, Type
 
 from core import exceptions
 from core.bot import emojies
@@ -22,7 +22,7 @@ _LOGGER.debug(config)
 
 class BaseInterface(ABC):
     def __init__(self):
-        self.db = Repository()
+        self.db: Repository = Repository()
 
 
 class ActuatorsInterface(BaseInterface, MediatorDependency):

@@ -1,4 +1,6 @@
 """ Actuator commands handlers """
+from typing import Union
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -48,7 +50,10 @@ class InlineButtonHandler(MessageHandler):
     """ Handling an inline button click """
 
     async def handle(
-        self, callback_query: types.CallbackQuery, state: FSMContext, **kwargs
+        self,
+        callback_query: Union[types.Message, types.CallbackQuery],
+        state: FSMContext,
+        **kwargs
     ):  # type: ignore
         await callback_query.answer("Button has been Pressed")
         message = callback_query.message

@@ -23,6 +23,8 @@
 4. Запускаем:
 > pip install .
 >
+> pre-commit install  # Для разработки
+>
 > cd core/repository && alembic upgrade head && cd ../..
 >  
 > python -m core run

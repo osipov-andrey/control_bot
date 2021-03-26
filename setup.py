@@ -33,7 +33,7 @@ setup(
         "setuptools~=53.0.0",
         "pydantic~=1.8.1",
     ],
-    extras_require={"dev": ["black~=20.8b1", "mypy~=0.812"]},
+    extras_require={"dev": ["black~=20.8b1", "mypy~=0.812", "pre-commit~=2.11.1"]},
     packages=find_packages(exclude=["tests"]),
     data_files=[
         ("", ["core/config/logging.yml"]),

@@ -183,14 +183,14 @@ class Repository:
     async def _execute_query(
         self, query: Query, *, connection, fetchall=True, commit=False
     ) -> Union[tuple, List[tuple], Cursor]:
-        cursor = await connection.execute(self._get_sql(query))
+        cursor: Cursor = await connection.execute(self._get_sql(query))
         if commit:
             await connection.commit()
             return cursor
         if fetchall is True:
-            result = await cursor.fetchall()
+            result: List[tuple] = await cursor.fetchall()
         else:
-            result = await cursor.fetchone()
+            result: tuple = await cursor.fetchone()
         return result
 
     @staticmethod
