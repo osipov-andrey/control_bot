@@ -13,6 +13,7 @@ from core.bot._command_constants import ME, INTRODUCE, MY_ID, MY_CHANNELS
 @d.class_message_handler(commands=[ME])
 class MeHandler(MessageHandler):
     """ Private office submenu """
+
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         await MainMenu.me.set()
         menu = get_menu(
@@ -21,7 +22,7 @@ class MeHandler(MessageHandler):
                 MenuTextButton(INTRODUCE, "Write my ID to the bot"),
                 MenuTextButton(MY_ID, "My telegram ID"),
                 MenuTextButton(MY_CHANNELS, "My channels"),
-            ]
+            ],
         )
         await self._answer(message, menu)
 
@@ -29,6 +30,7 @@ class MeHandler(MessageHandler):
 @d.class_message_handler(commands=[INTRODUCE], state=MainMenu.me)
 class IntroduceHandler(MessageHandler):
     """ Save your data to the bot """
+
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         user_status = await self.mediator.users.upsert(
             tg_id=message.from_user.id,
@@ -46,6 +48,7 @@ class IntroduceHandler(MessageHandler):
 @d.class_message_handler(commands=[MY_ID], state=MainMenu.me)
 class MyIDHandler(MessageHandler):
     """ Show my telegram ID """
+
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         user_id = message.from_user.id
         await message.answer(f"Your telegram ID: {user_id}")
@@ -55,8 +58,11 @@ class MyIDHandler(MessageHandler):
 @d.class_message_handler(commands=[MY_CHANNELS], state=MainMenu.me)
 class MyChannelsHandler(MessageHandler):
     """ Show channels i'm subscribed to """
+
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         channels = await self.mediator.channels.get_subscribes(self.user_telegram_id)
-        text = "<b>Channels you subscribed to:</b>\n" + generate_channel_report(channels)
+        text = "<b>Channels you subscribed to:</b>\n" + generate_channel_report(
+            channels
+        )
         await self._answer(message, text)
         await state.reset_state()

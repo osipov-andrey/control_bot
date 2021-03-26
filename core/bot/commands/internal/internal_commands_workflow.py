@@ -32,16 +32,11 @@ async def start_cmd_internal_workflow(
         try:
             await callback(**cmd.filled_args)
         except NoSuchUser:
-            await mediator.send(
-                OutgoingMessage(chat_id=state.chat, text=UNKNOWN_USER)
-            )
+            await mediator.send(OutgoingMessage(chat_id=state.chat, text=UNKNOWN_USER))
         await state.reset_state()
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
         await state_storage.update_data(
-            user=cmd.user_id,
-            chat=cmd.user_id,
-            cmd=cmd,
-            callback=callback
+            user=cmd.user_id, chat=cmd.user_id, cmd=cmd, callback=callback
         )
         new_kwargs = await cmd.get_next_step()
         message_kwargs.update(new_kwargs)

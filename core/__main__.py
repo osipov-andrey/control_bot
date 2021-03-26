@@ -6,10 +6,10 @@ from . import config
 dictConfig(config.config["logging"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mediator = Mediator()
 
-    parser = argparse.ArgumentParser(prog="Bot", )
+    parser = argparse.ArgumentParser(prog="Bot")
     subparsers = parser.add_subparsers(help="Operating mode")
     parser_start = subparsers.add_parser("run", help="Run bot")
     parser_start.set_defaults(func=mediator.run)

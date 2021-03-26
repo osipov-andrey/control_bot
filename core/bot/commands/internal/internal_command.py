@@ -9,7 +9,12 @@ class InternalCommand(ActuatorCommand):
     """ The command spawned inside the bot """
 
     def __init__(
-            self, cmd: str, user_id: int, cmd_schema: CommandSchema, arguments: Optional[list] = None, is_admin=False
+        self,
+        cmd: str,
+        user_id: int,
+        cmd_schema: CommandSchema,
+        arguments: Optional[list] = None,
+        is_admin=False,
     ):  # pylint: disable=super-init-not-called
 
         if is_admin and cmd_schema.behavior__admin:

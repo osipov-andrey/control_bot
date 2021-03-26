@@ -10,13 +10,18 @@ metadata = MetaData()
 channels_users_associations = Table(
     "user_channel",
     metadata,
-    Column("user_id", Integer,
-           ForeignKey('user.id', onupdate="CASCADE", ondelete="CASCADE"),
-           nullable=False),
-    Column("channel_id",
-           ForeignKey('channel.id', onupdate="CASCADE", ondelete="CASCADE"),
-           nullable=False),
-    PrimaryKeyConstraint("user_id", "channel_id", name="user_channel_pk")
+    Column(
+        "user_id",
+        Integer,
+        ForeignKey("user.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column(
+        "channel_id",
+        ForeignKey("channel.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    PrimaryKeyConstraint("user_id", "channel_id", name="user_channel_pk"),
 )
 UserChannel = create_mapping(channels_users_associations)
 
@@ -24,13 +29,19 @@ UserChannel = create_mapping(channels_users_associations)
 actuators_users_associations = Table(
     "user_actuator",
     metadata,
-    Column("user_id", Integer,
-           ForeignKey('user.id', onupdate="CASCADE", ondelete="CASCADE"),
-           nullable=False),
-    Column("actuator_id", Integer,
-           ForeignKey('actuator.id', onupdate="CASCADE", ondelete="CASCADE"),
-           nullable=False),
-    PrimaryKeyConstraint("user_id", "actuator_id", name="user_actuator_pk")
+    Column(
+        "user_id",
+        Integer,
+        ForeignKey("user.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column(
+        "actuator_id",
+        Integer,
+        ForeignKey("actuator.id", onupdate="CASCADE", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    PrimaryKeyConstraint("user_id", "actuator_id", name="user_actuator_pk"),
 )
 UserActuator = create_mapping(actuators_users_associations)
 
@@ -43,7 +54,7 @@ users_table = Table(
     Column("name", String, nullable=True),
     Column("phone_number", String, nullable=True),
     Column("is_admin", Boolean, default=False),
-    UniqueConstraint("telegram_id", "telegram_username", name="uq_id_user")
+    UniqueConstraint("telegram_id", "telegram_username", name="uq_id_user"),
 )
 User = create_mapping(users_table)
 

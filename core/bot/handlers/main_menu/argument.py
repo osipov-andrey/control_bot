@@ -5,12 +5,16 @@ from core.bot._helpers import delete_cmd_prefix
 from core.bot.state_enums import CommandFillStatus
 from core.bot.commands.internal.internal_command import InternalCommand
 from core.bot.telegram_api import telegram_api_dispatcher as d
-from core.bot.commands.internal.internal_commands_workflow import start_cmd_internal_workflow
+from core.bot.commands.internal.internal_commands_workflow import (
+    start_cmd_internal_workflow,
+)
 from core.bot.states import Command
 
 
 @d.message_handler(state=Command.argument_internal)
-async def argument_handler(message: types.Message, state: FSMContext):  # TODO: class-based
+async def argument_handler(
+    message: types.Message, state: FSMContext
+):  # TODO: class-based
     """ Handling Command Argument Input """
     message_kwargs = {"chat_id": message.chat.id}
     data = await state.get_data()

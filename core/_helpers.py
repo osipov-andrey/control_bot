@@ -15,7 +15,9 @@ class Behavior(Enum):
 
 
 def get_log_cover(cover_name: str) -> str:
-    cover = f"\n{'#'*20} {cover_name} {'#'*20}" \
-            f"\n%s" \
-            f"\n{'#'*20} {' '*len(cover_name)} {'#'*20}"
+    cover = (
+        f"\n{'#'*20} {cover_name} {'#'*20}"
+        f"\n%s"
+        f"\n{'#'*20} {' '*len(cover_name)} {'#'*20}"
+    )
     return cover

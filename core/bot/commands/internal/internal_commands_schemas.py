@@ -9,26 +9,35 @@ then in this case we write logic in the message handlers.
 from core._helpers import ArgType
 from core.inbox.models import ArgInfo, CommandSchema
 from core.bot.commands.internal.internal_command import InternalCommand
-from core.bot._command_constants import SUBSCRIBE, GRANT, REVOKE, DELETE_ACTUATOR, DELETE_CHANNEL, UNSUBSCRIBE
+from core.bot._command_constants import (
+    SUBSCRIBE,
+    GRANT,
+    REVOKE,
+    DELETE_ACTUATOR,
+    DELETE_CHANNEL,
+    UNSUBSCRIBE,
+)
 from core.mediator.dependency import MediatorDependency
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
     """ Generate schema for subscribe/unsubscribe main-menu commands """
-    channels = [c.name for c in await MediatorDependency.mediator.channels.all_channels()]
+    channels = [
+        c.name for c in await MediatorDependency.mediator.channels.all_channels()
+    ]
 
     args = {
         "channel": ArgInfo(
             description="Channel name",
             arg_schema={"type": ArgType.STR.value, "allowed": channels},
-            is_channel=True
+            is_channel=True,
         ).dict(),
         "user_id": ArgInfo(
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
             is_user=(cmd == SUBSCRIBE),
             is_subscriber=(cmd == UNSUBSCRIBE),
-        ).dict()
+        ).dict(),
     }
 
     cmd_schema = CommandSchema(
@@ -62,7 +71,7 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
             description="Telegram user ID",
             arg_schema={"type": ArgType.INT.value},
             is_user=(cmd == GRANT),
-            is_granter=(cmd == REVOKE)
+            is_granter=(cmd == REVOKE),
         ).dict(),
     }
 

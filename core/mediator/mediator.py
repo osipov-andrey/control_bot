@@ -9,8 +9,13 @@ from core.bot.telegram_api import telegram_api_dispatcher
 from core.config import config
 from core.inbox.consumers.rabbit import RabbitConsumer
 from core.inbox.dispatcher import InboxDispatcher
-from core.inbox.messages import DocumentMessage, PhotoMessage, EditTextMessage, \
-    TextMessage, OutgoingMessage
+from core.inbox.messages import (
+    DocumentMessage,
+    PhotoMessage,
+    EditTextMessage,
+    TextMessage,
+    OutgoingMessage,
+)
 from core.ram_storage._memory_storage import ControlBotMemoryStorage
 from core.sse.sse_server import create_sse_server
 from ._interfaces import *
@@ -20,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER.debug(config)
 
 
-__all__ = ['Mediator']
+__all__ = ["Mediator"]
 
 
 class _SingletonMeta(type):
@@ -69,8 +74,7 @@ class Mediator(metaclass=_SingletonMeta):
             return await self._send(message)
         except aiogram.utils.exceptions.MessageIsTooLong:
             error_message = OutgoingMessage(
-                chat_id=message.chat_id,
-                text="Message is too long!"
+                chat_id=message.chat_id, text="Message is too long!"
             )
             return await self._send(error_message)
 
@@ -80,17 +84,24 @@ class Mediator(metaclass=_SingletonMeta):
 
     @_send.register
     async def _send_document(self, message: DocumentMessage):
-        return await self.telegram_dispatcher.bot.send_document(**message.get_params_to_sent())
+        return await self.telegram_dispatcher.bot.send_document(
+            **message.get_params_to_sent()
+        )
 
     @_send.register
     async def _send_text(self, message: TextMessage):
-        return await self.telegram_dispatcher.bot.send_message(**message.get_params_to_sent())
+        return await self.telegram_dispatcher.bot.send_message(
+            **message.get_params_to_sent()
+        )
 
     @_send.register
     async def _send_photo(self, message: PhotoMessage):
-        return await self.telegram_dispatcher.bot.send_photo(**message.get_params_to_sent())
+        return await self.telegram_dispatcher.bot.send_photo(
+            **message.get_params_to_sent()
+        )
 
     @_send.register
     async def _edit_text(self, message: EditTextMessage):
-        return await self.telegram_dispatcher.bot.edit_message_text(**message.get_params_to_sent())
-
+        return await self.telegram_dispatcher.bot.edit_message_text(
+            **message.get_params_to_sent()
+        )

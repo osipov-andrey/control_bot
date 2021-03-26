@@ -1,5 +1,6 @@
 class MediatorDependency:
     """ Class for accessing the Mediator """
+
     mediator = None  # type: ignore
 
     @classmethod

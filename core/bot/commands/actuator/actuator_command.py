@@ -20,9 +20,9 @@ class ActuatorCommand(MediatorDependency):
     @staticmethod
     def parse_cmd_string(cmd_string: str):
         """ Split command macros """
-        assert cmd_string.startswith('/')
+        assert cmd_string.startswith("/")
 
-        full_cmd = cmd_string.split('_')
+        full_cmd = cmd_string.split("_")
         client = full_cmd[0][1:]
         try:
             cmd: Optional[str] = full_cmd[1]
@@ -33,13 +33,14 @@ class ActuatorCommand(MediatorDependency):
         return client, cmd, args
 
     def __init__(
-            self,
-            client: str,
-            cmd: str,
-            arguments: List,
-            user_id: int,
-            is_admin=False,
-            message_id: Optional[UUID] = None):
+        self,
+        client: str,
+        cmd: str,
+        arguments: List,
+        user_id: int,
+        is_admin=False,
+        message_id: Optional[UUID] = None,
+    ):
 
         self.client = client
         self.cmd: str = cmd
@@ -75,7 +76,7 @@ class ActuatorCommand(MediatorDependency):
         arg_scheme = self._get_arg_scheme(arg_name)
 
         if arg_scheme.arg_schema.type == ArgType.LIST.value:
-            self.filled_args[arg_name] = arg_value.split(' ')
+            self.filled_args[arg_name] = arg_value.split(" ")
             return
 
         validated = self._validate_arg(arg_name, arg_scheme, arg_value)
@@ -97,18 +98,23 @@ class ActuatorCommand(MediatorDependency):
         if self.validation_errors:
             message += self._get_validation_report()
         prompt = await generate_prompt(argument_info, self.filled_args)
-        message += \
-            f"Fill in the following <b>{self.cmd}</b> argument:\n" \
-            f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n" \
+        message += (
+            f"Fill in the following <b>{self.cmd}</b> argument:\n"
+            f"<i><b>{argument_to_fill}</b></i> - {argument_info.description}\n"
             f"{prompt if prompt else ''}"
+        )
 
         message_kwargs["text"] = message + CONTEXT_CANCEL_MENU
         return message_kwargs
 
     def _get_validation_report(self) -> str:
-        report = "<b>The following arguments were entered with errors:</b>\n" \
-                 + "\n".join(f"{arg}: {error}" for arg, error in self.validation_errors.items()) \
-                 + "\n\n"
+        report = (
+            "<b>The following arguments were entered with errors:</b>\n"
+            + "\n".join(
+                f"{arg}: {error}" for arg, error in self.validation_errors.items()
+            )
+            + "\n\n"
+        )
         return report
 
     @staticmethod
@@ -123,7 +129,7 @@ class ActuatorCommand(MediatorDependency):
         required_args = list(self.cmd_scheme.args.keys())
 
         for index, (required_arg, received_value) in enumerate(
-                zip_longest(required_args, self.list_args)
+            zip_longest(required_args, self.list_args)
         ):
             if not required_arg:
                 break
@@ -146,10 +152,7 @@ class ActuatorCommand(MediatorDependency):
                 self.args_to_fill.append(required_arg)
 
     def _validate_arg(
-            self,
-            arg_name: str,
-            arg_info: ArgInfo,
-            received_value: Union[int, str]
+        self, arg_name: str, arg_info: ArgInfo, received_value: Union[int, str]
     ) -> bool:
         if arg_info.arg_schema.type == ArgType.INT.value:
             try:  # Телеграм возвращает всегда строки
@@ -169,5 +172,7 @@ class ActuatorCommand(MediatorDependency):
         return self.cmd_scheme.args.get(arg_name)
 
     def __str__(self):
-        return f"{self.__class__.__name__}: " \
-               f"(cmd={self.cmd}; args={self.list_args}; user-id={self.user_id})"
+        return (
+            f"{self.__class__.__name__}: "
+            f"(cmd={self.cmd}; args={self.list_args}; user-id={self.user_id})"
+        )

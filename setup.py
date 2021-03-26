@@ -35,6 +35,8 @@ setup(
     ],
     extras_require={
         'dev': [
+            "black~=20.8b1",
+            "mypy~=0.812",
         ],
     },
     packages=find_packages(exclude=['tests']),

@@ -13,7 +13,9 @@ from .db_enums import UserEvents
 from ._schema import *
 
 
-PATH_TO_DB = Path(__file__).parent.absolute().joinpath("db_dump").joinpath("control_bot.sqlite")
+PATH_TO_DB = (
+    Path(__file__).parent.absolute().joinpath("db_dump").joinpath("control_bot.sqlite")
+)
 
 
 def connect_to_db(method):
@@ -30,6 +32,7 @@ def connect_to_db(method):
                 raise AlreadyHasItException
             else:
                 raise
+
     return wrapper
 
 
@@ -37,32 +40,26 @@ class Repository:
     db = PATH_TO_DB
 
     async def upsert_user(
-            self,
-            tg_id: int,
-            tg_username: str,
-            name: Optional[str] = null(),
-            phone: Optional[str] = null(),
-            is_admin: Optional[bool] = False,
+        self,
+        tg_id: int,
+        tg_username: str,
+        name: Optional[str] = null(),
+        phone: Optional[str] = null(),
+        is_admin: Optional[bool] = False,
     ):
         try:
             user_exists = await self.get_user(tg_id)
-            query = _queryes.update_user(
-                tg_id, tg_username, name, phone, is_admin
-            )
+            query = _queryes.update_user(tg_id, tg_username, name, phone, is_admin)
             result = UserEvents.UPDATED
         except NoSuchUser:
-            query = _queryes.insert_user(
-                tg_id, tg_username, name, phone, is_admin
-            )
+            query = _queryes.insert_user(tg_id, tg_username, name, phone, is_admin)
             result = UserEvents.CREATED
 
         await self._execute_query(query, commit=True)
         return result
 
     async def get_user(self, tg_id: int) -> User:
-        user_query = users_table.select().where(
-            users_table.c.telegram_id == tg_id
-        )
+        user_query = users_table.select().where(users_table.c.telegram_id == tg_id)
         user = await self._execute_query(user_query, fetchall=False)
         if not user:
             raise NoSuchUser
@@ -77,17 +74,13 @@ class Repository:
         return users
 
     async def get_admins(self) -> List[User]:
-        admins_query = users_table.select().where(
-            users_table.c.is_admin == 1
-        )
+        admins_query = users_table.select().where(users_table.c.is_admin == 1)
         admins = await self._execute_query(admins_query)
         admins = [User(*admin) for admin in admins]
         return admins
 
     async def get_channel(self, channel_name: str) -> Channel:
-        user_query = channel_table.select().where(
-            channel_table.c.name == channel_name
-        )
+        user_query = channel_table.select().where(channel_table.c.name == channel_name)
         channel = await self._execute_query(user_query, fetchall=False)
         if not channel:
             raise NoSuchChannel
@@ -100,14 +93,14 @@ class Repository:
         return [Channel(*channel) for channel in result]
 
     async def save_channel(self, name: str, description: str) -> bool:
-        query: Query = channel_table.insert().values({"name": name, "description": description})
+        query: Query = channel_table.insert().values(
+            {"name": name, "description": description}
+        )
         result = await self._execute_query(query, commit=True)
         return result.rowcount == 1
 
     async def delete_channel(self, name: str) -> bool:
-        query: Query = channel_table.delete().where(
-            channel_table.c.name == name
-        )
+        query: Query = channel_table.delete().where(channel_table.c.name == name)
         result = await self._execute_query(query, commit=True)
         return result.rowcount == 1
 
@@ -120,10 +113,9 @@ class Repository:
     async def channel_subscribe(self, user_telegram_id: int, channel: str) -> bool:
         user = await self.get_user(user_telegram_id)
         channel = await self.get_channel(channel)
-        subscribe_query = channels_users_associations.insert().values({
-            "user_id": user.id,
-            "channel_id": channel.id
-        })
+        subscribe_query = channels_users_associations.insert().values(
+            {"user_id": user.id, "channel_id": channel.id}
+        )
         result = await self._execute_query(subscribe_query, commit=True)
         return bool(result.rowcount)
 
@@ -165,7 +157,8 @@ class Repository:
 
     async def user_has_grant(self, user_telegram_id: int, actuator_name: str) -> bool:
         result = await self._execute_query(
-            _queryes.get_has_grant_query(user_telegram_id, actuator_name), fetchall=False
+            _queryes.get_has_grant_query(user_telegram_id, actuator_name),
+            fetchall=False,
         )
         return bool(result)
 
@@ -180,13 +173,15 @@ class Repository:
         return actuators
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
-        channels = await self._execute_query(_queryes.get_user_subscribes_query(user_telegram_id))
+        channels = await self._execute_query(
+            _queryes.get_user_subscribes_query(user_telegram_id)
+        )
         channels: list = [Channel(*channel) for channel in channels]
         return channels
 
     @connect_to_db
     async def _execute_query(
-            self, query: Query, *, connection, fetchall=True, commit=False
+        self, query: Query, *, connection, fetchall=True, commit=False
     ) -> Union[tuple, List[tuple], Cursor]:
         cursor = await connection.execute(self._get_sql(query))
         if commit:

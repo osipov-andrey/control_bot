@@ -13,16 +13,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class RabbitConsumer:
-
     def __init__(
-            self,
-            host: str,
-            port: int,
-            *,
-            login: str,
-            pwd: str,
-            rabbit_queue: str,
-            inbox_queue: asyncio.Queue
+        self,
+        host: str,
+        port: int,
+        *,
+        login: str,
+        pwd: str,
+        rabbit_queue: str,
+        inbox_queue: asyncio.Queue
     ):
 
         self.host = host
@@ -35,13 +34,18 @@ class RabbitConsumer:
     async def listen_to_rabbit(self):
 
         transport, protocol = await aioamqp.connect(
-            self.host, self.port,
-            login=self.login, password=self.password, login_method='PLAIN'
+            self.host,
+            self.port,
+            login=self.login,
+            password=self.password,
+            login_method="PLAIN",
         )
 
         channel: Channel = await protocol.channel()
         await channel.queue_declare(config["rabbit"]["rabbit_queue"], durable=True)
-        await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
+        await channel.basic_consume(
+            self._callback, queue_name=self.rabbit_queue, no_ack=True
+        )
 
     async def _callback(self, channel, body, envelope, properties):
         _LOGGER.info("Get message from rabbit: %s", body)

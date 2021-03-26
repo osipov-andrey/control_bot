@@ -33,7 +33,9 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
         try:
-            message_kwargs["text"] = get_client_commands(mediator, actuator_name, is_admin)
+            message_kwargs["text"] = get_client_commands(
+                mediator, actuator_name, is_admin
+            )
         except NoSuchActuatorInRAM:
             _LOGGER.warning("No actuator %s in RAM!", actuator_name)
             message_kwargs["text"] = UNKNOWN_ACTUATOR
@@ -62,7 +64,12 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
         if not cmd.cmd_scheme:
             return
         await continue_cmd_workflow(
-            state, cmd, message_kwargs, CommandFillStatus.FILL_COMMAND, mediator, message_id
+            state,
+            cmd,
+            message_kwargs,
+            CommandFillStatus.FILL_COMMAND,
+            mediator,
+            message_id,
         )
     except NoSuchCommand as e:
         exception = True
@@ -76,7 +83,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
 
 
 async def continue_cmd_workflow(
-        state, cmd: ActuatorCommand, message_kwargs, fill_status, mediator, message_id=None
+    state, cmd: ActuatorCommand, message_kwargs, fill_status, mediator, message_id=None
 ):
     cmd_fill_status = cmd.fill_status
     if cmd_fill_status == ArgumentsFillStatus.FILLED:
@@ -101,9 +108,13 @@ async def _finish_cmd_workflow(state, cmd: ActuatorCommand, mediator, message_id
     await state.reset_state()
     event = SSEEvent(
         command=cmd.cmd,
-        target=MessageTarget(target_type=TargetType.USER.value, target_name=cmd.user_id, message_id=message_id),
+        target=MessageTarget(
+            target_type=TargetType.USER.value,
+            target_name=cmd.user_id,
+            message_id=message_id,
+        ),
         args=cmd.filled_args,
-        behavior=cmd.behavior
+        behavior=cmd.behavior,
     )
     await mediator.actuators.emit_event(cmd.client, event)
 

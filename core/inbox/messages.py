@@ -3,13 +3,18 @@ import io
 from typing import Optional, Tuple, Union
 from typing import List
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, InputFile
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    InputFile,
+)
 
 from core.mediator.dependency import MediatorDependency
 from .models import ActuatorMessage, TargetType
 
 
-def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> 'OutgoingMessage':
+def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> "OutgoingMessage":
     """
     We receive a message from the actuator in the form of a pydantic model 'ActuatorMessage'.
     That's why we need this factory.
@@ -23,7 +28,9 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> 'OutgoingMe
 
     target_type = message.target.target_type
     if target_type != TargetType.USER.value:
-        raise ValueError(f"Unsupported message type for outgoing message! [{target_type}]")
+        raise ValueError(
+            f"Unsupported message type for outgoing message! [{target_type}]"
+        )
     message_kwargs["chat_id"] = message.target.target_name
     message_kwargs["message_id"] = message.target.message_id
 
@@ -36,7 +43,8 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> 'OutgoingMe
 
 class OutgoingMessage:
     """ Message to send to Telegram API """
-    _COMMON_PARAMS_TO_SENT = ('chat_id', 'reply_markup', 'parse_mode')
+
+    _COMMON_PARAMS_TO_SENT = ("chat_id", "reply_markup", "parse_mode")
     _PARAMS_TO_SENT: tuple = tuple()
 
     def __new__(cls, *args, **kwargs):
@@ -51,15 +59,15 @@ class OutgoingMessage:
         return msg
 
     def __init__(
-            self,
-            *,
-            chat_id: str,
-            reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
-            reply_to_message_id: Optional[int] = None,
-            parse_mode: str = "HTML",
-            replies: Optional[List] = None,
-            issue: Optional[dict] = None,
-            **kwargs
+        self,
+        *,
+        chat_id: str,
+        reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
+        reply_to_message_id: Optional[int] = None,
+        parse_mode: str = "HTML",
+        replies: Optional[List] = None,
+        issue: Optional[dict] = None,
+        **kwargs,
     ):
         self.chat_id = chat_id
         self.reply_markup = reply_markup
@@ -78,7 +86,7 @@ class OutgoingMessage:
             params = self._COMMON_PARAMS_TO_SENT + self._PARAMS_TO_SENT
         return {key: value for key, value in self.__dict__.items() if key in params}
 
-    def get_replies(self, reply_to_message_id) -> List['OutgoingMessage']:
+    def get_replies(self, reply_to_message_id) -> List["OutgoingMessage"]:
         """
         Generate message object for replies.
         :param reply_to_message_id - message id in chat
@@ -95,34 +103,35 @@ class OutgoingMessage:
 
     def _check_issue(self, issue: dict):
         if issue.get("resolved"):
-            problem_issue = MediatorDependency.mediator.memory_storage.resolve_issue(issue.get("issue_id"))
+            problem_issue = MediatorDependency.mediator.memory_storage.resolve_issue(
+                issue.get("issue_id")
+            )
             if problem_issue:
                 self.reply_to_message_id = problem_issue.reply_to_message_id
 
     def __str__(self):
-        values = '\n'.join(f'{key}: {value}' for key, value in self.__dict__.items())
-        return f"\n{'#' * 20} TelegramLeverMessage {'#' * 20}" \
-               f"\n{values}" \
-               f"\n{'#' * 20}{' ' * 22}{'#' * 20}"
+        values = "\n".join(f"{key}: {value}" for key, value in self.__dict__.items())
+        return (
+            f"\n{'#' * 20} TelegramLeverMessage {'#' * 20}"
+            f"\n{values}"
+            f"\n{'#' * 20}{' ' * 22}{'#' * 20}"
+        )
 
 
 class TextMessage(OutgoingMessage):
     """ Message only with text """
-    _PARAMS_TO_SENT = ('text', 'reply_to_message_id')
 
-    def __init__(
-            self,
-            *,
-            text: str,
-            **kwargs
-    ):
+    _PARAMS_TO_SENT = ("text", "reply_to_message_id")
+
+    def __init__(self, *, text: str, **kwargs):
         super().__init__(**kwargs)
         self.text = text
 
 
 class EditTextMessage(TextMessage):
     """ Message that will edit an existing one """
-    _PARAMS_TO_SENT = ('text', 'message_id')
+
+    _PARAMS_TO_SENT = ("text", "message_id")
 
     def __init__(self, *, message_id: int, **kwargs):
         super().__init__(**kwargs)
@@ -131,7 +140,8 @@ class EditTextMessage(TextMessage):
 
 class DocumentMessage(OutgoingMessage):
     """ Message with document """
-    _PARAMS_TO_SENT = ('document', 'caption', 'reply_to_message_id')
+
+    _PARAMS_TO_SENT = ("document", "caption", "reply_to_message_id")
 
     def __init__(self, *, document: dict, **kwargs):
         super().__init__(**kwargs)
@@ -143,16 +153,14 @@ class DocumentMessage(OutgoingMessage):
         filename = document.get("filename")
         caption = document.get("caption")
 
-        text_file = InputFile(
-            io.StringIO(content),
-            filename=filename
-        )
+        text_file = InputFile(io.StringIO(content), filename=filename)
         return text_file, caption
 
 
 class PhotoMessage(OutgoingMessage):
     """ Message with image """
-    _PARAMS_TO_SENT = ('photo', 'caption', 'reply_to_message_id')
+
+    _PARAMS_TO_SENT = ("photo", "caption", "reply_to_message_id")
 
     def __init__(self, *, image: str, text: str, **kwargs):
         super().__init__(**kwargs)

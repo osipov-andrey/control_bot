@@ -7,5 +7,5 @@ from ._memory_storage import ControlBotMemoryStorage
 
 
 __all__ = [
-    'ControlBotMemoryStorage',
+    "ControlBotMemoryStorage",
 ]
