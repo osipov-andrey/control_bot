@@ -13,5 +13,5 @@ def create_mapping(table: Table) -> Type[tuple]:
 
 def to_pascal_case(snake_case: str) -> str:
     parts = snake_case.split("_")
-    kebab = "".join(part.capitalize() for part in parts)
-    return kebab
+    pascal = "".join(part.capitalize() for part in parts)
+    return pascal
