@@ -46,9 +46,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
 
         await Command.client.set()
         await state_storage.update_data(
-            user=user_id,
-            chat=chat_id,
-            client=actuator_name,
+            user=user_id, chat=chat_id, client=actuator_name
         )
         return
     elif command is None and command_state is not None:
@@ -92,11 +90,7 @@ async def continue_cmd_workflow(
     elif cmd_fill_status == ArgumentsFillStatus.NOT_FILLED:
         # Команда не заполнена:
 
-        await state_storage.update_data(
-            user=cmd.user_id,
-            chat=cmd.user_id,
-            cmd=cmd,
-        )
+        await state_storage.update_data(user=cmd.user_id, chat=cmd.user_id, cmd=cmd)
         next_step_kwargs = await cmd.get_next_step()
         message_kwargs.update(next_step_kwargs)
         # Arguments input state:

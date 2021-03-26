@@ -1,24 +1,24 @@
 from setuptools import find_packages, setup
 
 
-MODULE_NAME = 'core'
+MODULE_NAME = "core"
 
 setup(
     name=MODULE_NAME,
-    version='0.1.0',
-    author='Andrey Osipov',
-    platforms='all',
+    version="0.1.0",
+    author="Andrey Osipov",
+    platforms="all",
     classifiers=[
-        'Intended Audience :: Developers',
-        'Natural Language :: Russian',
-        'Operating System :: Win10',
-        'Operating System :: Linux',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: Implementation :: CPython'
+        "Intended Audience :: Developers",
+        "Natural Language :: Russian",
+        "Operating System :: Win10",
+        "Operating System :: Linux",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
     ],
-    python_requires='>=3.7',
+    python_requires=">=3.7",
     install_requires=[
         "aioamqp~=0.14.0",
         "aiogram~=2.11.2",
@@ -33,17 +33,11 @@ setup(
         "setuptools~=53.0.0",
         "pydantic~=1.8.1",
     ],
-    extras_require={
-        'dev': [
-            "black~=20.8b1",
-            "mypy~=0.812",
-        ],
-    },
-    packages=find_packages(exclude=['tests']),
+    extras_require={"dev": ["black~=20.8b1", "mypy~=0.812"]},
+    packages=find_packages(exclude=["tests"]),
     data_files=[
         ("", ["core/config/logging.yml"]),
-        ("", ["core/repository/alembic.ini"])
+        ("", ["core/repository/alembic.ini"]),
     ],
-
-    include_package_data=True
+    include_package_data=True,
 )

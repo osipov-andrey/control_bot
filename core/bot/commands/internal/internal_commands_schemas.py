@@ -48,12 +48,7 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
         },
     )
 
-    command = InternalCommand(
-        cmd,
-        user_id,
-        cmd_schema=cmd_schema,
-        is_admin=is_admin,
-    )
+    command = InternalCommand(cmd, user_id, cmd_schema=cmd_schema, is_admin=is_admin)
     return command
 
 
@@ -83,12 +78,7 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
         },
     )
 
-    command = InternalCommand(
-        cmd,
-        user_id,
-        cmd_schema=cmd_schema,
-        is_admin=is_admin,
-    )
+    command = InternalCommand(cmd, user_id, cmd_schema=cmd_schema, is_admin=is_admin)
     return command
 
 
@@ -101,26 +91,17 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
             is_actuator=True,
         ).dict(),
         "description": ArgInfo(
-            description="Actuator description",
-            arg_schema={"type": ArgType.STR.value},
+            description="Actuator description", arg_schema={"type": ArgType.STR.value}
         ).dict(),
     }
     if cmd == DELETE_ACTUATOR:
         args.pop("description")
     cmd_schema = CommandSchema(
         hidden=False,
-        behavior__admin={
-            "description": "Create/delete actuator",
-            "args": args,
-        },
+        behavior__admin={"description": "Create/delete actuator", "args": args},
     )
 
-    command = InternalCommand(
-        cmd,
-        user_id,
-        cmd_schema=cmd_schema,
-        is_admin=is_admin,
-    )
+    command = InternalCommand(cmd, user_id, cmd_schema=cmd_schema, is_admin=is_admin)
     return command
 
 
@@ -133,24 +114,15 @@ def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
             is_channel=True,
         ).dict(),
         "description": ArgInfo(
-            description="Channel description",
-            arg_schema={"type": ArgType.STR.value},
+            description="Channel description", arg_schema={"type": ArgType.STR.value}
         ).dict(),
     }
     if cmd == DELETE_CHANNEL:
         args.pop("description")
     cmd_schema = CommandSchema(
         hidden=False,
-        behavior__admin={
-            "description": "Create/delete channel",
-            "args": args,
-        },
+        behavior__admin={"description": "Create/delete channel", "args": args},
     )
 
-    command = InternalCommand(
-        cmd,
-        user_id,
-        cmd_schema=cmd_schema,
-        is_admin=is_admin,
-    )
+    command = InternalCommand(cmd, user_id, cmd_schema=cmd_schema, is_admin=is_admin)
     return command

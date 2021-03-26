@@ -24,9 +24,7 @@ class Config(dict):
         self._check_config()
 
     def _check_config(self):
-        queue = [
-            ("main", self),
-        ]
+        queue = [("main", self)]
         errors = []
 
         for prefix, dict_ in queue:  # type: str, dict

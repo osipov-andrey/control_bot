@@ -14,11 +14,7 @@ from core.repository.repository import Channel, Repository, User
 from core.sse.sse_event import SSEEvent
 
 
-__all__ = [
-    "ActuatorsInterface",
-    "ChannelsInterface",
-    "UsersInterface",
-]
+__all__ = ["ActuatorsInterface", "ChannelsInterface", "UsersInterface"]
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.debug(config)

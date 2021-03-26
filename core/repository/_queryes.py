@@ -14,21 +14,15 @@ from ._schema import (
 
 def get_channel_id_query(channel_name: str) -> Select:
     """ ID канала по названию """
-    query = select(
-        [
-            channel_table.c.id,
-        ]
-    ).where(channel_table.c.name == channel_name)
+    query = select([channel_table.c.id]).where(channel_table.c.name == channel_name)
     return query
 
 
 def get_user_id_query(user_telegram_id: int) -> Select:
     """ ID пользователя по telegram_id """
-    query = select(
-        [
-            users_table.c.id,
-        ]
-    ).where(users_table.c.telegram_id == user_telegram_id)
+    query = select([users_table.c.id]).where(
+        users_table.c.telegram_id == user_telegram_id
+    )
     return query
 
 
@@ -47,17 +41,13 @@ def get_unsubscribe_query(user_telegram_id: int, channel_name: str) -> Delete:
 
 def get_subscribers(channel_name: str) -> Select:
     """ Получить подписчиков канала """
-    channel_id_query = select(
-        [
-            channel_table.c.id,
-        ]
-    ).where(channel_table.c.name == channel_name)
+    channel_id_query = select([channel_table.c.id]).where(
+        channel_table.c.name == channel_name
+    )
 
-    users_id_query = select(
-        [
-            channels_users_associations.c.user_id,
-        ]
-    ).where(channels_users_associations.c.channel_id == channel_id_query)
+    users_id_query = select([channels_users_associations.c.user_id]).where(
+        channels_users_associations.c.channel_id == channel_id_query
+    )
 
     subscribers_query = users_table.select().where(users_table.c.id.in_(users_id_query))
     return subscribers_query
@@ -130,11 +120,9 @@ def delete_actuator_query(name: str) -> Delete:
 
 
 def get_actuator_id_query(actuator_name: str) -> Select:
-    query = select(
-        [
-            actuators_table.c.id,
-        ]
-    ).where(actuators_table.c.name == actuator_name)
+    query = select([actuators_table.c.id]).where(
+        actuators_table.c.name == actuator_name
+    )
     return query
 
 
@@ -163,7 +151,7 @@ def revoke_query(tg_id: int, actuator_name: str) -> Delete:
 
 def get_granters_query(actuator_name: str) -> Select:
     """ Получить всех пользователей с доступом к актуатору """
-    users_id_query = select([actuators_users_associations.c.user_id,]).where(
+    users_id_query = select([actuators_users_associations.c.user_id]).where(
         actuators_users_associations.c.actuator_id
         == get_actuator_id_query(actuator_name)
     )
