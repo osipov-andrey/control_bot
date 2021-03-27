@@ -1,9 +1,12 @@
+from core.mediator import Mediator
+
+
 class MediatorDependency:
     """ Class for accessing the Mediator """
 
-    mediator = None  # type: ignore
+    mediator: Mediator  # type: ignore
 
     @classmethod
-    def add_mediator(cls, mediator):
-        cls.mediator = mediator
+    def add_mediator(cls, mediator: Mediator):
+        cls.mediator: Mediator = mediator
         # Since the mediator is injected dynamically

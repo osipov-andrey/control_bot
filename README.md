@@ -23,7 +23,7 @@
 4. Запускаем:
 > pip install .
 >
-> pre-commit install  # Для разработки
+> pip install -e.[dev] && pre-commit install  # Для разработки
 >
 > cd core/repository && alembic upgrade head && cd ../..
 >  
