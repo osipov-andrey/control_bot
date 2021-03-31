@@ -5,6 +5,7 @@ from logging.config import dictConfig
 import aiogram
 
 from core.mediator import Mediator, MediatorDependency
+from core.sse.sse_server import create_sse_server
 from . import config
 
 from core.bot.telegram_api import telegram_api_dispatcher
@@ -23,6 +24,7 @@ def run():
 
     MediatorDependency.add_mediator(mediator)
 
+    create_sse_server(mediator)
     asyncio.ensure_future(rabbit.listen_to_rabbit())
     asyncio.ensure_future(inbox_dispatcher.message_dispatcher())
     aiogram.executor.start_polling(telegram_api_dispatcher, skip_updates=True)

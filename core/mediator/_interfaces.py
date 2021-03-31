@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from abc import ABC
-from typing import List, Type
+from typing import List
 
 from core import exceptions
 from core.bot import emojies
@@ -87,7 +87,9 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         """ Turn on the actuator  """
         admins = await self.mediator.users.get_admins()
         if self.is_connected(actuator_name):
-            text = f"{emojies.ACTUATOR_ALREADY_TURNED_ON} Actuator {actuator_name} already turned ON!"
+            text = (
+                f"{emojies.ACTUATOR_ALREADY_TURNED_ON} Actuator {actuator_name} already turned ON!"
+            )
             users = admins
             result = None
         else:
