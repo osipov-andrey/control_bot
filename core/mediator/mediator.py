@@ -1,14 +1,10 @@
-import asyncio
 import logging
 from functools import singledispatchmethod
 
 import aiogram
 from aiogram.utils import exceptions
 
-from core.bot.telegram_api import telegram_api_dispatcher
 from core.config import config
-from core.inbox.consumers.rabbit import RabbitConsumer
-from core.inbox.dispatcher import InboxDispatcher
 from core.inbox.messages import (
     DocumentMessage,
     PhotoMessage,
@@ -19,7 +15,7 @@ from core.inbox.messages import (
 from core.ram_storage._memory_storage import ControlBotMemoryStorage
 from core.sse.sse_server import create_sse_server
 from ._interfaces import *
-from .dependency import MediatorDependency
+
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.debug(config)
@@ -42,7 +38,7 @@ class _SingletonMeta(type):
 class Mediator(metaclass=_SingletonMeta):
     """ Класс связывающий различные компоненты программы """
 
-    def __init__(self):
+    def __init__(self, telegram_api_dispatcher):
 
         memory_storage = ControlBotMemoryStorage()
 
@@ -52,21 +48,10 @@ class Mediator(metaclass=_SingletonMeta):
         self.channels = ChannelsInterface()
         self.actuators = ActuatorsInterface(memory_storage)
 
-        self.inbox_queue = asyncio.Queue()
-        self.inbox_dispatcher = InboxDispatcher(self, self.inbox_queue)
         self.telegram_dispatcher = telegram_api_dispatcher
 
-        self._rabbit = RabbitConsumer(**config["rabbit"], inbox_queue=self.inbox_queue)
         self._sse_server = create_sse_server(self)
         _LOGGER.info("Mediator initialized!")
-
-    def run(self):
-        MediatorDependency.add_mediator(self)
-        # TODO разделить посредник и запускатор программы
-        # Для доступа к интерфейсам из любой части программы:
-        asyncio.ensure_future(self._rabbit.listen_to_rabbit())
-        asyncio.ensure_future(self.inbox_dispatcher.message_dispatcher())
-        aiogram.executor.start_polling(self.telegram_dispatcher, skip_updates=True)
 
     async def send(self, message: OutgoingMessage):
         """ Отправить сообщение в телеграм """
