@@ -38,6 +38,7 @@ setup(
     data_files=[
         ("", ["core/config/logging.yml"]),
         ("", ["core/repository/alembic.ini"]),
+        ("", [".env"]),
     ],
     include_package_data=True,
 )
