@@ -41,7 +41,7 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> "OutgoingMe
     return OutgoingMessage(**message_kwargs)
 
 
-class OutgoingMessage:
+class OutgoingMessage(MediatorDependency):
     """ Message to send to Telegram API """
 
     _COMMON_PARAMS_TO_SENT = ("chat_id", "reply_markup", "parse_mode")
@@ -103,7 +103,7 @@ class OutgoingMessage:
 
     def _check_issue(self, issue: dict):
         if issue.get("resolved"):
-            problem_issue = MediatorDependency.mediator.memory_storage.resolve_issue(
+            problem_issue = self.mediator.memory_storage.resolve_issue(
                 issue.get("issue_id")
             )
             if problem_issue:
