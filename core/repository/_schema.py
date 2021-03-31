@@ -1,7 +1,21 @@
+from collections import namedtuple
+from typing import Type
+
 from sqlalchemy import Table, Column, MetaData, Boolean, Integer, String
 from sqlalchemy import ForeignKey, PrimaryKeyConstraint, UniqueConstraint
 
-from ._helpers import create_mapping
+
+def _create_mapping(table: Table) -> Type[tuple]:
+    fields = table.c.keys()
+    name: str = _to_pascal_case(table.name)
+    mapping = namedtuple(name, fields)
+    return mapping
+
+
+def _to_pascal_case(snake_case: str) -> str:
+    parts = snake_case.split("_")
+    pascal = "".join(part.capitalize() for part in parts)
+    return pascal
 
 
 metadata = MetaData()
@@ -23,7 +37,7 @@ channels_users_associations = Table(
     ),
     PrimaryKeyConstraint("user_id", "channel_id", name="user_channel_pk"),
 )
-UserChannel = create_mapping(channels_users_associations)
+UserChannel = _create_mapping(channels_users_associations)
 
 
 actuators_users_associations = Table(
@@ -43,7 +57,7 @@ actuators_users_associations = Table(
     ),
     PrimaryKeyConstraint("user_id", "actuator_id", name="user_actuator_pk"),
 )
-UserActuator = create_mapping(actuators_users_associations)
+UserActuator = _create_mapping(actuators_users_associations)
 
 users_table = Table(
     "user",
@@ -56,7 +70,7 @@ users_table = Table(
     Column("is_admin", Boolean, default=False),
     UniqueConstraint("telegram_id", "telegram_username", name="uq_id_user"),
 )
-User = create_mapping(users_table)
+User = _create_mapping(users_table)
 
 
 channel_table = Table(
@@ -66,7 +80,7 @@ channel_table = Table(
     Column("name", String, unique=True, nullable=False, index=True),
     Column("description", String, nullable=True),
 )
-Channel = create_mapping(channel_table)
+Channel = _create_mapping(channel_table)
 
 
 actuators_table = Table(
@@ -76,4 +90,4 @@ actuators_table = Table(
     Column("name", String, unique=True, nullable=False, index=True),
     Column("description", String, nullable=True),
 )
-Actuator = create_mapping(actuators_table)
+Actuator = _create_mapping(actuators_table)
