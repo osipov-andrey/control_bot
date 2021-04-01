@@ -1,18 +1,41 @@
 import argparse
+import asyncio
 from logging.config import dictConfig
-from core.mediator import Mediator
+
+import aiogram
+
+from core.mediator import Mediator, MediatorDependency
+from core.sse.sse_server import create_sse_server
 from . import config
+
+from core.bot.telegram_api import telegram_api_dispatcher
+from core.inbox.consumers.rabbit import RabbitConsumer
+from core.inbox.dispatcher import InboxDispatcher
 
 dictConfig(config.config["logging"])
 
 
-if __name__ == '__main__':
-    mediator = Mediator()
+def run():
+    mediator = Mediator(telegram_api_dispatcher)
 
-    parser = argparse.ArgumentParser(prog="Bot", )
+    inbox_queue = asyncio.Queue()
+    inbox_dispatcher = InboxDispatcher(mediator, inbox_queue)
+    rabbit = RabbitConsumer(**config.config["rabbit"], inbox_queue=inbox_queue)
+
+    MediatorDependency.add_mediator(mediator)
+
+    create_sse_server(mediator)
+    asyncio.ensure_future(rabbit.listen_to_rabbit())
+    asyncio.ensure_future(inbox_dispatcher.message_dispatcher())
+    aiogram.executor.start_polling(telegram_api_dispatcher, skip_updates=True)
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(prog="Bot")
     subparsers = parser.add_subparsers(help="Operating mode")
     parser_start = subparsers.add_parser("run", help="Run bot")
-    parser_start.set_defaults(func=mediator.run)
+    parser_start.set_defaults(func=run)
 
     args = parser.parse_args()
     args.func()

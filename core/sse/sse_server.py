@@ -18,8 +18,15 @@ _PORT = config["sse"]["port"]
 
 
 def get_intro_event(client_name: str) -> SSEEvent:
-    target = MessageTarget(target_type=TargetType.SERVICE.value, target_name=client_name)
-    intro_event = SSEEvent(event="start", command="getAvailableMethods", target=target, behavior=Behavior.SERVICE.value)
+    target = MessageTarget(
+        target_type=TargetType.SERVICE.value, target_name=client_name
+    )
+    intro_event = SSEEvent(
+        event="start",
+        command="getAvailableMethods",
+        target=target,
+        behavior=Behavior.SERVICE.value,
+    )
     return intro_event
 
 
@@ -33,9 +40,7 @@ async def sse_connect(request):
     except exceptions.ActuatorAlreadyConnected:
         raise HTTPTooManyRequests()
 
-    log.info(
-        f"{request.remote} has been joined to terminal: {client_name}"
-    )
+    log.info(f"{request.remote} has been joined to terminal: {client_name}")
     headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Credentials": "true",
@@ -48,9 +53,7 @@ async def sse_connect(request):
 
             while not response.task.done():
                 event = await events_queue.get()
-                log.info(
-                    f"{request.remote} sent message with {event}"
-                )
+                log.info(f"{request.remote} sent message with {event}")
                 await response.send(event.data, event=event.event)
                 events_queue.task_done()
         finally:

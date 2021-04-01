@@ -14,24 +14,18 @@ from core.repository.repository import Channel, Repository, User
 from core.sse.sse_event import SSEEvent
 
 
-__all__ = [
-    'ActuatorsInterface',
-    'ChannelsInterface',
-    'UsersInterface',
-]
+__all__ = ["ActuatorsInterface", "ChannelsInterface", "UsersInterface"]
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.debug(config)
 
 
 class BaseInterface(ABC):
-
     def __init__(self):
-        self.db = Repository()
+        self.db: Repository = Repository()
 
 
 class ActuatorsInterface(BaseInterface, MediatorDependency):
-
     def __init__(self, memory_storage):
         super().__init__()
         self.memory_storage = memory_storage
@@ -93,7 +87,9 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         """ Turn on the actuator  """
         admins = await self.mediator.users.get_admins()
         if self.is_connected(actuator_name):
-            text = f"{emojies.ACTUATOR_ALREADY_TURNED_ON} Actuator {actuator_name} already turned ON!"
+            text = (
+                f"{emojies.ACTUATOR_ALREADY_TURNED_ON} Actuator {actuator_name} already turned ON!"
+            )
             users = admins
             result = None
         else:
@@ -121,13 +117,12 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         for user in set(admins + granters):
             message = OutgoingMessage(
                 chat_id=user.telegram_id,
-                text=f"{emojies.ACTUATOR_TURNED_OFF} Actuator {actuator_name} has been turned OFF!"
+                text=f"{emojies.ACTUATOR_TURNED_OFF} Actuator {actuator_name} has been turned OFF!",
             )
             await self.mediator.send(message)
 
 
 class ChannelsInterface(BaseInterface):
-
     async def all_channels(self) -> List[Channel]:
         return await self.db.all_channels()
 
@@ -153,11 +148,7 @@ class ChannelsInterface(BaseInterface):
 
 
 class UsersInterface(BaseInterface):
-
-    async def upsert(
-            self,
-            **kwargs
-    ):
+    async def upsert(self, **kwargs):
         return await self.db.upsert_user(**kwargs)
 
     async def get_admins(self) -> List[User]:

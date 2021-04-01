@@ -19,9 +19,10 @@
 1. Идем в телеграм в `@BotFather`, создаем бот, получаем HTTP API токен.
 2. Копируем **.env.template** -> **.env**
 3. В  **.env** указываем HTTP API токен, параметры для подключения к кролику, хост и порт для SSE сервера.
-   Настраиваем логирование *(пока нет)*
 4. Запускаем:
 > pip install .
+>
+> pip install -e.[dev] && pre-commit install  # Для разработки
 >
 > cd core/repository && alembic upgrade head && cd ../..
 >  
@@ -45,5 +46,6 @@ http://localhost:8080/sse/ACTUATOR_NAME/events,
 
 ## Docker
 
-1. docker-compose build
-2. docker-compose up -d
+1. Заполняем файл .env (см. выше)
+2. docker-compose build
+3. docker-compose up -d

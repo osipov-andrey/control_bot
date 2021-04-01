@@ -5,15 +5,14 @@ from core.inbox.models import MessageTarget
 
 
 class SSEEvent:
-
     def __init__(
-            self,
-            *,
-            event: str = "slave",
-            command: str,
-            target: MessageTarget,
-            args: dict = None,
-            behavior: str
+        self,
+        *,
+        event: str = "slave",
+        command: str,
+        target: MessageTarget,
+        args: dict = None,
+        behavior: str,
     ):
         self.event = event
         self.command = command
@@ -34,7 +33,9 @@ class SSEEvent:
         return json_
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(" \
-               f"event='{self.event}', command='{self.command}', " \
-               f"target={self.target}, behavior='{self.behavior}', args={self.args}" \
-               f")"
+        return (
+            f"{self.__class__.__name__}("
+            f"event='{self.event}', command='{self.command}', "
+            f"target={self.target}, behavior='{self.behavior}', args={self.args}"
+            f")"
+        )

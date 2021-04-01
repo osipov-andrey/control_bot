@@ -10,5 +10,5 @@ __all__ = [
     "UserActuator",
     "Channel",
     "UserChannel",
-    "User"
+    "User",
 ]

@@ -14,6 +14,7 @@ class TargetType(Enum):
 
 class InlineButton(BaseModel):
     """ Inline button description """
+
     text: str
     callback_data: str
 
@@ -26,6 +27,7 @@ class InlineButton(BaseModel):
 
 class Reply(BaseModel):
     """ Reply to the base message """
+
     image: Optional[str] = None  # Base64
     text: Optional[str] = None
 
@@ -41,6 +43,7 @@ class ArgSchema(BaseModel):
     Command argument schema for
     validation argument value in Cerberus
     """
+
     type: str
     max: Optional[int] = None
     min: Optional[int] = None
@@ -54,6 +57,7 @@ class ArgSchema(BaseModel):
 
 class ArgInfo(BaseModel):
     """ Actuator command argument description """
+
     description: str
     arg_schema: ArgSchema
     options: Optional[list] = None
@@ -66,6 +70,7 @@ class ArgInfo(BaseModel):
 
 class CommandBehavior(BaseModel):
     """ The Actuator command can have different behaviors """
+
     description: str
     args: Optional[Dict[str, ArgInfo]] = None
 
@@ -75,6 +80,7 @@ class CommandSchema(BaseModel):
     Description of the actuator command.
     Received when the actuator is plugged on.
     """
+
     hidden: bool
     behavior__admin: Optional[CommandBehavior] = None
     behavior__user: Optional[CommandBehavior] = None
@@ -88,6 +94,7 @@ class CommandSchema(BaseModel):
 
 class Issue(BaseModel):
     """ Notification of the occurrence or resolution of a problem """
+
     issue_id: str
     resolved: bool
     reply_to_message_id: Optional[int] = None
@@ -118,6 +125,7 @@ class ActuatorMessage(BaseModel):
     MAIN MODEL.
     Incoming message from actuator
     """
+
     _id: UUID
     cmd: str
     target: MessageTarget

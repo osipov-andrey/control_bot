@@ -28,6 +28,7 @@ class NoSuchActuatorInRAM(ActuatorsRuntimeException):
 
 class NoSuchCommand(ActuatorsRuntimeException):
     """ No such command for client"""
+
     def __init__(self, cmd: str, *args):
         super().__init__(*args)
         self.cmd = cmd

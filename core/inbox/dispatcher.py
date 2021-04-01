@@ -8,11 +8,10 @@ from core.inbox.messages import OutgoingMessage, create_message_from_inbox
 
 _LOGGER = logging.getLogger(__name__)
 
-INTRO_COMMAND = 'getAvailableMethods'
+INTRO_COMMAND = "getAvailableMethods"
 
 
 class InboxDispatcher:
-
     def __init__(self, observer, queue: Queue):
         self.observer = observer
         self.queue = queue
@@ -37,7 +36,9 @@ class InboxDispatcher:
         if telegram_message.cmd == INTRO_COMMAND:
             self.observer.actuators.save_actuator_info(telegram_message)
 
-    async def handle_user_message(self, message: Union[ActuatorMessage, OutgoingMessage]):
+    async def handle_user_message(
+        self, message: Union[ActuatorMessage, OutgoingMessage]
+    ):
         if isinstance(message, ActuatorMessage):
             outgoing_message = create_message_from_inbox(message)
         else:
@@ -57,12 +58,10 @@ class InboxDispatcher:
             new_target = MessageTarget(
                 target_type=TargetType.USER.value,
                 target_name=subs.telegram_id,
-                message_id=message.target.message_id
+                message_id=message.target.message_id,
             )
             outgoing_message = create_message_from_inbox(
-                message,
-                target=new_target,
-                text=new_text
+                message, target=new_target, text=new_text
             )
             await self.handle_user_message(outgoing_message)
 

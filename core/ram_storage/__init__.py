@@ -6,6 +6,4 @@ RAM storage for dynamic features:
 from ._memory_storage import ControlBotMemoryStorage
 
 
-__all__ = [
-    'ControlBotMemoryStorage',
-]
+__all__ = ["ControlBotMemoryStorage"]

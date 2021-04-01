@@ -5,7 +5,7 @@ import shutil
 from logging import handlers
 
 
-__all__ = ['gzip_rotating_handler']
+__all__ = ["gzip_rotating_handler"]
 
 
 def namer(name):
