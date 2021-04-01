@@ -5,7 +5,7 @@ MODULE_NAME = "core"
 
 setup(
     name=MODULE_NAME,
-    version="0.1.0",
+    version="1.0.0",
     author="Andrey Osipov",
     platforms="all",
     classifiers=[
