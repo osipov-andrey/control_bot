@@ -1,51 +1,50 @@
 # Control bot
 
-Телеграм бот для мониторинга и контроля любых внешних систем.
+Telegram bot for monitoring and managing any external systems.
 
-Сам бот не имеет никакой бизнес-логики, за исключением разграничения прав доступа.
-Бизнес логика подключается через специальные модули-актуаторы.
+The bot itself has no business logic, except for the differentiation of access rights.
+Business logic is connected through special actuator modules.
 
-Для написания модулей используйте библиотеку [control_bot_actuator (cba)](https://github.com/osipov-andrey/control_bot_actuator).
+Use the library to write modules: [control_bot_actuator (cba)](https://github.com/osipov-andrey/control_bot_actuator).
 
-Между ботом и модулями происходит двухсторонний обмен информацией.
+There is a two-way exchange of information between the bot and the modules.
 
 ![Alt-текст](https://github.com/osipov-andrey/control_bot/blob/master/docs/main_schema.png?raw=true "Control bot + actuators")
 
-Актуаторы получают команды от бота через SSE. 
-Возвращают сообщения с помощью RabbitMQ либо на POST-ручку бота. 
+The actuators receive commands from the bot via SSE and return messages using RabbitMQ.
 
-## Запуск
+## Starting
 
-1. Идем в телеграм в `@BotFather`, создаем бот, получаем HTTP API токен.
-2. Копируем **.env.template** -> **.env**
-3. В  **.env** указываем HTTP API токен, параметры для подключения к кролику, хост и порт для SSE сервера.
-4. Запускаем:
+1. Go to the telegram account `@BotFather`, create a bot, get the HTTP API token.
+2. Copy **.env.template** -> **.env**
+3. In the **.env** file, specify the HTTP API token, parameters for connecting to the rabbit, host and port for the SSE server.
+4. Launch:
 > pip install .
 >
-> pip install -e.[dev] && pre-commit install  # Для разработки
+> pip install -e.[dev] && pre-commit install  _(For developing)_
 >
 > cd core/repository && alembic upgrade head && cd ../..
 >  
 > python -m core run
 
-5. Заходим в вашего бота в телеграме, жмем `\start`.
-   Должно прийти сообщение, что вы теперь админ бота.
+5. Go to your bot in telegram, click `\start`. 
+   You should receive a message that you are now the admin of the bot.
 
-6. После этого вызываем главное меню через ту же команду.
-   Регистрируем первый актуатор:
+6. After that, we call the main menu through the same command. 
+   Register first actuator:
    `\start` -> `\actuators` -> `\createActuator`
 
-7. Предоставляем пользователю доступ к актуатору:
+7. Grant the user access to the actuator:
    `\start` -> `\users` или `\actuators` -> `\grant`
 
-8. Подключаемые актуаторы под зарегистрированными именами будут появляться в главном меню (для пользователей с доступом).
+8. The connected actuators under the registered names will appear in the main menu (for users with grant).
 
-SSE-сервер будет работать по адресу:
-http://localhost:8080/sse/ACTUATOR_NAME/events,
-где HOST, PORT - из конфига, ACTUATOR_NAME - имя подключаемого актуатора.
+SSE server will run at:
+`http://HOST:PORT/sse/ACTUATOR_NAME/events`,
+where HOST, PORT - from the config, ACTUATOR_NAME - the name of the connected actuator.
 
 ## Docker
 
-1. Заполняем файл .env (см. выше)
+1. Complete the **.env** file (see above)
 2. docker-compose build
 3. docker-compose up -d
