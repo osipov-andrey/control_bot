@@ -28,7 +28,7 @@ setup(
         "alembic~=1.5.6",
         "Cerberus~=1.3.2",
         "defaultenv~=0.0.14",
-        "PyYAML==5.3.1",
+        "PyYAML==5.4",
         "SQLAlchemy~=1.3.22",
         "setuptools~=53.0.0",
         "pydantic~=1.8.1",
