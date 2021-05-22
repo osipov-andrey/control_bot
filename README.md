@@ -48,3 +48,10 @@ where HOST, PORT - from the config, ACTUATOR_NAME - the name of the connected ac
 1. Complete the **.env** file (see above)
 2. docker-compose build
 3. docker-compose up -d
+
+
+## How it works with Zabbix:
+
+### TODO: add link to zabbix-actuator
+
+![Alt-текст](https://github.com/osipov-andrey/control_bot/blob/eng/docs/zactuator.gif?raw=true "Control bot + Zabbix")
