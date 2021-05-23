@@ -32,7 +32,7 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> "OutgoingMe
             f"Unsupported message type for outgoing message! [{target_type}]"
         )
     message_kwargs["chat_id"] = message.target.target_name
-    message_kwargs["message_id"] = message.target.message_id
+    message_kwargs["to_message_id"] = message.target.message_id
 
     reply_markup = message_kwargs.get("reply_markup")
     if reply_markup:
@@ -52,7 +52,9 @@ class OutgoingMessage(MediatorDependency):
             msg = object.__new__(DocumentMessage)
         elif kwargs.get("image"):
             msg = object.__new__(PhotoMessage)
-        elif kwargs.get("message_id"):
+        elif kwargs.get("to_message_id"):
+            # We get the "message id" for each event update from the Telegram-API.
+            # Here parameter changed to avoid confusion
             msg = object.__new__(EditTextMessage)
         else:
             msg = object.__new__(TextMessage)
@@ -133,9 +135,9 @@ class EditTextMessage(TextMessage):
 
     _PARAMS_TO_SENT = ("text", "message_id")
 
-    def __init__(self, *, message_id: int, **kwargs):
+    def __init__(self, *, to_message_id: int, **kwargs):
         super().__init__(**kwargs)
-        self.message_id = message_id
+        self.message_id = to_message_id
 
 
 class DocumentMessage(OutgoingMessage):
