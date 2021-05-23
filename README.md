@@ -52,6 +52,6 @@ where HOST, PORT - from the config, ACTUATOR_NAME - the name of the connected ac
 
 ## How it works with Zabbix:
 
-### TODO: add link to zabbix-actuator
+[Zabbix actuator](https://github.com/osipov-andrey/actuator_zabbix).
 
-![Alt-текст](https://github.com/osipov-andrey/control_bot/blob/eng/docs/zactuator.gif?raw=true "Control bot + Zabbix")
+![Alt-текст](https://github.com/osipov-andrey/actuator_zabbix/blob/master/docs/zactuator_eng.gif?raw=true "Control bot + Zabbix")
