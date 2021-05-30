@@ -26,7 +26,7 @@ def get_menu(*, commands: List[MenuTextButton], header="", is_admin=False):
 
 
 def delete_cmd_prefix(arg: str):
-    """ Для быстрого ввода аргументов могут использоваться команды """
+    """Для быстрого ввода аргументов могут использоваться команды"""
     if arg.startswith("/"):
         arg = arg[1:]
     return arg
@@ -53,9 +53,7 @@ def admin_only_method(method):
     """
 
     @wraps(method)
-    async def wrapper(
-        handler_instance, message: types.Message, state: FSMContext, *args, **kwargs
-    ):
+    async def wrapper(handler_instance, message: types.Message, state: FSMContext, *args, **kwargs):
         if handler_instance.is_admin is True:
             return await method(handler_instance, message, state, *args, **kwargs)
         await state.reset_state()

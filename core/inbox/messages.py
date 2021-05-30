@@ -28,9 +28,7 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> "OutgoingMe
 
     target_type = message.target.target_type
     if target_type != TargetType.USER.value:
-        raise ValueError(
-            f"Unsupported message type for outgoing message! [{target_type}]"
-        )
+        raise ValueError(f"Unsupported message type for outgoing message! [{target_type}]")
     message_kwargs["chat_id"] = message.target.target_name
     message_kwargs["to_message_id"] = message.target.message_id
 
@@ -42,7 +40,7 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> "OutgoingMe
 
 
 class OutgoingMessage(MediatorDependency):
-    """ Message to send to Telegram API """
+    """Message to send to Telegram API"""
 
     _COMMON_PARAMS_TO_SENT = ("chat_id", "reply_markup", "parse_mode")
     _PARAMS_TO_SENT: tuple = tuple()
@@ -81,7 +79,7 @@ class OutgoingMessage(MediatorDependency):
             self._check_issue(issue)
 
     def get_params_to_sent(self, only_common=False) -> dict:
-        """ Gathers parameters for sending a message via aiogram """
+        """Gathers parameters for sending a message via aiogram"""
         if only_common:
             params = self._COMMON_PARAMS_TO_SENT
         else:
@@ -105,9 +103,7 @@ class OutgoingMessage(MediatorDependency):
 
     def _check_issue(self, issue: dict):
         if issue.get("resolved"):
-            problem_issue = self.mediator.memory_storage.resolve_issue(
-                issue.get("issue_id")
-            )
+            problem_issue = self.mediator.memory_storage.resolve_issue(issue.get("issue_id"))
             if problem_issue:
                 self.reply_to_message_id = problem_issue.reply_to_message_id
 
@@ -121,7 +117,7 @@ class OutgoingMessage(MediatorDependency):
 
 
 class TextMessage(OutgoingMessage):
-    """ Message only with text """
+    """Message only with text"""
 
     _PARAMS_TO_SENT = ("text", "reply_to_message_id")
 
@@ -131,7 +127,7 @@ class TextMessage(OutgoingMessage):
 
 
 class EditTextMessage(TextMessage):
-    """ Message that will edit an existing one """
+    """Message that will edit an existing one"""
 
     _PARAMS_TO_SENT = ("text", "message_id")
 
@@ -141,7 +137,7 @@ class EditTextMessage(TextMessage):
 
 
 class DocumentMessage(OutgoingMessage):
-    """ Message with document """
+    """Message with document"""
 
     _PARAMS_TO_SENT = ("document", "caption", "reply_to_message_id")
 
@@ -160,7 +156,7 @@ class DocumentMessage(OutgoingMessage):
 
 
 class PhotoMessage(OutgoingMessage):
-    """ Message with image """
+    """Message with image"""
 
     _PARAMS_TO_SENT = ("photo", "caption", "reply_to_message_id")
 

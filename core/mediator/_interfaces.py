@@ -35,7 +35,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         return actuator_name in self.connected_actuators.keys()
 
     def save_actuator_info(self, message: ActuatorMessage):
-        """ Сохранить логику актуатора в ОЗУ """
+        """Сохранить логику актуатора в ОЗУ"""
         actuator_name = message.target.target_name
 
         assert message.target.target_type == TargetType.SERVICE.value
@@ -44,11 +44,11 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         self.memory_storage.save_client(actuator_name, message.commands)
 
     def get_command_info(self, actuator_name: str, command: str):
-        """ Получить информацию о команде актуатора """
+        """Получить информацию о команде актуатора"""
         return self.memory_storage.get_command_info(actuator_name, command)
 
     def get_actuator_info(self, actuator_name: str):
-        """ Получить информацию о всех командах актуатора """
+        """Получить информацию о всех командах актуатора"""
         return self.memory_storage.get_client_info(actuator_name)
 
     async def create_actuator(self, actuator_name: str, description: str):
@@ -58,7 +58,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         return await self.db.delete_actuator(actuator_name)
 
     async def emit_event(self, actuator_name: str, event: SSEEvent):
-        """ Отправить ЕVENT в актуатор """
+        """Отправить ЕVENT в актуатор"""
         try:
             actuator_queue: asyncio.Queue = self.connected_actuators[actuator_name]
             await actuator_queue.put(event)
@@ -66,25 +66,25 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
             return "Unknown Client"
 
     async def grant(self, telegram_id: int, actuator_name: str):
-        """ Предоставить пользователю доступ к актуатору """
+        """Предоставить пользователю доступ к актуатору"""
         return await self.db.grant(telegram_id, actuator_name)
 
     async def revoke(self, telegram_id: int, actuator_name: str):
-        """ Забрать у пользователя доступ к актуатору """
+        """Забрать у пользователя доступ к актуатору"""
         return await self.db.revoke(telegram_id, actuator_name)
 
     async def get_all(self):
-        """ Получить все зарегистрированные актуаторы """
+        """Получить все зарегистрированные актуаторы"""
         actuators = await self.db.get_actuators()
         return actuators
 
     async def get_granters(self, actuator_name: str):
-        """ Получить пользователей с доступом к актуатору """
+        """Получить пользователей с доступом к актуатору"""
         granters = await self.db.get_granters(actuator_name)
         return granters
 
     async def turn_on_actuator(self, actuator_name: str) -> asyncio.Queue:
-        """ Turn on the actuator  """
+        """Turn on the actuator"""
         admins = await self.mediator.users.get_admins()
         if self.is_connected(actuator_name):
             text = (
@@ -109,7 +109,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
             raise exceptions.ActuatorAlreadyConnected
 
     async def turn_off_actuator(self, actuator_name: str):
-        """ Turn off the actuator """
+        """Turn off the actuator"""
         self.connected_actuators.pop(actuator_name)
         self.memory_storage.remove_client(actuator_name)
         admins = await self.mediator.users.get_admins()
@@ -155,7 +155,7 @@ class UsersInterface(BaseInterface):
         return await self.db.get_admins()
 
     async def is_admin(self, telegram_id: int) -> bool:
-        """ Проверка админских прав у пользователя """
+        """Проверка админских прав у пользователя"""
         try:
             user: User = await self.db.get_user(telegram_id)
         except NoSuchUser:
@@ -163,16 +163,16 @@ class UsersInterface(BaseInterface):
         return bool(user.is_admin)
 
     async def get_all(self) -> List[User]:
-        """ Получить ВСЕХ пользователей """
+        """Получить ВСЕХ пользователей"""
         users = await self.db.get_all_users()
         return users
 
     async def subscribes(self, telegram_id: int) -> List[Channel]:
-        """ Получить подписки пользователя """
+        """Получить подписки пользователя"""
         subs = await self.db.get_user_subscribes(telegram_id)
         return subs
 
     async def has_grant(self, telegram_id: int, actuator_name: str) -> bool:
-        """ Есть ли у пользователя доступ к актутатору """
+        """Есть ли у пользователя доступ к актутатору"""
         result = await self.db.user_has_grant(telegram_id, actuator_name)
         return result

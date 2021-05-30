@@ -3,7 +3,7 @@ from core.exceptions import NoSuchActuatorInRAM, NoSuchCommand
 
 
 class ControlBotMemoryStorage:
-    """ Stores in RAM information about connected actuators, issues, etc."""
+    """Stores in RAM information about connected actuators, issues, etc."""
 
     def __init__(self):
         self._storage = dict()

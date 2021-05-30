@@ -15,11 +15,11 @@ from core.mediator.dependency import MediatorDependency
 
 
 class ActuatorCommand(MediatorDependency):
-    """ Команда, полученная из телеги """
+    """Команда, полученная из телеги"""
 
     @staticmethod
     def parse_cmd_string(cmd_string: str):
-        """ Split command macros """
+        """Split command macros"""
         assert cmd_string.startswith("/")
 
         full_cmd = cmd_string.split("_")
@@ -107,15 +107,19 @@ class ActuatorCommand(MediatorDependency):
         message_kwargs["text"] = message + CONTEXT_CANCEL_MENU
         return message_kwargs
 
+    # fmt: off
     def _get_validation_report(self) -> str:
         report = (
             "<b>The following arguments were entered with errors:</b>\n"
             + "\n".join(
-                f"{arg}: {error}" for arg, error in self.validation_errors.items()
+                f"{arg}: {error}"
+                for arg, error in self.validation_errors.items()
             )
             + "\n\n"
         )
         return report
+
+    # fmt: on
 
     @staticmethod
     def _generate_keyboard(options: list) -> ReplyKeyboardMarkup:
@@ -125,7 +129,7 @@ class ActuatorCommand(MediatorDependency):
         return keyboard
 
     def _parse_args_to_fill(self):
-        """ Compare Received and Required Arguments """
+        """Compare Received and Required Arguments"""
         required_args = list(self.cmd_scheme.args.keys())
 
         for index, (required_arg, received_value) in enumerate(

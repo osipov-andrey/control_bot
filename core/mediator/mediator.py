@@ -25,7 +25,7 @@ class _SingletonMeta(type):
 
 
 class Mediator(metaclass=_SingletonMeta):
-    """ Mediator between telegram API, repository, RAM-storage """
+    """Mediator between telegram API, repository, RAM-storage"""
 
     def __init__(self, telegram_api_dispatcher=None):
 
@@ -44,7 +44,7 @@ class Mediator(metaclass=_SingletonMeta):
         _LOGGER.info("Mediator initialized!")
 
     async def send(self, message: OutgoingMessage):
-        """ Send message to telegram API """
+        """Send message to telegram API"""
         try:
             return await self.telegram_dispatcher.send(message)
         except aiogram.utils.exceptions.MessageIsTooLong:

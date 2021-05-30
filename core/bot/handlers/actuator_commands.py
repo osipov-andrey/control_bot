@@ -21,7 +21,7 @@ _COMMAND_REGEX = r"^\/([^_]*)_?.*?$"
 @d.class_message_handler(regexp=_COMMAND_REGEX)
 @d.class_message_handler(state=Command.client)
 class ActuatorCommandHandler(MessageHandler):
-    """ Handle actuator command """
+    """Handle actuator command"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         await start_actuator_command_workflow(message, state, self.mediator)
@@ -29,7 +29,7 @@ class ActuatorCommandHandler(MessageHandler):
 
 @d.class_message_handler(state=Command.arguments)
 class FillingArgumentHandler(MessageHandler):
-    """ Fill in the argument of the actuator command """
+    """Fill in the argument of the actuator command"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         data = await state.get_data()
@@ -47,17 +47,12 @@ class FillingArgumentHandler(MessageHandler):
 
 @d.class_callback_query_handler(state="*")
 class InlineButtonHandler(MessageHandler):
-    """ Handling an inline button click """
+    """Handling an inline button click"""
 
     async def handle(
-        self,
-        callback_query: Union[types.Message, types.CallbackQuery],
-        state: FSMContext,
-        **kwargs
+        self, callback_query: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs
     ):  # type: ignore
         await callback_query.answer("Button has been Pressed")
         message = callback_query.message
         message.text = callback_query.data
-        await start_actuator_command_workflow(
-            message, state, self.mediator, message.message_id
-        )
+        await start_actuator_command_workflow(message, state, self.mediator, message.message_id)

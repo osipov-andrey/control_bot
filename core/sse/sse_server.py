@@ -18,9 +18,7 @@ _PORT = config["sse"]["port"]
 
 
 def get_intro_event(client_name: str) -> SSEEvent:
-    target = MessageTarget(
-        target_type=TargetType.SERVICE.value, target_name=client_name
-    )
+    target = MessageTarget(target_type=TargetType.SERVICE.value, target_name=client_name)
     intro_event = SSEEvent(
         event="start",
         command="getAvailableMethods",
@@ -58,9 +56,7 @@ async def sse_connect(request):
                 events_queue.task_done()
         finally:
             await bot.actuators.turn_off_actuator(client_name)
-            log.info(
-                f"{request._transport_peername[0]} has been left from terminal: {client_name}"
-            )
+            log.info(f"{request._transport_peername[0]} has been left from terminal: {client_name}")
     return response
 
 

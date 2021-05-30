@@ -9,7 +9,7 @@ from core.bot._command_constants import START, USERS, CHANNELS, ACTUATORS, ME
 
 @telegram_api_dispatcher.class_message_handler(commands=[START])
 class MainMenuHandler(MessageHandler):
-    """ Main menu """
+    """Main menu"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         admins = await self.mediator.users.get_admins()
@@ -21,9 +21,7 @@ class MainMenuHandler(MessageHandler):
             MenuTextButton(actuator.name, actuator.description)
             for actuator in await self.mediator.actuators.get_all()
             if self.mediator.actuators.is_connected(actuator.name)
-            and await self.mediator.users.has_grant(
-                self.user_telegram_id, actuator.name
-            )
+            and await self.mediator.users.has_grant(self.user_telegram_id, actuator.name)
         ]
         menu = get_menu(
             header="Main menu:",

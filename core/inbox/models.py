@@ -13,7 +13,7 @@ class TargetType(Enum):
 
 
 class InlineButton(BaseModel):
-    """ Inline button description """
+    """Inline button description"""
 
     text: str
     callback_data: str
@@ -26,7 +26,7 @@ class InlineButton(BaseModel):
 
 
 class Reply(BaseModel):
-    """ Reply to the base message """
+    """Reply to the base message"""
 
     image: Optional[str] = None  # Base64
     text: Optional[str] = None
@@ -56,7 +56,7 @@ class ArgSchema(BaseModel):
 
 
 class ArgInfo(BaseModel):
-    """ Actuator command argument description """
+    """Actuator command argument description"""
 
     description: str
     arg_schema: ArgSchema
@@ -69,7 +69,7 @@ class ArgInfo(BaseModel):
 
 
 class CommandBehavior(BaseModel):
-    """ The Actuator command can have different behaviors """
+    """The Actuator command can have different behaviors"""
 
     description: str
     args: Optional[Dict[str, ArgInfo]] = None
@@ -93,7 +93,7 @@ class CommandSchema(BaseModel):
 
 
 class Issue(BaseModel):
-    """ Notification of the occurrence or resolution of a problem """
+    """Notification of the occurrence or resolution of a problem"""
 
     issue_id: str
     resolved: bool

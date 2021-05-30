@@ -47,7 +47,7 @@ class CustomDispatcher(aiogram.Dispatcher):
         run_task=None,
         **kwargs
     ):
-        """ Register Class as message handler """
+        """Register Class as message handler"""
 
         def decorator(class_):
             handler = class_()
@@ -67,7 +67,7 @@ class CustomDispatcher(aiogram.Dispatcher):
         return decorator
 
     def class_callback_query_handler(self, *custom_filters, state=None, run_task=None, **kwargs):
-        """ Register Class as callback query handler """
+        """Register Class as callback query handler"""
 
         def decorator(class_):
             handler = class_()

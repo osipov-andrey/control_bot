@@ -25,7 +25,7 @@ from core.bot.telegram_api import telegram_api_dispatcher as d
 
 @d.class_message_handler(commands=[ACTUATORS])
 class ActuatorsHandler(MessageHandler):
-    """ Actuators submenu """
+    """Actuators submenu"""
 
     @admin_only_method
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
@@ -46,7 +46,7 @@ class ActuatorsHandler(MessageHandler):
 
 @d.class_message_handler(commands=[ALL_ACTUATORS], state=MainMenu.actuators)
 class AllActuatorsHandler(MessageHandler):
-    """ Show all actuators """
+    """Show all actuators"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         actuators = await self.mediator.actuators.get_all()
@@ -67,20 +67,16 @@ class AllActuatorsHandler(MessageHandler):
 
 @d.class_message_handler(commands=[CREATE_ACTUATOR], state=MainMenu.actuators)
 class CreateActuatorHandler(MessageHandler):
-    """ Create actuator """
+    """Create actuator"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        cmd = get_create_or_delete_cmd(
-            CREATE_ACTUATOR, self.user_telegram_id, self.is_admin
-        )
+        cmd = get_create_or_delete_cmd(CREATE_ACTUATOR, self.user_telegram_id, self.is_admin)
 
         async def create_callback(**kwargs_):
             actuator_name = kwargs_.get("actuator")
             description = kwargs_.get("description")
             await self.mediator.actuators.create_actuator(actuator_name, description)
-            await self._answer(
-                message, f"Mediator created : {actuator_name} - {description}."
-            )
+            await self._answer(message, f"Mediator created : {actuator_name} - {description}.")
 
         await start_cmd_internal_workflow(
             state,
@@ -93,12 +89,10 @@ class CreateActuatorHandler(MessageHandler):
 
 @d.class_message_handler(commands=[DELETE_ACTUATOR], state=MainMenu.actuators)
 class DeleteActuatorHandler(MessageHandler):
-    """ Delete actuator """
+    """Delete actuator"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        cmd = get_create_or_delete_cmd(
-            DELETE_ACTUATOR, self.user_telegram_id, self.is_admin
-        )
+        cmd = get_create_or_delete_cmd(DELETE_ACTUATOR, self.user_telegram_id, self.is_admin)
 
         async def delete_callback(**kwargs_):
             actuator_name = kwargs_.get("actuator")

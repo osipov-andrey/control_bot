@@ -57,9 +57,7 @@ def upgrade():
         sa.ForeignKeyConstraint(
             ["actuator_id"], ["actuator.id"], onupdate="CASCADE", ondelete="CASCADE"
         ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["user.id"], onupdate="CASCADE", ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"], onupdate="CASCADE", ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("user_id", "actuator_id", name="user_actuator_pk"),
     )
     op.create_table(
@@ -69,9 +67,7 @@ def upgrade():
         sa.ForeignKeyConstraint(
             ["channel_id"], ["channel.id"], onupdate="CASCADE", ondelete="CASCADE"
         ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["user.id"], onupdate="CASCADE", ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"], onupdate="CASCADE", ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("user_id", "channel_id", name="user_channel_pk"),
     )
     # ### end Alembic commands ###

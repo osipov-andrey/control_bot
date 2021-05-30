@@ -1,17 +1,17 @@
 class BotDBException(Exception):
-    """ DB exception """
+    """DB exception"""
 
 
 class AlreadyHasItException(BotDBException):
-    """ The database already has such a record """
+    """The database already has such a record"""
 
 
 class NoSuchUser(BotDBException):
-    """ No such user in database """
+    """No such user in database"""
 
 
 class NoSuchChannel(BotDBException):
-    """ No such channel in database """
+    """No such channel in database"""
 
 
 class ActuatorsRuntimeException(Exception):
@@ -19,15 +19,15 @@ class ActuatorsRuntimeException(Exception):
 
 
 class ActuatorAlreadyConnected(ActuatorsRuntimeException):
-    """ Actuator already plugged on """
+    """Actuator already plugged on"""
 
 
 class NoSuchActuatorInRAM(ActuatorsRuntimeException):
-    """ No such client in ram_storage """
+    """No such client in ram_storage"""
 
 
 class NoSuchCommand(ActuatorsRuntimeException):
-    """ No such command for client"""
+    """No such command for client"""
 
     def __init__(self, cmd: str, *args):
         super().__init__(*args)

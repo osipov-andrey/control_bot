@@ -6,7 +6,7 @@ from core.bot.commands.actuator.actuator_command import ActuatorCommand
 
 
 class InternalCommand(ActuatorCommand):
-    """ The command spawned inside the bot """
+    """The command spawned inside the bot"""
 
     def __init__(
         self,

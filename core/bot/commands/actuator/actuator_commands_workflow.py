@@ -33,9 +33,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
     if command is None and command_state is None:
         # Пришло только имя клиента - показываем возможные команды
         try:
-            message_kwargs["text"] = get_client_commands(
-                mediator, actuator_name, is_admin
-            )
+            message_kwargs["text"] = get_client_commands(mediator, actuator_name, is_admin)
         except NoSuchActuatorInRAM:
             _LOGGER.warning("No actuator %s in RAM!", actuator_name)
             message_kwargs["text"] = UNKNOWN_ACTUATOR
@@ -45,9 +43,7 @@ async def start_actuator_command_workflow(message, state, mediator, message_id=N
             await mediator.send(OutgoingMessage(**message_kwargs))
 
         await Command.client.set()
-        await state_storage.update_data(
-            user=user_id, chat=chat_id, client=actuator_name
-        )
+        await state_storage.update_data(user=user_id, chat=chat_id, client=actuator_name)
         return
     elif command is None and command_state is not None:
         # Не указана команда

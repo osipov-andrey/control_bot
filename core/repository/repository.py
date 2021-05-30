@@ -13,9 +13,7 @@ from .db_enums import UserEvents
 from ._schema import *
 
 
-PATH_TO_DB = (
-    Path(__file__).parent.absolute().joinpath("db_dump").joinpath("control_bot.sqlite")
-)
+PATH_TO_DB = Path(__file__).parent.absolute().joinpath("db_dump").joinpath("control_bot.sqlite")
 
 
 def connect_to_db(method):
@@ -93,9 +91,7 @@ class Repository:
         return [Channel(*channel) for channel in result]
 
     async def save_channel(self, name: str, description: str) -> bool:
-        query: Query = channel_table.insert().values(
-            {"name": name, "description": description}
-        )
+        query: Query = channel_table.insert().values({"name": name, "description": description})
         result = await self._execute_query(query, commit=True)
         return result.rowcount == 1
 
@@ -150,9 +146,7 @@ class Repository:
         return result
 
     async def delete_actuator(self, name: str):
-        result = await self._execute_query(
-            _queryes.delete_actuator_query(name), commit=True
-        )
+        result = await self._execute_query(_queryes.delete_actuator_query(name), commit=True)
         return result
 
     async def user_has_grant(self, user_telegram_id: int, actuator_name: str) -> bool:
@@ -173,9 +167,7 @@ class Repository:
         return actuators
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
-        channels = await self._execute_query(
-            _queryes.get_user_subscribes_query(user_telegram_id)
-        )
+        channels = await self._execute_query(_queryes.get_user_subscribes_query(user_telegram_id))
         channels: list = [Channel(*channel) for channel in channels]
         return channels
 

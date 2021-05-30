@@ -29,7 +29,7 @@ from core.bot.telegram_api import telegram_api_dispatcher as d
 
 @d.class_message_handler(commands=[USERS])
 class UsersHandler(MessageHandler):
-    """ Users submenu """
+    """Users submenu"""
 
     @admin_only_method
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
@@ -49,7 +49,7 @@ class UsersHandler(MessageHandler):
 
 @d.class_message_handler(commands=[ALL_USERS], state=MainMenu.users)
 class AllUsersHandler(MessageHandler):
-    """ Show all users of bot """
+    """Show all users of bot"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         users = await self.mediator.users.get_all()
@@ -66,11 +66,9 @@ class AllUsersHandler(MessageHandler):
         await state.reset_state()
 
 
-@d.class_message_handler(
-    commands=[SUBSCRIBE], state=[MainMenu.users, MainMenu.channels]
-)
+@d.class_message_handler(commands=[SUBSCRIBE], state=[MainMenu.users, MainMenu.channels])
 class SubscribeHandler(MessageHandler):
-    """ Subscribe user to channel """
+    """Subscribe user to channel"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         cmd = await get_subscribe_or_unsubscribe_cmd(
@@ -100,11 +98,9 @@ class SubscribeHandler(MessageHandler):
         )
 
 
-@d.class_message_handler(
-    commands=[UNSUBSCRIBE], state=[MainMenu.users, MainMenu.channels]
-)
+@d.class_message_handler(commands=[UNSUBSCRIBE], state=[MainMenu.users, MainMenu.channels])
 class UnsubscribeHandler(MessageHandler):
-    """ Unsubscribe user from channel """
+    """Unsubscribe user from channel"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         cmd = await get_subscribe_or_unsubscribe_cmd(
@@ -115,9 +111,7 @@ class UnsubscribeHandler(MessageHandler):
             user_to_subs_id = kwargs_.get("user_id")
             channel = kwargs_.get("channel")
             await self.mediator.channels.unsubscribe(user_to_subs_id, channel)
-            await message.answer(
-                f"The user {user_to_subs_id} unsubscribed from channel {channel}"
-            )
+            await message.answer(f"The user {user_to_subs_id} unsubscribed from channel {channel}")
 
         await start_cmd_internal_workflow(
             state,
@@ -130,7 +124,7 @@ class UnsubscribeHandler(MessageHandler):
 
 @d.class_message_handler(commands=[GRANT], state=[MainMenu.users, MainMenu.actuators])
 class GrantHandler(MessageHandler):
-    """ Grant the user rights to the actuator """
+    """Grant the user rights to the actuator"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
         cmd = await get_grant_or_revoke_cmd(GRANT, self.user_telegram_id, self.is_admin)
@@ -158,12 +152,10 @@ class GrantHandler(MessageHandler):
 
 @d.class_message_handler(commands=[REVOKE], state=[MainMenu.users, MainMenu.actuators])
 class RevokeHandler(MessageHandler):
-    """ Revoke the user rights to the actuator """
+    """Revoke the user rights to the actuator"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        cmd = await get_grant_or_revoke_cmd(
-            REVOKE, self.user_telegram_id, self.is_admin
-        )
+        cmd = await get_grant_or_revoke_cmd(REVOKE, self.user_telegram_id, self.is_admin)
 
         async def revoke_callback(**kwargs_):
             user_to_revoke_id = kwargs_.get("user_id")

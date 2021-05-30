@@ -21,10 +21,8 @@ from core.mediator.dependency import MediatorDependency
 
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    """ Generate schema for subscribe/unsubscribe main-menu commands """
-    channels = [
-        c.name for c in await MediatorDependency.mediator.channels.all_channels()
-    ]
+    """Generate schema for subscribe/unsubscribe main-menu commands"""
+    channels = [c.name for c in await MediatorDependency.mediator.channels.all_channels()]
 
     args = {
         "channel": ArgInfo(
@@ -53,7 +51,7 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
 
 
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    """ Generate schema for grant/revoke main-menu commands """
+    """Generate schema for grant/revoke main-menu commands"""
     actuators = [a.name for a in await MediatorDependency.mediator.actuators.get_all()]
     args = {
         "actuator": ArgInfo(
@@ -83,7 +81,7 @@ async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 
 def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    """ Generate schema for create/delete actuator main-menu commands """
+    """Generate schema for create/delete actuator main-menu commands"""
     args = {
         "actuator": ArgInfo(
             description="Actuator name",
@@ -106,7 +104,7 @@ def get_create_or_delete_cmd(cmd, user_id, is_admin) -> InternalCommand:
 
 
 def get_create_or_delete_channel_cmd(cmd, user_id, is_admin) -> InternalCommand:
-    """ Generate schema for create/delete channel main-menu commands """
+    """Generate schema for create/delete channel main-menu commands"""
     args = {
         "channel": ArgInfo(
             description="Channel name",

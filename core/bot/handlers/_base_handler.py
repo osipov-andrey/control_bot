@@ -9,7 +9,7 @@ from core.mediator.dependency import MediatorDependency
 
 
 class MessageHandler(ABC, MediatorDependency):
-    """ Custom class-based handler for use with aiogram """
+    """Custom class-based handler for use with aiogram"""
 
     def __init__(self):
         self.user_telegram_id = None
@@ -22,7 +22,7 @@ class MessageHandler(ABC, MediatorDependency):
         state: FSMContext,
         **kwargs,
     ):
-        """ Callback for use in `core.bot.telegram_api.CustomDispatcher` """
+        """Callback for use in `core.bot.telegram_api.CustomDispatcher`"""
         self.user_telegram_id = message.from_user.id
         self.is_admin = await self.mediator.users.is_admin(self.user_telegram_id)
         self.kwargs_to_answer = {
@@ -38,7 +38,7 @@ class MessageHandler(ABC, MediatorDependency):
         state: FSMContext,
         **kwargs,
     ):
-        """ Place for handling logic """
+        """Place for handling logic"""
         ...
 
     @staticmethod

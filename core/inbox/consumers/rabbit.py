@@ -43,9 +43,7 @@ class RabbitConsumer:
 
         channel: Channel = await protocol.channel()
         await channel.queue_declare(config["rabbit"]["rabbit_queue"], durable=True)
-        await channel.basic_consume(
-            self._callback, queue_name=self.rabbit_queue, no_ack=True
-        )
+        await channel.basic_consume(self._callback, queue_name=self.rabbit_queue, no_ack=True)
 
     async def _callback(self, channel, body, envelope, properties):
         _LOGGER.info("Get message from rabbit: %s", body)

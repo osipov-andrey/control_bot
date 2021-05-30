@@ -36,9 +36,7 @@ class InboxDispatcher:
         if telegram_message.cmd == INTRO_COMMAND:
             self.observer.actuators.save_actuator_info(telegram_message)
 
-    async def handle_user_message(
-        self, message: Union[ActuatorMessage, OutgoingMessage]
-    ):
+    async def handle_user_message(self, message: Union[ActuatorMessage, OutgoingMessage]):
         if isinstance(message, ActuatorMessage):
             outgoing_message = create_message_from_inbox(message)
         else:
@@ -60,9 +58,7 @@ class InboxDispatcher:
                 target_name=subs.telegram_id,
                 message_id=message.target.message_id,
             )
-            outgoing_message = create_message_from_inbox(
-                message, target=new_target, text=new_text
-            )
+            outgoing_message = create_message_from_inbox(message, target=new_target, text=new_text)
             await self.handle_user_message(outgoing_message)
 
     async def _check_replies(self, message: OutgoingMessage, reply_to_message_id: int):

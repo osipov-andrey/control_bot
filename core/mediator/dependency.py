@@ -1,5 +1,5 @@
 class MediatorDependency:
-    """ Class for accessing the Mediator """
+    """Class for accessing the Mediator"""
 
     mediator = None  # type: ignore
 
