@@ -27,7 +27,7 @@ sys.path.insert(0, parent_dir)
 
 import _schema as models
 
-target_metadata = models.metadata
+target_metadata = models.Base.metadata
 print(target_metadata)
 
 # other values from the config, defined by the needs of env.py,
