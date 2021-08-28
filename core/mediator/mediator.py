@@ -4,6 +4,7 @@ import aiogram
 from aiogram.utils import exceptions
 
 from core.inbox.messages import OutgoingMessage
+from core.mediator.mediator_proto import MediatorProto
 from core.ram_storage import ControlBotMemoryStorage
 from ._interfaces import *
 
@@ -13,18 +14,18 @@ _LOGGER = logging.getLogger(__name__)
 __all__ = ["Mediator"]
 
 
-class _SingletonMeta(type):
+# class _SingletonMeta(type):
+#
+#     _instances: dict = dict()
+#
+#     def __call__(cls, *args, **kwargs):
+#         if cls not in cls._instances:
+#             instance = super().__call__(*args, **kwargs)
+#             cls._instances[cls] = instance
+#         return cls._instances[cls]
 
-    _instances: dict = dict()
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            instance = super().__call__(*args, **kwargs)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
-
-
-class Mediator(metaclass=_SingletonMeta):
+class Mediator(MediatorProto):
     """Mediator between telegram API, repository, RAM-storage"""
 
     def __init__(self, telegram_api_dispatcher=None):

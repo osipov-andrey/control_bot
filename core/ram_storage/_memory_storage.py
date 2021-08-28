@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 from core.inbox.models import Issue, CommandSchema
 from core.exceptions import NoSuchActuatorInRAM, NoSuchCommand
 
@@ -7,29 +9,29 @@ class ControlBotMemoryStorage:
 
     def __init__(self):
         self._storage = dict()
-        self._issue_storage = dict()
+        self._issue_storage: Dict[str, Issue] = dict()
 
-    def save_client(self, client_name: str, commands_info: dict):
-        self._storage[client_name] = commands_info
+    def save_actuator_info(self, actuator_name: str, commands_info: dict):
+        self._storage[actuator_name] = commands_info
 
-    def remove_client(self, client_name: str):
-        self._storage.pop(client_name)
+    def remove_actuator(self, actuator_name: str):
+        self._storage.pop(actuator_name)
 
-    def get_client_info(self, client_name: str):
+    def get_actuator_info(self, actuator_name: str):
         try:
-            return self._storage[client_name]
+            return self._storage[actuator_name]
         except KeyError:
-            raise NoSuchActuatorInRAM(client_name)
+            raise NoSuchActuatorInRAM(actuator_name)
 
-    def get_command_info(self, client_name: str, command: str):
+    def get_command_info(self, actuator_name: str, command: str):
         try:
-            return self.get_client_info(client_name)[command]
+            return self.get_actuator_info(actuator_name)[command]
         except KeyError:
-            raise NoSuchCommand(client_name, command)
+            raise NoSuchCommand(actuator_name, command)
 
     def set_issue(self, issue: Issue):
         self._issue_storage[issue.issue_id] = issue
 
-    def resolve_issue(self, issue_id: str) -> Issue:
-        issue = self._issue_storage.get(issue_id)
+    def resolve_issue(self, issue_id: str) -> Optional[Issue]:
+        issue: Optional[Issue] = self._issue_storage.get(issue_id)
         return issue

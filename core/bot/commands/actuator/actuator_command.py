@@ -11,10 +11,10 @@ from core._helpers import ArgType, Behavior
 from core.inbox.models import ArgInfo, CommandBehavior, CommandSchema
 from core.bot.state_enums import ArgumentsFillStatus
 from core.bot._prompts_generators import generate_prompt
-from core.mediator.dependency import MediatorDependency
+from core.mediator.dependency import MediatorDependency as md
 
 
-class ActuatorCommand(MediatorDependency):
+class ActuatorCommand:
     """Команда, полученная из телеги"""
 
     @staticmethod
@@ -48,7 +48,7 @@ class ActuatorCommand(MediatorDependency):
         self.message_id = message_id
         self.behavior = Behavior.USER.value
 
-        cmd_info: CommandSchema = self.mediator.actuators.get_command_info(client, cmd)
+        cmd_info: CommandSchema = md.get_mediator().actuators.get_command_info(client, cmd)
         if is_admin and cmd_info.behavior__admin:
             self.cmd_scheme: CommandBehavior = cmd_info.behavior__admin
             self.behavior = Behavior.ADMIN.value
@@ -89,8 +89,7 @@ class ActuatorCommand(MediatorDependency):
     async def get_next_step(self) -> dict:
         message_kwargs = dict()
         argument_to_fill = self.args_to_fill[0]
-        argument_info = self.cmd_scheme.args.get(argument_to_fill)
-
+        argument_info: ArgInfo = self._get_arg_scheme(argument_to_fill)
         options = argument_info.options
         if options:
             message_kwargs["reply_markup"] = self._generate_keyboard(options)
@@ -173,7 +172,10 @@ class ActuatorCommand(MediatorDependency):
         return bool(validation)
 
     def _get_arg_scheme(self, arg_name: str) -> ArgInfo:
-        return self.cmd_scheme.args.get(arg_name)
+        arg_info: Optional[ArgInfo] = self.cmd_scheme.args.get(arg_name)
+        if not arg_info:
+            raise RuntimeError(f"There is no ArgInfo for {self.cmd_scheme}!")
+        return arg_info
 
     def __str__(self):
         return (

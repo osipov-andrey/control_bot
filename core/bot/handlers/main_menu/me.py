@@ -8,6 +8,7 @@ from core.bot.states import MainMenu
 from core.bot.telegram_api import telegram_api_dispatcher as d
 from core.repository.db_enums import UserEvents
 from core.bot._command_constants import ME, INTRODUCE, MY_ID, MY_CHANNELS
+from core.mediator.dependency import MediatorDependency as md
 
 
 @d.class_message_handler(commands=[ME])
@@ -32,7 +33,7 @@ class IntroduceHandler(MessageHandler):
     """Save your data to the bot"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        user_status = await self.mediator.users.upsert(
+        user_status = await md.get_mediator().users.upsert(
             tg_id=message.from_user.id,
             tg_username=message.from_user.username,
             name=message.from_user.full_name,
@@ -60,7 +61,7 @@ class MyChannelsHandler(MessageHandler):
     """Show channels i'm subscribed to"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        channels = await self.mediator.channels.get_subscribes(self.user_telegram_id)
+        channels = await md.get_mediator().channels.get_subscribes(self.user_telegram_id)
         text = "<b>Channels you subscribed to:</b>\n" + generate_channel_report(channels)
         await self._answer(message, text)
         await state.reset_state()

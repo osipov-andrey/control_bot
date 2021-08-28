@@ -21,6 +21,7 @@ from core.bot.commands.internal.internal_commands_workflow import (
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.mediator.dependency import MediatorDependency as md
 
 
 @d.class_message_handler(commands=[ACTUATORS])
@@ -49,12 +50,12 @@ class AllActuatorsHandler(MessageHandler):
     """Show all actuators"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        actuators = await self.mediator.actuators.get_all()
+        actuators = await md.get_mediator().actuators.get_all()
         text = f"{emojies.ACTUATOR} Registered actuators: \n\n"
         text += "\n".join(
             "{connected}{name} - {description}".format(
                 connected=emojies.ACTUATOR_CONNECTED
-                if self.mediator.actuators.is_connected(a.name)
+                if md.get_mediator().actuators.is_connected(a.name)
                 else "",
                 name=f"{emojies.ACTUATOR}<b>{a.name}</b>",
                 description=a.description,

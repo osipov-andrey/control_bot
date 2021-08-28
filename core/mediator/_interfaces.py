@@ -1,15 +1,15 @@
 import asyncio
 import logging
 from abc import ABC
-from typing import List
+from typing import List, Set
 
 from core import exceptions
 from core.bot import emojies
 from core.config import config
 from core.inbox.models import TargetType, ActuatorMessage
 from core.inbox.messages import OutgoingMessage
-from core.mediator.dependency import MediatorDependency
 from core.exceptions import NoSuchUser
+from core.mediator import MediatorDependency as md
 from core.repository.repository import Channel, Repository, User
 from core.sse.sse_event import SSEEvent
 
@@ -25,7 +25,7 @@ class BaseInterface(ABC):
         self.db: Repository = Repository()
 
 
-class ActuatorsInterface(BaseInterface, MediatorDependency):
+class ActuatorsInterface(BaseInterface):
     def __init__(self, memory_storage):
         super().__init__()
         self.memory_storage = memory_storage
@@ -41,7 +41,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
         assert message.target.target_type == TargetType.SERVICE.value
         assert actuator_name in self.connected_actuators
 
-        self.memory_storage.save_client(actuator_name, message.commands)
+        self.memory_storage.save_actuator_info(actuator_name, message.commands)
 
     def get_command_info(self, actuator_name: str, command: str):
         """Получить информацию о команде актуатора"""
@@ -49,7 +49,7 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
 
     def get_actuator_info(self, actuator_name: str):
         """Получить информацию о всех командах актуатора"""
-        return self.memory_storage.get_client_info(actuator_name)
+        return self.memory_storage.get_actuator_info(actuator_name)
 
     async def create_actuator(self, actuator_name: str, description: str):
         return await self.db.create_actuator(actuator_name, description)
@@ -85,24 +85,24 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
 
     async def turn_on_actuator(self, actuator_name: str) -> asyncio.Queue:
         """Turn on the actuator"""
-        admins = await self.mediator.users.get_admins()
+        admins: List[User] = await md.get_mediator().users.get_admins()
         if self.is_connected(actuator_name):
             text = (
                 f"{emojies.ACTUATOR_ALREADY_TURNED_ON} Actuator {actuator_name} already turned ON!"
             )
-            users = admins
+            users: Set[User] = set(admins)
             result = None
         else:
             actuator_queue: asyncio.Queue = asyncio.Queue()
             self.connected_actuators[actuator_name] = actuator_queue
-            granters = await self.get_granters(actuator_name)
+            granters: List[User] = await self.get_granters(actuator_name)
             users = set(admins + granters)
             text = f"{emojies.ACTUATOR_TURNED_ON} Actuator {actuator_name} has been turned ON!"
             result = actuator_queue
 
         for user in users:
-            message = OutgoingMessage(chat_id=user.telegram_id, text=text)
-            await self.mediator.send(message)
+            message = OutgoingMessage(chat_id=str(user.telegram_id), text=text)
+            await md.get_mediator().send(message)
         if result:
             return result
         else:
@@ -111,15 +111,15 @@ class ActuatorsInterface(BaseInterface, MediatorDependency):
     async def turn_off_actuator(self, actuator_name: str):
         """Turn off the actuator"""
         self.connected_actuators.pop(actuator_name)
-        self.memory_storage.remove_client(actuator_name)
-        admins = await self.mediator.users.get_admins()
+        self.memory_storage.remove_actuator(actuator_name)
+        admins = await md.get_mediator().users.get_admins()
         granters = await self.get_granters(actuator_name)
         for user in set(admins + granters):
             message = OutgoingMessage(
-                chat_id=user.telegram_id,
+                chat_id=str(user.telegram_id),
                 text=f"{emojies.ACTUATOR_TURNED_OFF} Actuator {actuator_name} has been turned OFF!",
             )
-            await self.mediator.send(message)
+            await md.get_mediator().send(message)
 
 
 class ChannelsInterface(BaseInterface):
@@ -164,7 +164,7 @@ class UsersInterface(BaseInterface):
 
     async def get_all(self) -> List[User]:
         """Получить ВСЕХ пользователей"""
-        users = await self.db.get_all_users()
+        users: List[User] = await self.db.get_all_users()
         return users
 
     async def subscribes(self, telegram_id: int) -> List[Channel]:

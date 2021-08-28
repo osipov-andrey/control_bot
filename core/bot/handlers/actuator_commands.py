@@ -13,6 +13,7 @@ from core.bot.commands.actuator.actuator_commands_workflow import (
 from core.bot.state_enums import CommandFillStatus
 from core.bot.states import Command
 from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.mediator.dependency import MediatorDependency as md
 
 
 _COMMAND_REGEX = r"^\/([^_]*)_?.*?$"
@@ -24,7 +25,7 @@ class ActuatorCommandHandler(MessageHandler):
     """Handle actuator command"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        await start_actuator_command_workflow(message, state, self.mediator)
+        await start_actuator_command_workflow(message, state, md.get_mediator())
 
 
 @d.class_message_handler(state=Command.arguments)
@@ -41,7 +42,7 @@ class FillingArgumentHandler(MessageHandler):
             cmd,
             self.kwargs_to_answer,
             CommandFillStatus.FILL_ARGUMENTS,
-            self.mediator,
+            md.get_mediator(),
         )
 
 
@@ -50,9 +51,11 @@ class InlineButtonHandler(MessageHandler):
     """Handling an inline button click"""
 
     async def handle(
-        self, callback_query: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs
-    ):  # type: ignore
-        await callback_query.answer("Button has been Pressed")
-        message = callback_query.message
-        message.text = callback_query.data
-        await start_actuator_command_workflow(message, state, self.mediator, message.message_id)
+        self, message: Union[types.Message, types.CallbackQuery], state: FSMContext, **kwargs
+    ):
+        if not isinstance(message, types.CallbackQuery):
+            raise RuntimeError("Got: 'types.Message'. Expected: 'types.CallbackQuery'")
+        await message.answer("Button has been Pressed")
+        _message = message.message
+        _message.text = message.data
+        await start_actuator_command_workflow(_message, state, md.get_mediator(), _message.message_id)

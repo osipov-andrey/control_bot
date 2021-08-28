@@ -10,8 +10,8 @@ from aiogram.types import (
     InputFile,
 )
 
-from core.mediator.dependency import MediatorDependency
-from .models import ActuatorMessage, TargetType
+from core.mediator.dependency import MediatorDependency as md
+from .models import ActuatorMessage, TargetType, Issue
 
 
 def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> "OutgoingMessage":
@@ -39,11 +39,11 @@ def create_message_from_inbox(message: ActuatorMessage, **kwargs) -> "OutgoingMe
     return OutgoingMessage(**message_kwargs)
 
 
-class OutgoingMessage(MediatorDependency):
+class OutgoingMessage:
     """Message to send to Telegram API"""
 
-    _COMMON_PARAMS_TO_SENT = ("chat_id", "reply_markup", "parse_mode")
-    _PARAMS_TO_SENT: tuple = tuple()
+    _COMMON_PARAMS_TO_SENT: Tuple[str, ...] = ("chat_id", "reply_markup", "parse_mode")
+    _PARAMS_TO_SENT: Tuple[str, ...] = tuple()
 
     def __new__(cls, *args, **kwargs):
         if kwargs.get("document"):
@@ -59,21 +59,21 @@ class OutgoingMessage(MediatorDependency):
         return msg
 
     def __init__(
-        self,
-        *,
-        chat_id: str,
-        reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
-        reply_to_message_id: Optional[int] = None,
-        parse_mode: str = "HTML",
-        replies: Optional[List] = None,
-        issue: Optional[dict] = None,
-        **kwargs,
+            self,
+            *,
+            chat_id: str,
+            reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
+            reply_to_message_id: Optional[int] = None,
+            parse_mode: str = "HTML",
+            replies: Optional[list] = None,
+            issue: Optional[dict] = None,
+            **kwargs,
     ):
         self.chat_id = chat_id
         self.reply_markup = reply_markup
         self.reply_to_message_id = reply_to_message_id
         self.parse_mode = parse_mode
-        self.replies = replies
+        self.replies: list = replies if replies else []
         self.issue = issue
         if issue:
             self._check_issue(issue)
@@ -92,8 +92,7 @@ class OutgoingMessage(MediatorDependency):
         :param reply_to_message_id - message id in chat
         """
         replies = []
-        for reply in self.replies:
-            reply: dict
+        for reply in self.replies:  # type: dict
             message_kwargs = self.get_params_to_sent(only_common=True)
             message_kwargs.update(reply)
             message_kwargs["reply_to_message_id"] = reply_to_message_id
@@ -103,7 +102,7 @@ class OutgoingMessage(MediatorDependency):
 
     def _check_issue(self, issue: dict):
         if issue.get("resolved"):
-            problem_issue = self.mediator.memory_storage.resolve_issue(issue.get("issue_id"))
+            problem_issue: Optional[Issue] = md.get_mediator().memory_storage.resolve_issue(issue.get("issue_id", ""))
             if problem_issue:
                 self.reply_to_message_id = problem_issue.reply_to_message_id
 
@@ -147,11 +146,11 @@ class DocumentMessage(OutgoingMessage):
 
     @staticmethod
     def _get_document(document: dict) -> Tuple[InputFile, str]:
-        content = document.get("content")
-        filename = document.get("filename")
-        caption = document.get("caption")
+        content: str = document.get("content", "")
+        filename: str = document.get("filename", "_empty_name_.txt")
+        caption: str = document.get("caption", "")
 
-        text_file = InputFile(io.StringIO(content), filename=filename)
+        text_file: InputFile = InputFile(io.StringIO(content), filename=filename)
         return text_file, caption
 
 

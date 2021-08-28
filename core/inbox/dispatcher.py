@@ -1,10 +1,9 @@
 import logging
 from asyncio import Queue
-from typing import Iterable, Union
+from typing import Iterable, Union, Optional
 
 from core.inbox.models import Issue, MessageTarget, TargetType, ActuatorMessage
 from core.inbox.messages import OutgoingMessage, create_message_from_inbox
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +50,9 @@ class InboxDispatcher:
     async def handle_channel_message(self, message: ActuatorMessage):
         channel = message.target.target_name
         subscribers: Iterable = await self.observer.channels.get_subscribers(channel)
-        new_text = f"Channel <b>{channel}</b>\n" + message.text
+        new_text = f"Channel <b>{channel}</b>\n"
+        if message.text:
+            new_text += message.text
         for subs in subscribers:
             new_target = MessageTarget(
                 target_type=TargetType.USER.value,
@@ -67,11 +68,11 @@ class InboxDispatcher:
             for reply in replies:
                 await self.handle_user_message(reply)  # TODO replies for channel
 
-    async def _check_issue(self, message: ActuatorMessage, reply_to_message_id: int):
+    async def _check_issue(self, message: ActuatorMessage, reply_to_message_id: int):  # TODO: Single dispatch
         if message.issue and (message.issue.resolved is False):
             # Устанавливаем проблемные события с указанным ID сообщения,
             # на которое должно будет ответить сообщение с решением проблемы
             issue = message.issue
             issue.reply_to_message_id = reply_to_message_id
             self.observer.memory_storage.set_issue(issue)
-            # 'Разрешение' issues происходит при создании сообщения
+            # 'Разрешение' issues происходит при создании сообщения54

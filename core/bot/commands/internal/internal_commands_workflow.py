@@ -25,7 +25,7 @@ async def start_cmd_internal_workflow(
     only adapted for the internal needs of the bot.
     (Main menu commands)
     """
-    mediator = MediatorDependency.mediator
+    mediator = MediatorDependency.get_mediator()
     cmd_fill_status = cmd.fill_status
 
     if cmd_fill_status == ArgumentsFillStatus.FILLED:

@@ -105,7 +105,7 @@ class Repository:
             raise NoSuchUser
         return user
 
-    async def get_all_users(self):
+    async def get_all_users(self) -> List[User]:
         # TODO: generator
         users_query = users_table.select()
         users = await self._execute_simple_query(users_query)

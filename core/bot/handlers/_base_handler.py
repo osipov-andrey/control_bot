@@ -5,10 +5,10 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from core.bot._notification_constants import CONTEXT_CANCEL_MENU
-from core.mediator.dependency import MediatorDependency
+from core.mediator.dependency import MediatorDependency as md
 
 
-class MessageHandler(ABC, MediatorDependency):
+class MessageHandler(ABC):
     """Custom class-based handler for use with aiogram"""
 
     def __init__(self):
@@ -24,7 +24,7 @@ class MessageHandler(ABC, MediatorDependency):
     ):
         """Callback for use in `core.bot.telegram_api.CustomDispatcher`"""
         self.user_telegram_id = message.from_user.id
-        self.is_admin = await self.mediator.users.is_admin(self.user_telegram_id)
+        self.is_admin = await md.get_mediator().users.is_admin(self.user_telegram_id)
         self.kwargs_to_answer = {
             # kwargs for sending a message to the user
             "chat_id": self.user_telegram_id

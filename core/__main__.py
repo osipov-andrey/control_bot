@@ -22,7 +22,7 @@ def run():
     inbox_dispatcher = InboxDispatcher(mediator, inbox_queue)
     rabbit = RabbitConsumer(**config.config["rabbit"], inbox_queue=inbox_queue)
 
-    MediatorDependency.add_mediator(mediator)
+    MediatorDependency.set_mediator(mediator)
 
     create_sse_server(mediator)
     asyncio.ensure_future(rabbit.listen_to_rabbit())

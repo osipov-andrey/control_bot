@@ -72,7 +72,7 @@ class CommandBehavior(BaseModel):
     """The Actuator command can have different behaviors"""
 
     description: str
-    args: Optional[Dict[str, ArgInfo]] = None
+    args: Dict[str, ArgInfo] = Field(default_factory=dict)
 
 
 class CommandSchema(BaseModel):

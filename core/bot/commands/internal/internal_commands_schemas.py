@@ -22,7 +22,7 @@ from core.mediator.dependency import MediatorDependency
 
 async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCommand:
     """Generate schema for subscribe/unsubscribe main-menu commands"""
-    channels = [c.name for c in await MediatorDependency.mediator.channels.all_channels()]
+    channels = [c.name for c in await MediatorDependency.get_mediator().channels.all_channels()]
 
     args = {
         "channel": ArgInfo(
@@ -52,7 +52,7 @@ async def get_subscribe_or_unsubscribe_cmd(cmd, user_id, is_admin) -> InternalCo
 
 async def get_grant_or_revoke_cmd(cmd, user_id, is_admin) -> InternalCommand:
     """Generate schema for grant/revoke main-menu commands"""
-    actuators = [a.name for a in await MediatorDependency.mediator.actuators.get_all()]
+    actuators = [a.name for a in await MediatorDependency.get_mediator().actuators.get_all()]
     args = {
         "actuator": ArgInfo(
             description="Actuator name",

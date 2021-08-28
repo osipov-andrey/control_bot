@@ -5,6 +5,7 @@ from core.bot._helpers import get_menu, MenuTextButton
 from core.bot.handlers._base_handler import MessageHandler
 from core.bot.telegram_api import telegram_api_dispatcher
 from core.bot._command_constants import START, USERS, CHANNELS, ACTUATORS, ME
+from core.mediator.dependency import MediatorDependency as md
 
 
 @telegram_api_dispatcher.class_message_handler(commands=[START])
@@ -12,16 +13,16 @@ class MainMenuHandler(MessageHandler):
     """Main menu"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        admins = await self.mediator.users.get_admins()
+        admins = await md.get_mediator().users.get_admins()
         if not admins:
             await self._auto_create_admin(message)
             return
 
         actuators = [
             MenuTextButton(actuator.name, actuator.description)
-            for actuator in await self.mediator.actuators.get_all()
-            if self.mediator.actuators.is_connected(actuator.name)
-            and await self.mediator.users.has_grant(self.user_telegram_id, actuator.name)
+            for actuator in await md.get_mediator().actuators.get_all()
+            if md.get_mediator().actuators.is_connected(actuator.name)
+            and await md.get_mediator().users.has_grant(self.user_telegram_id, actuator.name)
         ]
         menu = get_menu(
             header="Main menu:",
@@ -38,7 +39,7 @@ class MainMenuHandler(MessageHandler):
         await self._answer(message, menu)
 
     async def _auto_create_admin(self, message: types.Message):
-        await self.mediator.users.upsert(
+        await md.get_mediator().users.upsert(
             tg_id=message.from_user.id,
             tg_username=message.from_user.username,
             name=message.from_user.full_name,

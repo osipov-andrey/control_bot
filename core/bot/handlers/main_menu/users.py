@@ -25,6 +25,7 @@ from core.exceptions import AlreadyHasItException, NoSuchUser
 from core.bot.states import MainMenu
 from core.bot.state_enums import CommandFillStatus
 from core.bot.telegram_api import telegram_api_dispatcher as d
+from core.mediator.dependency import MediatorDependency as md
 
 
 @d.class_message_handler(commands=[USERS])
@@ -52,7 +53,7 @@ class AllUsersHandler(MessageHandler):
     """Show all users of bot"""
 
     async def handle(self, message: types.Message, state: FSMContext, **kwargs):
-        users = await self.mediator.users.get_all()
+        users = await md.get_mediator().users.get_all()
         text = "\n".join(
             "{name} - {tg_username} - {tg_id} {is_admin}".format(
                 name=f"{emojies.USER}{u.name}",
