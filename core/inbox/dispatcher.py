@@ -44,7 +44,7 @@ class InboxDispatcher:
         result_id = result_message.message_id
         if outgoing_message.replies:
             await self._check_replies(outgoing_message, result_id)
-        if outgoing_message.issue:
+        if isinstance(message, ActuatorMessage) and outgoing_message.issue:
             await self._check_issue(message, result_id)
 
     async def handle_channel_message(self, message: ActuatorMessage):
