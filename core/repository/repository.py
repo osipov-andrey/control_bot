@@ -110,37 +110,37 @@ class Repository:
         result: ScalarResult = await self._execute_simple_query(user_query)
         user: Optional[User] = first(result)
         if not user:
-            raise NoSuchUser
+            raise NoSuchUser(tg_id)
         return user
 
     async def get_all_users(self) -> List[User]:
         # TODO: generator
-        users_query = users_table.select()
+        users_query = select(User)
         users = await self._execute_simple_query(users_query)
-        users = [User(*user) for user in users]
+        users = [user for user in users]
         return users
 
     async def get_admins(self) -> List[User]:
-        admins_query = users_table.select().where(users_table.c.is_admin == 1)
+        admins_query = select(User).where(User.is_admin)
         admins = await self._execute_simple_query(admins_query)
         admins = [User(*admin) for admin in admins]
         return admins
 
     async def get_channel(self, channel_name: str) -> Channel:
-        user_query = channel_table.select().where(channel_table.c.name == channel_name)
-        channel = await self._execute_simple_query(user_query, fetchall=False)
+        user_query = select(Channel).where(Channel.name == channel_name)
+        result: ScalarResult = await self._execute_simple_query(user_query)
+        channel: Optional[Channel] = first(result)
         if not channel:
-            raise NoSuchChannel
-        channel = Channel(*channel)
+            raise NoSuchChannel(channel_name)
         return channel
 
     async def all_channels(self) -> List[Channel]:
-        query: Query = channel_table.select()
-        result = await self._execute_simple_query(query, fetchall=True)
+        query: Query = Channel.select()
+        result = await self._execute_simple_query(query)
         return [Channel(*channel) for channel in result]
 
     async def save_channel(self, name: str, description: str) -> bool:
-        query: Query = channel_table.insert().values({"name": name, "description": description})
+        query: Query = Channel.insert().values({"name": name, "description": description})
         result = await self._execute_simple_query(query, commit=True)
         return result.rowcount == 1
 
