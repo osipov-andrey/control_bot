@@ -26,7 +26,8 @@ class User(Base):
 
 async def async_main():
     engine = create_async_engine(
-        "sqlite+aiosqlite:///control_bot.sqlite", echo=True,
+        "sqlite+aiosqlite:///control_bot.sqlite",
+        echo=True,
     )
 
     async with AsyncSession(engine) as session:

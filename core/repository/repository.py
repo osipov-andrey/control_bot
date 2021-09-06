@@ -27,7 +27,8 @@ def first(sequence: Iterable) -> Optional[Any]:
 @asynccontextmanager
 async def db_session(path_to_db: Path = PATH_TO_DB) -> AsyncSession:
     engine = create_async_engine(
-        f"sqlite+aiosqlite:///{str(path_to_db)}", echo=True,
+        f"sqlite+aiosqlite:///{str(path_to_db)}",
+        echo=True,
     )
 
     async with AsyncSession(engine) as session:
@@ -63,7 +64,6 @@ async def db_session(path_to_db: Path = PATH_TO_DB) -> AsyncSession:
 
 
 class Repository:
-
     def __init__(self, path_to_db: Path = PATH_TO_DB):
         self.db = path_to_db
 
@@ -77,21 +77,29 @@ class Repository:
     ):
         async with db_session(self.db) as session:  # type: AsyncSession
             # TODO: get_user()
-            user_exists: Result = await session.execute(select(User).where(User.telegram_id == tg_id))
+            user_exists: Result = await session.execute(
+                select(User).where(User.telegram_id == tg_id)
+            )
             if not user_exists.scalar():
                 # TODO: insert_user()
-                session.add(User(
-                    telegram_id=tg_id,
-                    telegram_username=tg_username,
-                    name=name,
-                    phone_number=phone,
-                    is_admin=is_admin
-                ))
+                session.add(
+                    User(
+                        telegram_id=tg_id,
+                        telegram_username=tg_username,
+                        name=name,
+                        phone_number=phone,
+                        is_admin=is_admin,
+                    )
+                )
                 result = UserEvents.CREATED
             else:
                 # TODO: update_user()
                 await session.execute(
-                    text(self._get_sql(_queryes.update_user(tg_id, tg_username, name, phone, is_admin)))
+                    text(
+                        self._get_sql(
+                            _queryes.update_user(tg_id, tg_username, name, phone, is_admin)
+                        )
+                    )
                 )
                 result = UserEvents.UPDATED
             await session.commit()
@@ -208,7 +216,9 @@ class Repository:
         return actuators
 
     async def get_user_subscribes(self, user_telegram_id: int) -> List[Channel]:
-        channels = await self._execute_simple_query(_queryes.get_user_subscribes_query(user_telegram_id))
+        channels = await self._execute_simple_query(
+            _queryes.get_user_subscribes_query(user_telegram_id)
+        )
         channels: list = [Channel(*channel) for channel in channels]
         return channels
 

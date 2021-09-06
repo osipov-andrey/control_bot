@@ -68,7 +68,9 @@ class InboxDispatcher:
             for reply in replies:
                 await self.handle_user_message(reply)  # TODO replies for channel
 
-    async def _check_issue(self, message: ActuatorMessage, reply_to_message_id: int):  # TODO: Single dispatch
+    async def _check_issue(
+        self, message: ActuatorMessage, reply_to_message_id: int
+    ):  # TODO: Single dispatch
         if message.issue and (message.issue.resolved is False):
             # Устанавливаем проблемные события с указанным ID сообщения,
             # на которое должно будет ответить сообщение с решением проблемы

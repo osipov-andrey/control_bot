@@ -13,7 +13,8 @@ PATH_TO_DB = Path(__file__).parent.absolute().joinpath("test.sqlite")
 
 repository = Repository(path_to_db=PATH_TO_DB)
 engine = create_engine(  # We can't create DB with async engine
-    f"sqlite:///{str(PATH_TO_DB)}", echo=True,
+    f"sqlite:///{str(PATH_TO_DB)}",
+    echo=True,
 )
 Session = scoped_session(sessionmaker(bind=engine))
 
@@ -29,10 +30,9 @@ def db_session() -> Session:
 
 @pytest.mark.asyncio
 async def test_insert_user(db_session: Session):
-    await repository.upsert_user(
-        tg_id=1012,
-        tg_username="kek_lol2"
-    )
-    user_result: Row[User] = db_session.execute(select(User).where(User.telegram_id == 1012)).first()
+    await repository.upsert_user(tg_id=1012, tg_username="kek_lol2")
+    user_result: Row[User] = db_session.execute(
+        select(User).where(User.telegram_id == 1012)
+    ).first()
     user: User = first(user_result)
     assert user.telegram_username == "kek_lol2"

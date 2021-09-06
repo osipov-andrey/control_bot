@@ -3,9 +3,8 @@ from typing import Optional
 from sqlalchemy import null, select, delete, insert, update, and_
 from sqlalchemy.sql import Select, Delete, Insert, Update
 
-from ._schema import (
-    User
-)
+from ._schema import User
+
 #
 #
 # def get_channel_id_query(channel_name: str) -> Select:
@@ -94,6 +93,8 @@ def update_user(
         .where(User.telegram_id == tg_id or User.telegram_username == tg_username)
     )
     return update_query
+
+
 #
 #
 # def create_actuator_query(name: str, description: Optional[str] = None) -> Insert:

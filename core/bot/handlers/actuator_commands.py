@@ -58,4 +58,6 @@ class InlineButtonHandler(MessageHandler):
         await message.answer("Button has been Pressed")
         _message = message.message
         _message.text = message.data
-        await start_actuator_command_workflow(_message, state, md.get_mediator(), _message.message_id)
+        await start_actuator_command_workflow(
+            _message, state, md.get_mediator(), _message.message_id
+        )

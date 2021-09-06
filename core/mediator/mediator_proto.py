@@ -7,18 +7,17 @@ from core.sse.sse_event import SSEEvent
 
 
 class MediatorProto(Protocol):
-    memory_storage: 'ControlBotMemoryStorageProto'
+    memory_storage: "ControlBotMemoryStorageProto"
     telegram_dispatcher: Any  # TODO: dispatcher
-    users: 'UsersInterfaceProto'
-    channels: 'ChannelsInterfaceProto'
-    actuators: 'ActuatorsInterfaceProto'
+    users: "UsersInterfaceProto"
+    channels: "ChannelsInterfaceProto"
+    actuators: "ActuatorsInterfaceProto"
 
     async def send(self, message) -> Any:  # TODO: from dispatcher
         ...
 
 
 class ControlBotMemoryStorageProto(Protocol):
-
     def save_actuator_info(self, actuator_name: str, commands_info: dict) -> None:
         ...
 
@@ -50,7 +49,6 @@ class ControlBotMemoryStorageProto(Protocol):
 
 
 class UsersInterfaceProto(Protocol):
-
     async def upsert(self, **kwargs) -> User:
         ...
 
@@ -78,7 +76,6 @@ class UsersInterfaceProto(Protocol):
 
 
 class ChannelsInterfaceProto(Protocol):
-
     async def all_channels(self) -> List[Channel]:
         ...
 
@@ -102,7 +99,6 @@ class ChannelsInterfaceProto(Protocol):
 
 
 class ActuatorsInterfaceProto(Protocol):
-
     def is_connected(self, actuator_name) -> bool:
         ...
 

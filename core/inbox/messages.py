@@ -59,15 +59,15 @@ class OutgoingMessage:
         return msg
 
     def __init__(
-            self,
-            *,
-            chat_id: str,
-            reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
-            reply_to_message_id: Optional[int] = None,
-            parse_mode: str = "HTML",
-            replies: Optional[list] = None,
-            issue: Optional[dict] = None,
-            **kwargs,
+        self,
+        *,
+        chat_id: str,
+        reply_markup: Optional[Union[ReplyKeyboardMarkup, InlineKeyboardMarkup]] = None,
+        reply_to_message_id: Optional[int] = None,
+        parse_mode: str = "HTML",
+        replies: Optional[list] = None,
+        issue: Optional[dict] = None,
+        **kwargs,
     ):
         self.chat_id = chat_id
         self.reply_markup = reply_markup
@@ -102,7 +102,9 @@ class OutgoingMessage:
 
     def _check_issue(self, issue: dict):
         if issue.get("resolved"):
-            problem_issue: Optional[Issue] = md.get_mediator().memory_storage.resolve_issue(issue.get("issue_id", ""))
+            problem_issue: Optional[Issue] = md.get_mediator().memory_storage.resolve_issue(
+                issue.get("issue_id", "")
+            )
             if problem_issue:
                 self.reply_to_message_id = problem_issue.reply_to_message_id
 
